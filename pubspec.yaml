@@ -7,8 +7,11 @@ description: A sample command-line application.
 environment:
   sdk: '>=2.0.0 <3.0.0'
 
-#dependencies:
-#  path: ^1.4.1
+dependencies:
+  path: ^1.6.2
+  args: ^1.5.1
+  yaml: ^2.1.15
+  resource: ^2.1.5
 
 dev_dependencies:
   test: ^1.0.0
