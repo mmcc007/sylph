@@ -145,7 +145,7 @@ void main() {
     }
   });
   test('lookup device pool', () async {
-    final filePath = 'test/test_sylph.yaml';
+    final filePath = 'test/sylph_test.yaml';
     final config = await parseYaml(filePath);
 
     //    for (var pools in devicePools) {
@@ -162,5 +162,15 @@ void main() {
     final poolName = 'android pool 1';
     Map devicePool = getDevicePoolInfo(config, poolName);
     print('resulting devicePool=$devicePool');
+  });
+
+  test('check pool type', () async {
+    final filePath = 'test/sylph_test.yaml';
+    final config = await parseYaml(filePath);
+    final poolName = 'android pool 1';
+    Map devicePoolInfo = getDevicePoolInfo(config, poolName);
+    print('resulting devicePool=$devicePoolInfo');
+
+    expect(devicePoolInfo['pool_type'], enumToStr(DeviceType.android));
   });
 }

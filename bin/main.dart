@@ -55,9 +55,10 @@ void run(Map config, String projectArn, String runName, int runTimeout) async {
     // Initialize device pools and run tests in each pool
     final List devicePools = testSuite['device_pools'];
     for (var poolName in devicePools) {
-//        print('poolType=$poolType, poolName=$poolName');
+//      print('poolName=$poolName');
       // lookup device pool
       Map devicePoolInfo = getDevicePoolInfo(config, poolName);
+//      print('devicePoolInfo=$devicePoolInfo');
       if (devicePoolInfo == null)
         throw 'Exception: device pool $poolName not found';
       // Setup device pool
@@ -65,7 +66,7 @@ void run(Map config, String projectArn, String runName, int runTimeout) async {
 
       // Create build artifact for pool type and upload
       String appArn;
-      if (devicePoolInfo['pool_type'] == sylph.DeviceType.android) {
+      if (devicePoolInfo['pool_type'] == enumToStr(sylph.DeviceType.android)) {
         cmd('flutter', ['build', 'apk', '-t', testSuite['main'], '--debug'],
             '.', false);
         // Upload apk

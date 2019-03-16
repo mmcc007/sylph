@@ -90,3 +90,6 @@ Future unpackScript(String srcPath, String dstDir) async {
   // make executable
   cmd('chmod', ['u+x', '$dstDir/$srcPath']);
 }
+
+// Converts enum value to string
+String enumToStr(dynamic _enum) => _enum.toString().split('.').last;
