@@ -67,8 +67,8 @@ jobs:
 
       script:
       - cd example; sylph
-      # bundle artifacts for later deploy
-      - tar cvzf /tmp/sylph-artifacts.tar.gz /tmp/sylph/artifacts
+      # bundle artifacts for deploy
+      - tar cvzf /tmp/sylph-artifacts.tar.gz -C /tmp sylph/artifacts
 
       # deploy artifacts
       deploy:
