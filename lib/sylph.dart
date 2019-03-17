@@ -225,7 +225,7 @@ Future bundleFlutterTests(Map config) async {
 //  final testSuite = config['test_suites'][0];
 //  final appPath = testSuite['app_path'];
   final appPath = Directory.current.path;
-  print('appPath=$appPath');
+//  print('appPath=$appPath');
   final appName = p.basename(appPath);
   final appDir = p.dirname(appPath);
 

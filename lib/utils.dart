@@ -64,7 +64,7 @@ Future unpackResources(String tmpDir) async {
 
   // unpack scripts
   final appPath = Directory.current.path;
-  print('appPath=$appPath');
+//  print('appPath=$appPath');
   final appName = p.basename(appPath);
   await unpackScripts('$tmpDir/$appName');
 }
