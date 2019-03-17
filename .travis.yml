@@ -12,7 +12,8 @@ jobs:
       - unzip awscli-bundle.zip
       - sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
       - aws --version
-      - cat >~/.aws/config <<EOL
+      - mkdir ~/.aws || echo "problem creating dir"
+      - cat >> ~/.aws/config <<EOL
         [default]
         output = json
         region = us-west-2
