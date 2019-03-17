@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/mmcc007/sylph.svg?branch=master)](https://travis-ci.com/mmcc007/sylph)
+
 _A sylph is a mythological invisible being of the air._
 [Wikipedia](https://en.wikipedia.org/wiki/Sylph)
 # Sylph
