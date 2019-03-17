@@ -25,14 +25,14 @@ phases:
         if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "Android" ];
         then
             # Run EC2 setup code here
-            curl https://storage.googleapis.com/flutter_infra/releases/stable/linux/flutter_linux_v1.0.0-stable.tar.xz -o flutter_linux.tar.xz
+            curl https://storage.googleapis.com/flutter_infra/releases/stable/linux/flutter_linux_v1.2.1-stable.tar.xz -o flutter_linux.tar.xz
             tar xf flutter_linux.tar.xz
         fi
 
         if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "iOS" ];
         then
             # Run Mac setup code here
-            curl https://storage.googleapis.com/flutter_infra/releases/stable/macos/flutter_macos_v1.0.0-stable.zip -o flutter_macos.zip
+            curl https://storage.googleapis.com/flutter_infra/releases/stable/macos/flutter_macos_v1.2.1-stable.zip -o flutter_macos.zip
             unzip -qq flutter_macos.zip
         fi
 
