@@ -1,4 +1,5 @@
 os: osx
+language: generic
 
 jobs:
   include:
@@ -11,17 +12,10 @@ jobs:
       - unzip awscli-bundle.zip
       - sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
       - aws --version
-#      - mkdir ~/.aws || echo "problem creating dir"
-#      - |
-#        cat >> ~/.aws/config <<EOL
-#      [default]
-#      output = json
-#      region = us-west-2
-#      EOL
       - cp -r .aws ~
       - cat ~/.aws/config
       - cat pubspec.yaml
-      - aws devicefarm list-projects
+#      - aws devicefarm list-projects
 
       # Install android tools
       - ANDROID_TOOLS=4333796 # android-28
@@ -33,9 +27,11 @@ jobs:
       # Silence warning.
       - mkdir -p ~/.android
       - touch ~/.android/repositories.cfg
-#      # install correct version of java on osx
-#      - export HOMEBREW_NO_AUTO_UPDATE=1
-#      - brew cask uninstall java; brew tap caskroom/versions; brew cask install java8;
+      # install correct version of java on osx
+      - java -version
+      - export HOMEBREW_NO_AUTO_UPDATE=1
+      - brew cask uninstall java; brew tap caskroom/versions; brew cask install java8;
+      - java -version
       # Accept licenses before installing components, no need to echo y for each component
       - yes | sdkmanager --licenses
       # Platform tools
