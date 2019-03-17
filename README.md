@@ -1,3 +1,4 @@
+[![pub package](https://img.shields.io/pub/v/sylph.svg)](https://pub.dartlang.org/packages/sylph) 
 [![Build Status](https://travis-ci.com/mmcc007/sylph.svg?branch=master)](https://travis-ci.com/mmcc007/sylph)
 
 _A sylph is a mythological invisible being of the air._
@@ -52,8 +53,10 @@ test_suites:
 #      - ios pool 1
     job_timeout: 5 # minutes
 ```
-# Contributing
+# Limitations
+Due to mismatch between Flutter and AWS tooling, Sylph currently is limited to working only on pools of android devices on AWS Device Farms.
 
+# Contributing
 When contributing to this repository, please feel free to discuss via issue or pull request.
 
 [Issues](https://github.com/mmcc007/screenshots/issues) and [pull requests](https://github.com/mmcc007/screenshots/pulls) are welcome.
