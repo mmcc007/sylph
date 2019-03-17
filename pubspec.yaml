@@ -12,6 +12,8 @@ dependencies:
   args: ^1.5.1
   yaml: ^2.1.15
   resource: ^2.1.5
+  uuid: ^2.0.0
+  queries: ^0.1.10
 
 dev_dependencies:
   test: ^1.0.0
