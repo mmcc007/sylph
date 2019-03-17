@@ -102,7 +102,6 @@ void runTests(
   String testSpecArn,
   String artifactsDir,
 ) {
-
   // Schedule run
   print('Scheduling \'$runName\' on AWS Device Farms');
   String runArn = sylph.scheduleRun(
