@@ -30,7 +30,7 @@ jobs:
       - sdkmanager --list | head -15
       # Platform and build tools
 #      - sdkmanager "emulator" "tools" "platform-tools" > /dev/null
-      - sdkmanager too"platform-tools" "platforms;android-${ANDROID_PLATFORM_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
+      - sdkmanager "tools" "platform-tools" "platforms;android-${ANDROID_PLATFORM_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
       - sdkmanager --list | head -15
 
       # fix timezone warning on osx
