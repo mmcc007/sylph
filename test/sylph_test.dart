@@ -173,4 +173,20 @@ void main() {
 
     expect(devicePoolInfo['pool_type'], enumToStr(DeviceType.android));
   });
+
+  test('download artifacts', () {
+    // get project arn
+    // aws devicefarm list-projects
+    // get project runs
+    // aws devicefarm list-runs --arn <project arn>
+    // get artifacts by run, by test suite, by test, etc..
+    // aws devicefarm list-artifacts --arn <run arn>
+    // download each artifact
+
+    final downloadDir = '/tmp/tmp/artifactsxxx';
+    final runArn =
+        'arn:aws:devicefarm:us-west-2:122621792560:run:fef6e39b-8ab0-44f4-b6ae-09115edbce36/42c84f3d-e061-4f23-ac7c-8d5d3a6b8f0f';
+    // list artifacts
+    downloadArtifacts(runArn, downloadDir);
+  });
 }

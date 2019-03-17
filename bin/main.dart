@@ -92,15 +92,8 @@ void run(Map config, String projectArn, String runName, int runTimeout) async {
           sylph.uploadFile(projectArn, testSpecPath, 'APPIUM_PYTHON_TEST_SPEC');
 
       // run tests and report
-      runTests(
-        runName,
-        runTimeout,
-        projectArn,
-        devicePoolArn,
-        appArn,
-        testPackageArn,
-        testSpecArn,
-      );
+      runTests(runName, runTimeout, projectArn, devicePoolArn, appArn,
+          testPackageArn, testSpecArn, '${config['tmp_dir']}/artifacts');
     }
   }
 
@@ -115,13 +108,15 @@ void run(Map config, String projectArn, String runName, int runTimeout) async {
 }
 
 void runTests(
-    String runName,
-    int runTimeout,
-    String projectArn,
-    String devicePoolArn,
-    String appArn,
-    String testPackageArn,
-    String testSpecArn) {
+  String runName,
+  int runTimeout,
+  String projectArn,
+  String devicePoolArn,
+  String appArn,
+  String testPackageArn,
+  String testSpecArn,
+  String downloadDir,
+) {
   // Set job timeout ???
 
   // Schedule run
@@ -135,6 +130,7 @@ void runTests(
   sylph.runReport(result);
 
   // Download artifacts
+  sylph.downloadArtifacts(runArn, downloadDir);
 }
 
 String upLoadBuild(String projectArn, sylph.DeviceType deviceType) {
