@@ -1,4 +1,3 @@
-language: generic
 os: osx
 
 jobs:
@@ -13,7 +12,8 @@ jobs:
       - sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
       - aws --version
       - mkdir ~/.aws || echo "problem creating dir"
-      - cat >> ~/.aws/config <<EOL
+      - |
+        cat >> ~/.aws/config <<EOL
         [default]
         output = json
         region = us-west-2
