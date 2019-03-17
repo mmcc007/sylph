@@ -9,7 +9,7 @@ const kConfigFilePath = 'sylph.yaml';
 main(List<String> arguments) async {
   final runTimeout = 1000;
   final runName = 'android run 1';
-  print('Starting AWS Device Farm run...');
+  print('Starting AWS Device Farm run \'$runName\'...');
   print('Config file: $kConfigFilePath');
 
   // Parse config file
@@ -20,6 +20,7 @@ main(List<String> arguments) async {
       sylph.setupProject(config['project_name'], config['default_job_timeout']);
 
   await run(config, projectArn, runName, runTimeout);
+  print('Completed AWS Device Farm run \'$runName\'.');
 }
 
 /// Processes config file
@@ -99,22 +100,23 @@ void runTests(
   String appArn,
   String testPackageArn,
   String testSpecArn,
-  String downloadDir,
+  String artifactsDir,
 ) {
-  // Set per job timeout ???
 
   // Schedule run
+  print('Scheduling \'$runName\' on AWS Device Farms');
   String runArn = sylph.scheduleRun(
       runName, projectArn, appArn, devicePoolArn, testSpecArn, testPackageArn);
 
-  // Monitor job progress
-  Map result = sylph.runStatus(runArn, runTimeout);
+  // Monitor run progress
+  final run = sylph.runStatus(runArn, runTimeout);
 
-  // Get job result
-  sylph.runReport(result);
+  // Output run result
+  sylph.runReport(run);
 
   // Download artifacts
-  sylph.downloadArtifacts(runArn, downloadDir);
+  print('Downloading artifacts...');
+  sylph.downloadArtifacts(runArn, artifactsDir);
 }
 
 String uploadBuild(String projectArn, sylph.DeviceType deviceType) {

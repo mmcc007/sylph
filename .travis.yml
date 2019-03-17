@@ -58,9 +58,6 @@ jobs:
       - sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
       - aws --version
       - cp -r .aws ~
-      - cat ~/.aws/config
-      - cat pubspec.yaml
-#      - aws devicefarm list-projects
 
       # install most current (released or unreleased) version of Sylph
       - pub global activate --source path .
