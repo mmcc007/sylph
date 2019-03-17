@@ -13,12 +13,14 @@ jobs:
       - aws --version
       - mkdir ~/.aws || echo "problem creating dir"
       - |
-        cat >> ~/.aws/config <<EOL
-        [default]
-        output = json
-        region = us-west-2
-        EOL
+      cat >> ~/.aws/config <<EOL
+      [default]
+      output = json
+      region = us-west-2
+      EOL
       - cat ~/.aws/config
+      - cat pubspec.yaml
+      - aws devicefarm list-projects
 
       # Install android tools
       - ANDROID_TOOLS=4333796 # android-28
