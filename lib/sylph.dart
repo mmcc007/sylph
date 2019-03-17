@@ -21,14 +21,16 @@ Future<Map> parseYaml(String filePath) async {
 
 /// Sets up a project for testing.
 /// Creates new project if none exists.
+/// Returns the project ARN.
 String setupProject(String projectName, int jobTimeoutMinutes) {
   // check for existing project
   final projects = deviceFarmCmd(['list-projects'])['projects'];
-  Map result = projects.firstWhere((project) => project['name'] == projectName,
+  final project = projects.firstWhere(
+      (project) => project['name'] == projectName,
       orElse: () => null);
 
-  if (result == null) {
-    // create project
+  if (project == null) {
+    // create new project
     print('Creating project for $projectName ...');
     return deviceFarmCmd([
       'create-project',
@@ -38,7 +40,7 @@ String setupProject(String projectName, int jobTimeoutMinutes) {
       '$jobTimeoutMinutes'
     ])['project']['arn'];
   } else
-    return result['arn'];
+    return project['arn'];
 }
 
 /// Set up a device pool if named pool does not exist.
@@ -77,6 +79,7 @@ String setupDevicePool(String projectArn, String poolName, List devices) {
 }
 
 /// Schedules a run.
+/// Returns the run ARN.
 String scheduleRun(String runName, String projectArn, String appArn,
     String devicePoolArn, String testSpecArn, String testPackageArn) {
   // Schedule run
@@ -102,7 +105,7 @@ String scheduleRun(String runName, String projectArn, String appArn,
 Map runStatus(String runArn, int timeout) {
   Map run;
   for (int i = 0; i < timeout; i++) {
-    final run = deviceFarmCmd([
+    run = deviceFarmCmd([
       'get-run',
       '--arn',
       runArn,
@@ -123,17 +126,30 @@ Map runStatus(String runArn, int timeout) {
 /// Run report.
 void runReport(Map run) {
   // generate report
-  print('run=$run');
+//  print('run=$run');
+
+  // print intro
   print(
-      'Run \'${run['name']}\' completed in ${run['deviceMinutes']['total']} minutes.');
+      'Run \'${run['name']}\' completed ${run['completedJobs']} of ${run['totalJobs']} jobs.');
+
+  // print result
+  print('  Result: ${run['result']}');
+
+  // print device minutes
+  final deviceMinutes = run['deviceMinutes'];
+  print(
+      '  Device minutes: ${deviceMinutes['total']} (${deviceMinutes['metered']} metered).');
+
+  // print counters
   final counters = run['counters'];
-  print('  skipped: ${counters['skipped']}\n'
-      '  warned: ${counters['warned']}\n'
-      '  skipped: ${counters['skipped']}\n'
-      '  failed: ${counters['failed']}\n'
-      '  passed: ${counters['passed']}\n'
-      '  errored: ${counters['errored']}\n'
-      '  total: ${counters['total']}\n');
+  print('  Counters:\n'
+      '    skipped: ${counters['skipped']}\n'
+      '    warned: ${counters['warned']}\n'
+      '    failed: ${counters['failed']}\n'
+      '    stopped: ${counters['stopped']}\n'
+      '    passed: ${counters['passed']}\n'
+      '    errored: ${counters['errored']}\n'
+      '    total: ${counters['total']}\n');
 }
 
 /// Finds the ARN of a device.
@@ -169,11 +185,11 @@ List deviceSpecToRules(List devices) {
   return rules;
 }
 
-/// Upload a file to device farm.
+/// Uploads a file to device farm.
 /// Returns file ARN.
 String uploadFile(String projectArn, String filePath, String fileType) {
   // 1. Create upload
-  final uploadRequested = deviceFarmCmd([
+  final upload = deviceFarmCmd([
     'create-upload',
     '--project-arn',
     projectArn,
@@ -181,25 +197,23 @@ String uploadFile(String projectArn, String filePath, String fileType) {
     p.basename(filePath),
     '--type',
     fileType
-  ]);
-  final fileUploadUrl = uploadRequested['upload']['url'];
-  final fileUploadArn = uploadRequested['upload']['arn'];
+  ])['upload'];
+  final uploadUrl = upload['url'];
+  final uploadArn = upload['arn'];
 
   // 2. Upload file
-  cmd('curl', ['-T', filePath, fileUploadUrl]);
+  cmd('curl', ['-T', filePath, uploadUrl]);
 
   // 3. Wait until file upload complete
   for (int i = 0; i < 5; i++) {
-    final upload =
-        deviceFarmCmd(['get-upload', '--arn', fileUploadArn])['upload'];
+    final upload = deviceFarmCmd(['get-upload', '--arn', uploadArn])['upload'];
     sleep(Duration(seconds: 1));
-    final status = upload['status'];
-    if (status == 'SUCCEEDED')
+    if (upload['status'] == 'SUCCEEDED')
       break;
     else if (i == 4)
       throw 'Error: file upload failed: file path = \'$filePath\'';
   }
-  return fileUploadArn;
+  return uploadArn;
 }
 
 /// Bundles Flutter tests using appium template.
@@ -239,7 +253,7 @@ void downloadArtifacts(String runArn, String downloadDir) {
   var artifacts = deviceFarmCmd(
       ['list-artifacts', '--arn', runArn, '--type', 'FILE'])['artifacts'];
 
-  for (var artifact in artifacts) {
+  for (final artifact in artifacts) {
     final name = artifact['name'];
     final extension = artifact['extension'];
     final fileUrl = artifact['url'];
