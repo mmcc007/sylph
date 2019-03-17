@@ -1,30 +1,26 @@
 import 'package:sylph/sylph.dart' as sylph;
 import 'package:sylph/utils.dart';
 
-const debugApkPath = 'build/app/outputs/apk/debug/app-debug.apk';
-const debugIpaPath = 'build/ios/Debug-iphoneos/Runner.ipa';
-//    '/Users/jenkins/dev/github.com/flutter/flutter/examples/flutter_gallery/build/app/outputs/apk/debug/app-debug.apk';
-//final dummyAppiumTestPath =
-//    '/Users/jenkins/flutter_app/test_bundle_slim_flutter.zip';
-//final testSpecPath = '/Users/jenkins/flutter_app/script/sylph.yaml';
-//
-const configFilePath = 'sylph.yaml';
+const kDebugApkPath = 'build/app/outputs/apk/debug/app-debug.apk';
+const kDebugIpaPath = 'build/ios/Debug-iphoneos/Runner.ipa';
+const kConfigFilePath = 'sylph.yaml';
 
 /// Uploads debug app and integration test to device farm and runs test.
 main(List<String> arguments) async {
   final runTimeout = 1000;
   final runName = 'android run 1';
-  print('Starting AWS Device Farm run...');
-  print('Config file: $configFilePath');
+  print('Starting AWS Device Farm run \'$runName\'...');
+  print('Config file: $kConfigFilePath');
 
   // Parse config file
-  Map config = await sylph.parseYaml(configFilePath);
+  Map config = await sylph.parseYaml(kConfigFilePath);
 
   // Setup project (if needed)
   final projectArn =
       sylph.setupProject(config['project_name'], config['default_job_timeout']);
 
   await run(config, projectArn, runName, runTimeout);
+  print('Completed AWS Device Farm run \'$runName\'.');
 }
 
 /// Processes config file
@@ -34,53 +30,51 @@ main(List<String> arguments) async {
 /// 3. Package and upload the build and tests
 /// 4. Run tests on device pool
 /// 3. Report and collect artifacts
-
 void run(Map config, String projectArn, String runName, int runTimeout) async {
   final List testSuites = config['test_suites'];
 //    print('testSuites=$testSuites');
   for (var testSuite in testSuites) {
     print('Running \'${testSuite['test_suite']}\' test suite...');
 
-    // Create test artifact
+    // todo: update test spec with tests from config
 //    final List tests = testSuite['tests'];
 //    for (var test in tests) {
 //      final poolType = devicePoolInfo['pool_type'];
 //      print(
-//          'packaging test: $test on $poolType devices in device pool $poolName');
+//          'bundling test: $test on $poolType devices in device pool $poolName');
 //    }
-    // Bundle test
-    // todo: update test spec with tests from config
+
+    // Bundle tests
     await sylph.bundleFlutterTests(config);
 
     // Initialize device pools and run tests in each pool
     final List devicePools = testSuite['device_pools'];
     for (var poolName in devicePools) {
-//      print('poolName=$poolName');
       // lookup device pool
       Map devicePoolInfo = getDevicePoolInfo(config, poolName);
-//      print('devicePoolInfo=$devicePoolInfo');
       if (devicePoolInfo == null)
-        throw 'Exception: device pool $poolName not found';
+        throw 'Error: device pool $poolName not found';
+
       // Setup device pool
       String devicePoolArn = setupDevicePool(config, projectArn);
 
-      // Create build artifact for pool type and upload
+      // Build debug app for pool type and upload
       String appArn;
       if (devicePoolInfo['pool_type'] == enumToStr(sylph.DeviceType.android)) {
         cmd('flutter', ['build', 'apk', '-t', testSuite['main'], '--debug'],
             '.', false);
         // Upload apk
-        appArn = upLoadBuild(projectArn, sylph.DeviceType.android);
+        appArn = uploadBuild(projectArn, sylph.DeviceType.android);
       } else {
         cmd('flutter', ['build', 'ios', '-t', testSuite['main'], '--debug'],
             '.', false);
         // Upload ipa
-        appArn = upLoadBuild(projectArn, sylph.DeviceType.ios);
+        appArn = uploadBuild(projectArn, sylph.DeviceType.ios);
       }
 
       // Upload test artifact (in 2 parts)
       // Upload test package
-      final testBundlePath = '${config['tmp_dir']}/${sylph.testBundle}';
+      final testBundlePath = '${config['tmp_dir']}/${sylph.kTestBundle}';
       print('Uploading tests: $testBundlePath ...');
       String testPackageArn = sylph.uploadFile(
           projectArn, testBundlePath, 'APPIUM_PYTHON_TEST_PACKAGE');
@@ -96,15 +90,6 @@ void run(Map config, String projectArn, String runName, int runTimeout) async {
           testPackageArn, testSpecArn, '${config['tmp_dir']}/artifacts');
     }
   }
-
-//
-//  // Setup device pool
-//  String devicePoolArn = setupPool(config, projectArn);
-//
-//  // Upload apk
-//  runTest(projectArn, config, runName, devicePoolArn, runTimeout);
-//
-//  // Download artifacts
 }
 
 void runTests(
@@ -115,33 +100,33 @@ void runTests(
   String appArn,
   String testPackageArn,
   String testSpecArn,
-  String downloadDir,
+  String artifactsDir,
 ) {
-  // Set job timeout ???
-
   // Schedule run
+  print('Scheduling \'$runName\' on AWS Device Farms');
   String runArn = sylph.scheduleRun(
       runName, projectArn, appArn, devicePoolArn, testSpecArn, testPackageArn);
 
-  // Monitor job progress
-  Map result = sylph.runStatus(runArn, runTimeout);
+  // Monitor run progress
+  final run = sylph.runStatus(runArn, runTimeout);
 
-  // Get job result
-  sylph.runReport(result);
+  // Output run result
+  sylph.runReport(run);
 
   // Download artifacts
-  sylph.downloadArtifacts(runArn, downloadDir);
+  print('Downloading artifacts...');
+  sylph.downloadArtifacts(runArn, artifactsDir);
 }
 
-String upLoadBuild(String projectArn, sylph.DeviceType deviceType) {
+String uploadBuild(String projectArn, sylph.DeviceType deviceType) {
   String appArn;
   if (deviceType == sylph.DeviceType.android) {
     // Upload apk
-    print('Uploading debug android app: $debugApkPath ...');
-    appArn = sylph.uploadFile(projectArn, debugApkPath, 'ANDROID_APP');
+    print('Uploading debug android app: $kDebugApkPath ...');
+    appArn = sylph.uploadFile(projectArn, kDebugApkPath, 'ANDROID_APP');
   } else {
-    print('Uploading debug iOS app: $debugIpaPath ...');
-    appArn = sylph.uploadFile(projectArn, debugApkPath, 'IOS_APP');
+    print('Uploading debug iOS app: $kDebugIpaPath ...');
+    appArn = sylph.uploadFile(projectArn, kDebugApkPath, 'IOS_APP');
   }
   return appArn;
 }

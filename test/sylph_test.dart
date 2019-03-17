@@ -189,4 +189,15 @@ void main() {
     // list artifacts
     downloadArtifacts(runArn, downloadDir);
   });
+
+  test('run device farm command', () {
+    final projectName = 'flutter tests';
+    var projectInfo = deviceFarmCmd(['list-projects']);
+    final projects = projectInfo['projects'];
+    final project = projects.firstWhere(
+        (project) => project['name'] == projectName,
+        orElse: () => null);
+    print(project);
+    expect(project['name'], projectName);
+  });
 }

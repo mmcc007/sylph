@@ -3,8 +3,8 @@
 
 _A sylph is a mythological invisible being of the air._
 [Wikipedia](https://en.wikipedia.org/wiki/Sylph)
-# Sylph
-_Sylph_ is a command line ultility for running Flutter integration and end-to-end tests on pools of real devices in the cloud.
+# _Sylph_
+_Sylph_ is a command line utility for running Flutter integration and end-to-end tests on pools of real devices in the cloud.
 
 # Installation
 ```
@@ -21,8 +21,8 @@ sylph -c <path to config file>
 ```
 
 # Configuration
-All configuration information is passed to Sylph using a configuration file. The default config file is called `sylph.yaml`:
-```
+All configuration information is passed to _Sylph_ using a configuration file. The default config file is called `sylph.yaml`:
+```yaml
 project_name: flutter tests
 default_job_timeout: 5 # minutes
 
@@ -53,8 +53,18 @@ test_suites:
 #      - ios pool 1
     job_timeout: 5 # minutes
 ```
+# Live demo
+To see _Sylph_ in action, a live demo is available.  
+
+The log of the live run is here:  
+https://travis-ci.com/mmcc007/sylph
+
+The resulting artifacts are here:  
+https://github.com/mmcc007/sylph/releases  
+(includes a video of test running on device)
+
 # Limitations
-Due to mismatch between Flutter and AWS tooling, Sylph currently is limited to working only on pools of android devices on AWS Device Farms.
+Due to mismatch between Flutter and AWS Device Farm tooling, _Sylph_ currently is limited to working only on pools of android devices.
 
 # Contributing
 When contributing to this repository, please feel free to discuss via issue or pull request.

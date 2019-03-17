@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:sylph/sylph.dart';
 import 'dart:io';
@@ -16,7 +17,7 @@ void clearDirectory(String dir) {
 
 /// Read a file image from resources.
 Future<List<int>> readResourceImage(String fileImageName) async {
-  final resource = Resource('$resourcesUri/$fileImageName');
+  final resource = Resource('$kResourcesUri/$fileImageName');
   return resource.readAsBytes();
 }
 
@@ -41,6 +42,13 @@ String cmd(String cmd, List<String> arguments,
   return result.stdout;
 }
 
+/// Runs a device farm command and returns as Map
+Map deviceFarmCmd(List<String> arguments,
+    [String workingDir = '.', bool silent = true]) {
+  return jsonDecode(
+      cmd('aws', ['devicefarm']..addAll(arguments), workingDir, silent));
+}
+
 /// Converts [DeviceType] to [String]
 String deviceTypeStr(DeviceType deviceType) {
   return DeviceType.ios.toString().split('.')[1];
@@ -57,10 +65,11 @@ Map getDevicePoolInfo(Map config, String poolName) {
 }
 
 Future unpackResources(String tmpDir) async {
-  final testBundlePath = '$tmpDir/$testBundle';
+  final testBundlePath = '$tmpDir/$kTestBundle';
 
   // unpack Appium template
-  await writeFileImage(await readResourceImage(appiumTemplate), testBundlePath);
+  await writeFileImage(
+      await readResourceImage(kAppiumTemplate), testBundlePath);
 
   // unpack scripts
   final appPath = Directory.current.path;
@@ -83,7 +92,7 @@ Future<void> unpackScripts(String dstDir) async {
 
 /// Read script from resources and install in staging area.
 Future unpackScript(String srcPath, String dstDir) async {
-  final resource = Resource('$resourcesUri/$srcPath');
+  final resource = Resource('$kResourcesUri/$srcPath');
   final String script = await resource.readAsString();
   final file = await File('$dstDir/$srcPath').create(recursive: true);
   await file.writeAsString(script, flush: true);
