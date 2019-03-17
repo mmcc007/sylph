@@ -16,7 +16,7 @@ jobs:
       # Install android tools
       - ANDROID_SDK_TOOLS=4333796 # android-28
       - ANDROID_PLATFORM_SDK=28
-      - ANDROID_BUILD_TOOLS=28.0.1
+      - ANDROID_BUILD_TOOLS=28.0.3
       - export ANDROID_HOME=~/android-sdk
       - wget -q "https://dl.google.com/android/repository/sdk-tools-darwin-$ANDROID_SDK_TOOLS.zip" -O android-sdk-tools.zip
       - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
