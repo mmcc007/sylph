@@ -14,10 +14,10 @@ jobs:
       - mkdir ~/.aws || echo "problem creating dir"
       - |
         cat >> ~/.aws/config <<EOL
-      [default]
-      output = json
-      region = us-west-2
-      EOL
+        [default]
+        output = json
+        region = us-west-2
+        EOL
       - cat ~/.aws/config
       - cat pubspec.yaml
       - aws devicefarm list-projects
