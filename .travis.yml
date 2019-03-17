@@ -11,13 +11,14 @@ jobs:
       - unzip awscli-bundle.zip
       - sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
       - aws --version
-      - mkdir ~/.aws || echo "problem creating dir"
-      - |
-        cat >> ~/.aws/config <<EOL
-        [default]
-        output = json
-        region = us-west-2
-        EOL
+#      - mkdir ~/.aws || echo "problem creating dir"
+#      - |
+#        cat >> ~/.aws/config <<EOL
+#      [default]
+#      output = json
+#      region = us-west-2
+#      EOL
+      - cp -r .aws ~
       - cat ~/.aws/config
       - cat pubspec.yaml
       - aws devicefarm list-projects
