@@ -56,7 +56,7 @@ test_suites:
 # Live demo
 To see _Sylph_ in action, a live demo is available.  
 
-The log of the live run is here:
+The log of the live run is here:  
 https://travis-ci.com/mmcc007/sylph
 
 The resulting artifacts are here:  
