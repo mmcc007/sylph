@@ -13,7 +13,7 @@ jobs:
       - aws --version
       - mkdir ~/.aws || echo "problem creating dir"
       - |
-      cat >> ~/.aws/config <<EOL
+        cat >> ~/.aws/config <<EOL
       [default]
       output = json
       region = us-west-2
