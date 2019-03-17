@@ -7,35 +7,30 @@ jobs:
       env: Run Sylph on AWS Device Farms
       before_install:
 
-      # install aws
-      - curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
-      - unzip awscli-bundle.zip
-      - sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
-      - aws --version
-      - cp -r .aws ~
-      - cat ~/.aws/config
-      - cat pubspec.yaml
-#      - aws devicefarm list-projects
+      # install correct version of java on osx to run sdkmanager
+      - java -version
+      - export HOMEBREW_NO_AUTO_UPDATE=1
+      - brew cask uninstall java; brew tap caskroom/versions; brew cask install java8;
+      - java -version
 
       # Install android tools
-      - ANDROID_TOOLS=4333796 # android-28
+      - ANDROID_SDK_TOOLS=4333796 # android-28
+      - ANDROID_PLATFORM_SDK=28
+      - ANDROID_BUILD_TOOLS=28.0.1
       - export ANDROID_HOME=~/android-sdk
-      - wget -q "https://dl.google.com/android/repository/sdk-tools-darwin-$ANDROID_TOOLS.zip" -O android-sdk-tools.zip
+      - wget -q "https://dl.google.com/android/repository/sdk-tools-darwin-$ANDROID_SDK_TOOLS.zip" -O android-sdk-tools.zip
       - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
       - rm android-sdk-tools.zip
       - PATH=${PATH}:${ANDROID_HOME}/emulator:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
       # Silence warning.
       - mkdir -p ~/.android
       - touch ~/.android/repositories.cfg
-      # install correct version of java on osx
-      - java -version
-      - export HOMEBREW_NO_AUTO_UPDATE=1
-      - brew cask uninstall java; brew tap caskroom/versions; brew cask install java8;
-      - java -version
       # Accept licenses before installing components, no need to echo y for each component
       - yes | sdkmanager --licenses
-      # Platform tools
-      - sdkmanager "emulator" "tools" "platform-tools" > /dev/null
+      - sdkmanager --list | head -15
+      # Platform and build tools
+#      - sdkmanager "emulator" "tools" "platform-tools" > /dev/null
+      - sdkmanager too"platform-tools" "platforms;android-${ANDROID_PLATFORM_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
       - sdkmanager --list | head -15
 
       # fix timezone warning on osx
@@ -56,6 +51,16 @@ jobs:
       - export PATH="$PATH":"$HOME/.pub-cache/bin"
       - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
       - flutter doctor -v
+
+      # install aws
+      - curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+      - unzip awscli-bundle.zip
+      - sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+      - aws --version
+      - cp -r .aws ~
+      - cat ~/.aws/config
+      - cat pubspec.yaml
+#      - aws devicefarm list-projects
 
       # install most current (released or unreleased) version of Sylph
       - pub global activate --source path .
