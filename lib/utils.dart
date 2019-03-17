@@ -31,7 +31,7 @@ Future<void> writeFileImage(List<int> fileImage, String path) async {
 /// If [silent] is false, output to stdout.
 String cmd(String cmd, List<String> arguments,
     [String workingDir = '.', bool silent = true]) {
-  print('cmd=\'$cmd ${arguments.join(" ")}\'');
+//  print('cmd=\'$cmd ${arguments.join(" ")}\'');
   final result = Process.runSync(cmd, arguments, workingDirectory: workingDir);
   if (!silent) stdout.write(result.stdout);
   if (result.exitCode != 0) {
