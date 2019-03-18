@@ -30,19 +30,19 @@ tmp_dir: /tmp/sylph
 
 device_pools:
 
-    - pool_name: android pool 1
-      pool_type: android
-      devices:
-        - name: Samsung Galaxy S9 (Unlocked)
-          model: SM-G960U1
-          os: 8.0.0
+  - pool_name: android pool 1
+    pool_type: android
+    devices:
+      - name: Samsung Galaxy S9 (Unlocked)
+        model: SM-G960U1
+        os: 8.0.0
 
-    - pool_name: ios pool 1
-      pool_type: ios
-      devices:
-        - name: Apple iPhone X
-          model: A1865
-          os: 12.0
+  - pool_name: ios pool 1
+    pool_type: ios
+    devices:
+      - name: Apple iPhone X
+        model: A1865
+        os: 12.0
 
 test_suites:
 
