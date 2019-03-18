@@ -12,7 +12,8 @@ const kResourcesUri = 'package:sylph/resources';
 const kAppiumTemplate = 'appium_template.zip';
 const kTestBundle = 'test_bundle.zip';
 
-/// parse a yaml file to a map
+/// Parses a named yaml file.
+/// Returns as [Map].
 Future<Map> parseYaml(String filePath) async {
   String deviceFarmConfigStr =
       await File(filePath).readAsString(encoding: utf8);
@@ -21,7 +22,7 @@ Future<Map> parseYaml(String filePath) async {
 
 /// Sets up a project for testing.
 /// Creates new project if none exists.
-/// Returns the project ARN.
+/// Returns the project ARN as [String].
 String setupProject(String projectName, int jobTimeoutMinutes) {
   // check for existing project
   final projects = deviceFarmCmd(['list-projects'])['projects'];
@@ -44,6 +45,7 @@ String setupProject(String projectName, int jobTimeoutMinutes) {
 }
 
 /// Set up a device pool if named pool does not exist.
+/// Returns the device pool ARN as [String].
 String setupDevicePool(String projectArn, String poolName, List devices) {
   // check for existing pool
   final pools = deviceFarmCmd([
@@ -79,7 +81,7 @@ String setupDevicePool(String projectArn, String poolName, List devices) {
 }
 
 /// Schedules a run.
-/// Returns the run ARN.
+/// Returns the run ARN as [String].
 String scheduleRun(String runName, String projectArn, String appArn,
     String devicePoolArn, String testSpecArn, String testPackageArn) {
   // Schedule run
@@ -101,7 +103,8 @@ String scheduleRun(String runName, String projectArn, String appArn,
   ])['run']['arn'];
 }
 
-/// Tracks run status and returns final run.
+/// Tracks run status.
+/// Returns final run as [Map].
 Map runStatus(String runArn, int timeout) {
   Map run;
   for (int i = 0; i < timeout; i++) {
@@ -123,7 +126,7 @@ Map runStatus(String runArn, int timeout) {
   return run;
 }
 
-/// Run report.
+/// Runs run report.
 void runReport(Map run) {
   // print intro
   print(
@@ -150,6 +153,7 @@ void runReport(Map run) {
 }
 
 /// Finds the ARN of a device.
+/// Returns device ARN  as [String].
 String findDeviceArn(String name, String model, String os) {
   assert(name != null && model != null && os != null);
   final devices = deviceFarmCmd([
@@ -167,6 +171,7 @@ String findDeviceArn(String name, String model, String os) {
 
 /// Converts a list of devices to a list of rules.
 /// Used for building a device pool.
+/// Returns rules as [List].
 List deviceSpecToRules(List devices) {
   // convert devices to rules
   final List rules = devices
@@ -183,7 +188,7 @@ List deviceSpecToRules(List devices) {
 }
 
 /// Uploads a file to device farm.
-/// Returns file ARN.
+/// Returns file ARN as [String].
 String uploadFile(String projectArn, String filePath, String fileType) {
   // 1. Create upload
   final upload = deviceFarmCmd([
@@ -215,7 +220,7 @@ String uploadFile(String projectArn, String filePath, String fileType) {
 
 /// Bundles Flutter tests using appium template.
 /// Resulting bundle is saved on disk in temporary location.
-Future bundleFlutterTests(Map config) async {
+Future<void> bundleFlutterTests(Map config) async {
   final tmpDir = config['tmp_dir'];
   clearDirectory(tmpDir);
   final testBundlePath = '$tmpDir/$kTestBundle';
