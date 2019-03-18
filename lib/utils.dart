@@ -64,7 +64,10 @@ Map getDevicePoolInfo(Map config, String poolName) {
   }, orElse: () => null);
 }
 
-Future unpackResources(String tmpDir) async {
+/// Unpacks resources found in package into [tmpDir].
+/// Appium template is used to deliver tests.
+/// Scripts are used to initialize device and run tests.
+Future<void> unpackResources(String tmpDir) async {
   final testBundlePath = '$tmpDir/$kTestBundle';
 
   // unpack Appium template

@@ -29,32 +29,47 @@ default_job_timeout: 5 # minutes
 tmp_dir: /tmp/sylph
 
 device_pools:
-    - pool_name: android pool 1
-      pool_type: android
-      devices:
-        - name: Samsung Galaxy S9 (Unlocked)
-          model: SM-G960U1
-          os: 8.0.0
-    - pool_name: ios pool 1
-      pool_type: ios
-      devices:
-        - name: Apple iPhone X
-          model: A1865
-          os: 12.0
+
+  - pool_name: android pool 1
+    pool_type: android
+    devices:
+      - name: Samsung Galaxy S9 (Unlocked)
+        model: SM-G960U1
+        os: 8.0.0
+
+  - pool_name: ios pool 1
+    pool_type: ios
+    devices:
+      - name: Apple iPhone X
+        model: A1865
+        os: 12.0
 
 test_suites:
-  - test_suite: my tests 1
-    app_path: /Users/jenkins/flutter_app
-    testspec: test_spec.yaml
+
+  - test_suite: example tests 1
+    main: test_driver/main1.dart
+    testspec: test_driver/test_spec.yaml
     tests:
-      - lib/main.dart
+      - test_driver/main1_test1.dart
+      - test_driver/main1_test2.dart
+    device_pools:
+      - android pool 1
+#      - ios pool 1
+    job_timeout: 5 # minutes
+    
+  - test_suite: example tests 2
+    main: test_driver/main2.dart
+    testspec: test_driver/test_spec.yaml
+    tests:
+      - test_driver/main2_test1.dart
+      - test_driver/main2_test2.dart
     device_pools:
       - android pool 1
 #      - ios pool 1
     job_timeout: 5 # minutes
 ```
 # Live demo
-To see _Sylph_ in action, a live demo is available.  
+To see _Sylph_ in action, a live demo of the [example](example) app is available.  
 
 The log of the live run is here:  
 https://travis-ci.com/mmcc007/sylph

@@ -73,13 +73,14 @@ void run(Map config, String projectArn, String runName, int runTimeout) async {
       }
 
       // Upload test artifact (in 2 parts)
-      // Upload test package
+
+      // 1. Upload test package
       final testBundlePath = '${config['tmp_dir']}/${sylph.kTestBundle}';
       print('Uploading tests: $testBundlePath ...');
       String testPackageArn = sylph.uploadFile(
           projectArn, testBundlePath, 'APPIUM_PYTHON_TEST_PACKAGE');
 
-      // Upload custom test spec yaml
+      // 2. Upload custom test spec yaml
       final testSpecPath = testSuite['testspec'];
       print('Uploading test specification: $testSpecPath ...');
       String testSpecArn =
