@@ -6,8 +6,8 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:resource/resource.dart';
 
-/// Clear directory [dir].
-/// Create directory if none exists.
+/// Clears a named directory.
+/// Creates directory if none exists.
 void clearDirectory(String dir) {
   if (Directory(dir).existsSync()) {
     Directory(dir).deleteSync(recursive: true);
@@ -15,21 +15,22 @@ void clearDirectory(String dir) {
   Directory(dir).createSync(recursive: true);
 }
 
-/// Read a file image from resources.
+/// Reads a named file image from resources.
+/// Returns the file image.
 Future<List<int>> readResourceImage(String fileImageName) async {
   final resource = Resource('$kResourcesUri/$fileImageName');
   return resource.readAsBytes();
 }
 
-/// Write a file image.
+/// Writes a file image to a path.
 Future<void> writeFileImage(List<int> fileImage, String path) async {
   final file = await File(path).create(recursive: true);
   await file.writeAsBytes(fileImage, flush: true);
 }
 
-/// Execute command [cmd] with arguments [arguments] in a separate process and return stdout.
-///
-/// If [silent] is false, output to stdout.
+/// Executes a command with arguments in a separate process.
+/// If [silent] is false, outputs to stdout when command completes.
+/// Returns stdout as [String].
 String cmd(String cmd, List<String> arguments,
     [String workingDir = '.', bool silent = true]) {
 //  print('cmd=\'$cmd ${arguments.join(" ")}\'');
@@ -42,7 +43,8 @@ String cmd(String cmd, List<String> arguments,
   return result.stdout;
 }
 
-/// Runs a device farm command and returns as Map
+/// Runs a device farm command.
+/// Returns as [Map].
 Map deviceFarmCmd(List<String> arguments,
     [String workingDir = '.', bool silent = true]) {
   return jsonDecode(
@@ -55,6 +57,7 @@ String deviceTypeStr(DeviceType deviceType) {
 }
 
 /// Gets device pool from config file.
+/// Returns as [Map].
 Map getDevicePoolInfo(Map config, String poolName) {
   final List devicePools = config['device_pools'];
 //  print('devicePools=$devicePools');
@@ -94,7 +97,7 @@ Future<void> unpackScripts(String dstDir) async {
 }
 
 /// Read script from resources and install in staging area.
-Future unpackScript(String srcPath, String dstDir) async {
+Future<void> unpackScript(String srcPath, String dstDir) async {
   final resource = Resource('$kResourcesUri/$srcPath');
   final String script = await resource.readAsString();
   final file = await File('$dstDir/$srcPath').create(recursive: true);
@@ -103,5 +106,5 @@ Future unpackScript(String srcPath, String dstDir) async {
   cmd('chmod', ['u+x', '$dstDir/$srcPath']);
 }
 
-// Converts enum value to string
+/// Converts enum value to [String].
 String enumToStr(dynamic _enum) => _enum.toString().split('.').last;

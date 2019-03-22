@@ -29,14 +29,14 @@ main(List<String> arguments) async {
 /// 2. Prepare build for ios or android based on pool type
 /// 3. Package and upload the build and tests
 /// 4. Run tests on device pool
-/// 3. Report and collect artifacts
+/// 5. Report and collect artifacts
 void run(Map config, String projectArn, String runName, int runTimeout) async {
   final List testSuites = config['test_suites'];
 //    print('testSuites=$testSuites');
   for (var testSuite in testSuites) {
     print('Running \'${testSuite['test_suite']}\' test suite...');
 
-    // todo: update test spec with tests from config
+    // todo: update test spec with tests in test suite
 //    final List tests = testSuite['tests'];
 //    for (var test in tests) {
 //      final poolType = devicePoolInfo['pool_type'];
@@ -59,20 +59,10 @@ void run(Map config, String projectArn, String runName, int runTimeout) async {
       String devicePoolArn = setupDevicePool(config, projectArn);
 
       // Build debug app for pool type and upload
-      String appArn;
-      if (devicePoolInfo['pool_type'] == enumToStr(sylph.DeviceType.android)) {
-        cmd('flutter', ['build', 'apk', '-t', testSuite['main'], '--debug'],
-            '.', false);
-        // Upload apk
-        appArn = uploadBuild(projectArn, sylph.DeviceType.android);
-      } else {
-        cmd('flutter', ['build', 'ios', '-t', testSuite['main'], '--debug'],
-            '.', false);
-        // Upload ipa
-        appArn = uploadBuild(projectArn, sylph.DeviceType.ios);
-      }
+      final appArn = buildUploadApp(
+          projectArn, devicePoolInfo['pool_type'], testSuite['main']);
 
-      // Upload test artifact (in 2 parts)
+      // Upload test suite (in 2 parts)
 
       // 1. Upload test package
       final testBundlePath = '${config['tmp_dir']}/${sylph.kTestBundle}';
@@ -93,6 +83,25 @@ void run(Map config, String projectArn, String runName, int runTimeout) async {
   }
 }
 
+/// Builds and uploads app for current pool.
+/// Returns app ARN as [String].
+String buildUploadApp(String projectArn, String poolType, String mainPath) {
+  String appArn;
+  if (poolType == 'android') {
+    cmd('flutter', ['build', 'apk', '-t', mainPath, '--debug'], '.', false);
+    // Upload apk
+    print('Uploading debug android app: $kDebugApkPath ...');
+    appArn = sylph.uploadFile(projectArn, kDebugApkPath, 'ANDROID_APP');
+  } else {
+    cmd('flutter', ['build', 'ios', '-t', mainPath, '--debug'], '.', false);
+    // Upload ipa
+    print('Uploading debug iOS app: $kDebugIpaPath ...');
+    appArn = sylph.uploadFile(projectArn, kDebugApkPath, 'IOS_APP');
+  }
+  return appArn;
+}
+
+/// Runs the test suite and downloads artifacts.
 void runTests(
   String runName,
   int runTimeout,
@@ -119,22 +128,10 @@ void runTests(
   sylph.downloadArtifacts(runArn, artifactsDir);
 }
 
-String uploadBuild(String projectArn, sylph.DeviceType deviceType) {
-  String appArn;
-  if (deviceType == sylph.DeviceType.android) {
-    // Upload apk
-    print('Uploading debug android app: $kDebugApkPath ...');
-    appArn = sylph.uploadFile(projectArn, kDebugApkPath, 'ANDROID_APP');
-  } else {
-    print('Uploading debug iOS app: $kDebugIpaPath ...');
-    appArn = sylph.uploadFile(projectArn, kDebugApkPath, 'IOS_APP');
-  }
-  return appArn;
-}
-
+/// Sets-up the named device pool.
+/// todo: pass device pool name.
+/// Returns device pool ARN as [String].
 String setupDevicePool(Map config, String projectArn) {
-  // Setup device pool
-//  final deviceType = deviceTypeStr(sylph.DeviceType.android);
   final poolName = config['device_pools'][0]['pool_name'];
   final devices = config['device_pools'][0]['devices'];
   final devicePoolArn = sylph.setupDevicePool(projectArn, poolName, devices);
