@@ -157,7 +157,6 @@ void runReport(Map run) {
 String findDeviceArn(String name, String model, String os) {
   assert(name != null && model != null && os != null);
   final devices = deviceFarmCmd([
-    'devicefarm',
     'list-devices',
   ])['devices'];
   Map device = devices.firstWhere(

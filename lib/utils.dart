@@ -16,13 +16,13 @@ void clearDirectory(String dir) {
 }
 
 /// Reads a named file image from resources.
-/// Returns the file image.
+/// Returns the file image as [List].
 Future<List<int>> readResourceImage(String fileImageName) async {
   final resource = Resource('$kResourcesUri/$fileImageName');
   return resource.readAsBytes();
 }
 
-/// Writes a file image to a path.
+/// Writes a file image to a path on disk.
 Future<void> writeFileImage(List<int> fileImage, String path) async {
   final file = await File(path).create(recursive: true);
   await file.writeAsBytes(fileImage, flush: true);
@@ -106,5 +106,5 @@ Future<void> unpackScript(String srcPath, String dstDir) async {
   cmd('chmod', ['u+x', '$dstDir/$srcPath']);
 }
 
-/// Converts enum value to [String].
+/// Converts [enum] value to [String].
 String enumToStr(dynamic _enum) => _enum.toString().split('.').last;
