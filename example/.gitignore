@@ -61,7 +61,6 @@
 **/ios/Flutter/flutter_assets/
 **/ios/ServiceDefinitions.json
 **/ios/Runner/GeneratedPluginRegistrant.*
-ios/Runner.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
 
 # Exceptions to above rules.
 !**/ios/**/default.mode1v3
