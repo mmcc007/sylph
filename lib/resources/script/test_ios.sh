@@ -6,13 +6,22 @@ set -e
 # run integration test on ios
 # used on device clouds
 
+# constants
+default_debug_ipa_name='Debug_Runner.ipa'
+default_debug_ipa_dir="."
+debug_app_dir='build/ios/iphoneos'
+
 main() {
   case $1 in
     --help)
         show_help
         ;;
     --build)
-        build_ipa
+        build_debug_ipa
+        ;;
+    --unpack)
+        if [[ -z $2 ]]; then show_help; fi
+        unpack_debug_ipa $2
         ;;
     --test)
         run_test
@@ -24,7 +33,7 @@ main() {
 }
 
 show_help() {
-    printf "\n\nusage: %s [--build] [--test package]
+    printf "\n\nusage: %s [--build] [--unpack <path to debug .ipa>] [--test package]
 
 Utility for building a debug app as a .ipa, unpacking, and running integration test on an iOS device.
 (app must include 'enableFlutterDriverExtension()')
@@ -32,6 +41,8 @@ Utility for building a debug app as a .ipa, unpacking, and running integration t
 where:
     --build
         build a debug ipa
+    --unpack <path to debug .ipa>
+        unpack debug .ipa to build directory for testing
     --test
         run default integration test on app
     --help
@@ -40,7 +51,7 @@ where:
     exit 1
 }
 
-build_ipa() {
+build_debug_ipa() {
     APP_NAME="Runner"
     FINAL_APP_NAME="Debug_Runner"
     SCHEME=$APP_NAME
@@ -54,9 +65,6 @@ build_ipa() {
     APP_COMMON_PATH="$IOS_BUILD_DIR/$APP_NAME"
     ARCHIVE_PATH="$APP_COMMON_PATH.xcarchive"
 
-
-#    flutter build ios -t test_driver/main.dart --release
-
     flutter clean
     flutter build ios -t test_driver/main.dart --debug
 
@@ -68,53 +76,31 @@ build_ipa() {
       -configuration $CONFIGURATION \
       -archivePath "$ARCHIVE_PATH"
 
-#    xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release archive -archivePath build/ios/Release-iphoneos/Runner.xcarchive
-    #-arch arm64
-#    cd ..
-
     echo "Generating debug .ipa"
     xcodebuild -exportArchive \
       -archivePath "$ARCHIVE_PATH" \
       -exportOptionsPlist ios/exportOptions.plist \
       -exportPath "$IOS_BUILD_DIR"
-    echo "Renaming $APP_NAME.ipa to $FINAL_APP_NAME.ipa"
-    mv "$IOS_BUILD_DIR/$APP_NAME.ipa" "$IOS_BUILD_DIR/$FINAL_APP_NAME.ipa"
-
-    # build debug version of app
-#    flutter clean
-#    flutter drive
-#    iphoneDir=build/ios/iphoneos
-#    cd build/ios/iphoneos
-#    mkdir Payload
-#    cp -r Runner.app Payload
-#    zip -r Runner.ipa Payload
-#    cd ios
-#    # start from scratch
-#    flutter clean
-#    # build release version
-#    flutter build ios --release
-#    # archive
-##    export FLUTTER_BUILD_MODE=Release
-#    CONFIGURATION=Release
-#    rm -rf $PWD/build/ios/Runner.xcarchive
-#    xcodebuild -workspace $PWD/ios/Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration $CONFIGURATION archive -archivePath $IOS_BUILD_DIR/Runner.xcarchive
-#    # export as ipa
-#    xcodebuild -exportArchive -archivePath $IOS_BUILD_DIR/Runner.xcarchive -exportOptionsPlist $PWD/script/exportOptions.plist -exportPath $IOS_BUILD_DIR/Runner.ipa
-#    ideviceinstall -i $IOS_BUILD_DIR/Runner.ipa/Runner.ipa
-
-#    rm -rf $IOS_BUILD_DIR/Payload
-#    mkdir $IOS_BUILD_DIR/Payload
-#    cp -r $IOS_BUILD_DIR/Runner.app $IOS_BUILD_DIR/Payload
-#    zip -r $IOS_BUILD_DIR/Runner.ipa $IOS_BUILD_DIR/Payload
+    local dst_debug_ipa_path="$default_debug_ipa_dir/$default_debug_ipa_name"
+    echo "Moving $APP_NAME.ipa to $dst_debug_ipa_path"
+    mv "$IOS_BUILD_DIR/$APP_NAME.ipa" "$dst_debug_ipa_path"
 }
 
-# unpack a .app from a .ipa
-#ipa_to_app(){
-#  local ipa_path=$1
-#  local app_path=$2
-#
-#
-#}
+# unpack a debug .app from a .debug ipa
+unpack_debug_ipa(){
+  local ipa_path=$1
+  local unpack_dir='Payload'
+
+  echo "Unpacking $ipa_path to $debug_app_dir..."
+
+  # clear dirs
+  rm -rf "$unpack_dir" "$debug_app_dir"
+  mkdir -p "$debug_app_dir"
+
+  unzip -q "$ipa_path"
+  mv "$unpack_dir/Runner.app" "$debug_app_dir"
+  echo "Unpacking of $ipa_path to $debug_app_dir completed successfully."
+}
 
 run_test() {
     local IOS_BUNDLE="$PWD/build/ios/Debug-iphoneos/Runner.app"
