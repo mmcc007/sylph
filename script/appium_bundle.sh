@@ -5,8 +5,33 @@
 
 set -e
 
+main() {
+
+  case $1 in
+    --help)
+        show_help
+        ;;
+    --download)
+        download_bundle_template
+        ;;
+    --install)
+        install_template
+        ;;
+    --bundle)
+        bundle_app
+        ;;
+    --bundle-certs) # for dev
+        bundle_certs
+        ;;
+    *)
+        show_help
+        ;;
+  esac
+
+}
+
 show_help() {
-    printf "\nusage: $0 [--download] [--install]
+    printf "\nusage: %s [--download] [--install]
 
 Utility for downloading and installing Appium template.
 (for details see https://stackoverflow.com/a/53328272/1420881 )
@@ -21,7 +46,7 @@ where:
         (for manual testing)
     --help
         print this message
-"
+" "$(basename "$0")"
     exit 1
 }
 
@@ -40,8 +65,6 @@ app_dir='example' # todo: pass as parameter
 app_dst_dir="$test_bundle/$app_dir"
 
 # app
-ios_debug_build_dir='build/ios/Debug-iphoneos/';
-ios_debug_build='Runner.app';
 ios_certs_dir="$app_dst_dir/certs"
 
 # scripts
@@ -148,12 +171,10 @@ bundle_app(){
   zip -r ../$test_bundle_zip .
   cd - > /dev/null
 
-  echo "Ready to manually upload $test_bundle_zip (size `ls -lah $test_bundle_zip | awk -F " " {'print $5'}`)"
+  echo "Ready to manually upload $test_bundle_zip (size $(ls -lah $test_bundle_zip | awk -F " " {'print $5'})"
 }
 
 bundle_certs() {
-
-  local team_id=$1
 
   local local_key_chain_name='login.keychain'
   local local_key_chain_pass='gaga5.4x'
@@ -205,28 +226,9 @@ export MATCH_PORT=$MATCH_PORT
 export MATCH_PASSWORD='${MATCH_PASSWORD}'
 export PUBLISHING_MATCH_CERTIFICATE_REPO=$PUBLISHING_MATCH_CERTIFICATE_REPO
 export FASTLANE_PASSWORD='$FASTLANE_PASSWORD'
-export FASTLANE_SESSION='$(printf "%q" $FASTLANE_SESSION)'
+export FASTLANE_SESSION='$(printf "%q" "$FASTLANE_SESSION")'
 EOF
 #set +o noglob
 }
 
-# if no arguments passed
-if [ -z $1 ]; then show_help; fi
-
-case $1 in
-    --help)
-        show_help
-        ;;
-    --download)
-        download_bundle_template
-        ;;
-    --install)
-        install_template
-        ;;
-    --bundle)
-        bundle_app
-        ;;
-    --bundle-certs) # for dev
-        bundle_certs
-        ;;
-esac
+main "$@"
