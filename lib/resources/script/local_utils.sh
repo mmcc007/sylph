@@ -1,8 +1,45 @@
 #!/usr/bin/env bash
 
+# utils run locally
+
+main(){
+  case $1 in
+    --build-debug-ipa)
+        build_debug_ipa
+        ;;
+    --bundle)
+        bundle
+        ;;
+    *)
+        show_help
+        ;;
+  esac
+}
+
+show_help() {
+    printf "\n\nusage: %s [--build-debug-ipa] [--bundle]
+
+Utilities ran locally
+
+where:
+    --build-debug-ipa
+        package a debug app as a .ipa
+        (app must include 'enableFlutterDriverExtension()')
+    --bundle
+        append to appium bundle for upload to Device Farm
+    --help
+        print this message
+" "$(basename "$0")"
+    exit 1
+}
+
 # constants
 default_debug_ipa_name='Debug_Runner.ipa'
 default_debug_ipa_dir="."
+
+bundle() {
+  echo not implemented
+}
 
 build_debug_ipa() {
     APP_NAME="Runner"
@@ -39,4 +76,4 @@ build_debug_ipa() {
     mv "$IOS_BUILD_DIR/$APP_NAME.ipa" "$dst_debug_ipa_path"
 }
 
-build_debug_ipa
+main "$@"
