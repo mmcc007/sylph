@@ -1,0 +1,190 @@
+version: 0.1
+
+# Phases are collection of commands that get executed on Device Farm.
+phases:
+  # The install phase includes commands that install dependencies that your tests use.
+  # Default dependencies for testing frameworks supported on Device Farm are already installed.
+  install:
+    commands:
+      # By default, Appium server version used is 1.7.2.
+      # You can switch to an alternate supported version from 1.6.5, 1.7.1, 1.7.2, 1.8.0 or 1.8.1 by using a command like "avm 1.7.1"
+      # OR
+      # To install a newer version of Appium use the following commands:
+      # - export APPIUM_VERSION=1.8.1
+      # - avm $APPIUM_VERSION
+      # - ln -s /usr/local/avm/versions/$APPIUM_VERSION/node_modules/.bin/appium  /usr/local/avm/versions/$APPIUM_VERSION/node_modules/appium/bin/appium.js
+
+      # define bundle files
+      - SECURE_ENV="script/secure.env"
+
+      # enter flutter app directory in Appium bundle
+      - cd flutter_app
+      - ls -la
+
+      # set-up secure env vars
+      - source $SECURE_ENV
+#      - cat $SECURE_ENV
+#      - echo $FASTLANE_PASSWORD
+#      - echo $FASTLANE_SESSION
+
+      # set-up environment to run match
+      - ls -la ~/Library/Keychains
+      - ./script/test_ios.sh --certs # needed for match and build/deploy
+      - ls -la ~/Library/Keychains
+#      - ls -la ~/.ssh
+#      - cat ~/.ssh/config
+#      - cat ~/.ssh/known_hosts
+#      - ruby -version
+#      - gem --version
+
+      # install fastlane
+      - export LC_ALL=en_US.UTF-8 # required by fastlane
+      - export LANG=en_US.UTF-8 # required by fastlane
+      - gem install bundler:2.0.1 # the gem file requires bundler 2.0
+      - cd ios
+      - bundle install
+
+      # set-up environment to run match
+      - fastlane --verbose run setup_travis force:true
+      - ls -la ~/Library/Keychains
+
+      # run match to install signing certificate and provisioning profile
+      - fastlane --verbose enable_match_code_signing
+      - ls -la ~/Library/Keychains
+      - ls -la ~/Library/MobileDevice/Provisioning\ Profiles
+
+      # add keychain to list of keychains
+      - security list-keychains
+      - security list-keychains -d user
+      - security list-keychains -s `security list-keychains | xargs` ~/Library/Keychains/fastlane_tmp_keychain-db
+      - security default-keychain -d user
+      - security default-keychain -s fastlane_tmp_keychain
+      - security default-keychain -s ~/Library/Keychains/fastlane_tmp_keychain-db
+      - security default-keychain -d user
+      - security list-keychains -d user
+      - security list-keychains
+
+      # display installed identities
+      - security find-identity -v -p codesigning
+      - security find-identity -v -p codesigning login.keychain
+      - security find-identity -v -p codesigning fastlane_tmp_keychain
+      - ls -la ~/Library/Keychains
+      - cd ../..
+
+      # install flutter
+      - echo "Install flutter"
+      - FLUTTER_VERSION='v1.5.4-hotfix.2-stable'
+      - >-
+        if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "Android" ];
+        then
+            # Run EC2 setup code here
+            curl https://storage.googleapis.com/flutter_infra/releases/stable/linux/flutter_linux_$FLUTTER_VERSION.tar.xz -o flutter_linux.tar.xz
+            tar xf flutter_linux.tar.xz
+        fi
+
+        if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "iOS" ];
+        then
+            # Run Mac setup code here
+            # Install Flutter dependencies
+            # brew upgrade ios-deploy
+            # brew install cocoapods
+            # pod setup
+            # Install Flutter
+            curl https://storage.googleapis.com/flutter_infra/releases/stable/macos/flutter_macos_$FLUTTER_VERSION.zip -o flutter_macos.zip
+            unzip -qq flutter_macos.zip
+        fi
+
+      #      - mv flutter ~/flutter
+      #      - echo "export PATH=$PATH:$HOME/flutter/bin:$HOME/flutter/bin/cache/dart-sdk/bin">> ~/.bash_profile
+      #      - export PATH=$PATH:$HOME/flutter/bin:$HOME/flutter/bin/cache/dart-sdk/bin
+      - export PATH="$PATH":"$HOME/.pub-cache/bin"
+      - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
+      #      - flutter --verbose doctor -v
+      - flutter doctor -v
+  #      - flutter --verbose devices
+  #      - >-
+  #        if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "iOS" ];
+  #        then
+  #            cd example
+  #            cat flutter_01.log
+  #            echo "flutter -v packages get"
+  #            flutter -v packages get
+  #            cat flutter_01.log;cat flutter_02.log
+  #            echo "flutter -v build ios --debug --no-codesign"
+  #            flutter -v build ios --debug --no-codesign
+  #            cat flutter_01.log;cat flutter_02.log
+  #            cd -
+  #            # exit 1
+  #        fi
+
+  # The pre-test phase includes commands that setup your test environment.
+  pre_test:
+    commands:
+      # We recommend starting appium server process in the background using the command below.
+      # Appium server log will go to $DEVICEFARM_LOG_DIR directory.
+      # The environment variables below will be auto-populated during run time.
+
+
+  # The test phase includes commands that run your test suite execution.
+  test:
+    commands:
+      # Your test package is downloaded in $DEVICEFARM_TEST_PACKAGE_PATH so we first change directory to that path.
+      # We already setup python virtual environment on $DEVICEFARM_TEST_PACKAGE_PATH
+      # and installed required libraries. You can run your test under $DEVICEFARM_TEST_PACKAGE_PATH
+      - echo "Navigate to test package directory"
+      - cd $DEVICEFARM_TEST_PACKAGE_PATH
+      - echo "Start Flutter integration test"
+      # By default, the following command is used by Device Farm to run your Appium Python test.
+      # The goal is to run all your tests files in the test package.
+      # Alternatively, You may specify your customized command.
+      # Note: For most use cases, the default command works fine.
+      # Please refer "https://docs.pytest.org/en/latest/usage.html" for more options on running pytests from command line.
+      # - bin/py.test tests/ --junit-xml $DEVICEFARM_LOG_DIR/junitreport.xml
+      - APP_ID=com.orbsoft.counter
+      - MAIN=test_driver/main.dart
+      # - TEST=test_driver/main_test.dart
+      - cd flutter_app
+      - >-
+        if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "Android" ];
+        then
+          ./script/test_android.sh $APP_ID $TEST
+        fi
+
+        if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "iOS" ];
+        then
+          # which ideviceinstaller
+          # ideviceinstaller -l
+
+          #  bash -x ./script/test_ios.sh --test com.orbsoft.counter test_driver/main_test.dart
+          # echo "flutter -v driver test_driver/main.dart"
+          # flutter -v driver test_driver/main.dart
+          # cat flutter_01.log;cat flutter_02.log
+
+          # echo "ios-deploy -c"
+          # ios-deploy -c
+
+          # echo "ios-deploy --bundle build/ios/Debug-iphoneos/Runner.app --no-wifi --justlaunch --args '--enable-dart-profiling --start-paused --enable-checked-mode --verify-entry-points'"
+          # ios-deploy --bundle build/ios/Debug-iphoneos/Runner.app --no-wifi --justlaunch --args '--enable-dart-profiling --start-paused --enable-checked-mode --verify-entry-points'
+          # echo "ios-deploy exited with $?"
+
+          # echo "flutter --verbose build ios -t MAIN --debug"
+          # flutter --verbose build ios -t $MAIN --debug
+
+          #echo flutter --verbose drive --no-build $MAIN
+          #flutter --verbose drive --no-build $MAIN
+          echo flutter --verbose drive $MAIN
+          flutter --verbose drive $MAIN
+        fi
+
+      - echo done.
+
+  # The post test phase includes are commands that are run after your tests are executed.
+  post_test:
+    commands:
+
+# The artifacts phase lets you specify the location where your tests logs, device logs will be stored.
+# And also let you specify the location of your test logs and artifacts which you want to be collected by Device Farm.
+# These logs and artifacts will be available through ListArtifacts API in Device Farm.
+artifacts:
+  # By default, Device Farm will collect your artifacts from following directories
+  - $DEVICEFARM_LOG_DIR
