@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -x
+#set -x
 set -e
 
 # run integration test on ios
@@ -23,6 +23,10 @@ main() {
         if [[ -z $2 ]]; then show_help; fi
         unpack_debug_ipa $2
         ;;
+    --dummy-symbols)
+        if [[ -z $2 ]]; then show_help; fi
+        dummy_symbols $2
+        ;;
     --test)
         run_test
         ;;
@@ -33,7 +37,7 @@ main() {
 }
 
 show_help() {
-    printf "\n\nusage: %s [--build] [--unpack <path to debug .ipa>] [--test package]
+    printf "\n\nusage: %s [--build] [--unpack <path to debug .ipa>] [--dummy-symbols <path to build_to_os map file>] [--test package]
 
 Utility for building a debug app as a .ipa, unpacking, and running integration test on an iOS device.
 (app must include 'enableFlutterDriverExtension()')
@@ -43,6 +47,8 @@ where:
         build a debug ipa
     --unpack <path to debug .ipa>
         unpack debug .ipa to build directory for testing
+    --dummy-symbols <<path to build_to_os map file>>
+        generate dummy symbol directories for ios-deploy
     --test
         run default integration test on app
     --help
@@ -100,6 +106,25 @@ unpack_debug_ipa(){
   unzip -q "$ipa_path"
   mv "$unpack_dir/Runner.app" "$debug_app_dir"
   echo "Unpacking of $ipa_path to $debug_app_dir completed successfully."
+}
+
+# generate dummy symbol directories for supported iOS devices for ios-deploy
+# actual symbols are not used by flutter integration tests
+dummy_symbols() {
+  local dummy_symbols_path=$1
+
+  typeset -A build
+  while IFS=$'=' read key value; do
+    build[$key]=$value
+  done < $dummy_symbols_path
+
+  for build in "${!build[@]}"
+  do
+    os=${build[$build]}
+    echo "creating $HOME/Library/Developer/Xcode/iOS DeviceSupport/$os ($build)/Symbols"
+    mkdir -p "$HOME/Library/Developer/Xcode/iOS DeviceSupport/$os ($build)/Symbols"
+  done
+
 }
 
 run_test() {
