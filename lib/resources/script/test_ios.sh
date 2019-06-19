@@ -16,9 +16,6 @@ main() {
     --help)
         show_help
         ;;
-    --build)
-        build_debug_ipa
-        ;;
     --unpack)
         if [[ -z $2 ]]; then show_help; fi
         unpack_debug_ipa $2
@@ -38,14 +35,12 @@ main() {
 }
 
 show_help() {
-    printf "\n\nusage: %s [--build] [--unpack <path to debug .ipa>] [--dummy-symbols <path to build_to_os map file>] [--test <path to debug app>]
+    printf "\n\nusage: %s [--unpack <path to debug .ipa>] [--dummy-symbols <path to build_to_os map file>] [--test <path to debug app>]
 
 Utility for building a debug app as a .ipa, unpacking, and running integration test on an iOS device.
 (app must include 'enableFlutterDriverExtension()')
 
 where:
-    --build
-        build a debug ipa
     --unpack <path to debug .ipa>
         unpack debug .ipa to build directory for testing
     --dummy-symbols <<path to build_to_os map file>>
@@ -56,41 +51,6 @@ where:
         print this message
 " "$(basename "$0")"
     exit 1
-}
-
-build_debug_ipa() {
-    APP_NAME="Runner"
-    FINAL_APP_NAME="Debug_Runner"
-    SCHEME=$APP_NAME
-
-#    IOS_BUILD_DIR=$PWD/build/ios/Release-iphoneos
-    IOS_BUILD_DIR=$PWD/build/ios/Debug-iphoneos
-#    CONFIGURATION=Release
-    CONFIGURATION=Debug
-#    export FLUTTER_BUILD_MODE=Release
-    export FLUTTER_BUILD_MODE=Debug
-    APP_COMMON_PATH="$IOS_BUILD_DIR/$APP_NAME"
-    ARCHIVE_PATH="$APP_COMMON_PATH.xcarchive"
-
-    flutter clean
-    flutter build ios -t test_driver/main.dart --debug
-
-    echo "Generating debug archive"
-    xcodebuild archive \
-      -workspace ios/$APP_NAME.xcworkspace \
-      -scheme $SCHEME \
-      -sdk iphoneos \
-      -configuration $CONFIGURATION \
-      -archivePath "$ARCHIVE_PATH"
-
-    echo "Generating debug .ipa"
-    xcodebuild -exportArchive \
-      -archivePath "$ARCHIVE_PATH" \
-      -exportOptionsPlist ios/exportOptions.plist \
-      -exportPath "$IOS_BUILD_DIR"
-    local dst_debug_ipa_path="$default_debug_ipa_dir/$default_debug_ipa_name"
-    echo "Moving $APP_NAME.ipa to $dst_debug_ipa_path"
-    mv "$IOS_BUILD_DIR/$APP_NAME.ipa" "$dst_debug_ipa_path"
 }
 
 # unpack a debug .app from a .debug ipa
