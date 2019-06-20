@@ -104,9 +104,10 @@ String scheduleRun(String runName, String projectArn, String appArn,
 
 /// Tracks run status.
 /// Returns final run as [Map].
-Map runStatus(String runArn, int timeout) {
+Map runStatus(String runArn, int localTimeout) {
+  const timeoutIncrement = 2;
   Map run;
-  for (int i = 0; i < timeout; i = i + 2) {
+  for (int i = 0; i < localTimeout; i = i + timeoutIncrement) {
     run = deviceFarmCmd([
       'get-run',
       '--arn',
@@ -115,11 +116,11 @@ Map runStatus(String runArn, int timeout) {
     final runStatus = run['status'];
 
     // print run status
-    print('Run status: $runStatus (timeout: $i of $timeout)');
+    print('Run status: $runStatus (local timeout: $i of $localTimeout)');
 
     if (runStatus == kCompletedRunStatus) return run;
 
-    sleep(Duration(seconds: 2));
+    sleep(Duration(seconds: timeoutIncrement));
   }
   throw 'Error: run timed-out';
 }
