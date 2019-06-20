@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:sylph/bundle.dart';
 import 'package:sylph/sylph.dart' as sylph;
 import 'package:sylph/utils.dart';
