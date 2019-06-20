@@ -67,7 +67,7 @@ void run(Map config, String projectArn, String runName, int runTimeout) async {
       String devicePoolArn = setupDevicePool(config, projectArn);
 
       // Build debug app for pool type and upload
-      final appArn = buildUploadApp(
+      final appArn = await buildUploadApp(
           projectArn, devicePoolInfo['pool_type'], testSuite['main'], tmpDir);
 
       // Upload test suite (in 2 parts)
@@ -93,16 +93,16 @@ void run(Map config, String projectArn, String runName, int runTimeout) async {
 
 /// Builds and uploads app for current pool.
 /// Returns app ARN as [String].
-String buildUploadApp(
-    String projectArn, String poolType, String mainPath, String tmpDir) {
+Future<String> buildUploadApp(
+    String projectArn, String poolType, String mainPath, String tmpDir) async {
   String appArn;
   if (poolType == 'android') {
-    streamCmd('flutter', ['build', 'apk', '-t', mainPath, '--debug']);
+    await streamCmd('flutter', ['build', 'apk', '-t', mainPath, '--debug']);
     // Upload apk
     print('Uploading debug android app: $kDebugApkPath ...');
     appArn = sylph.uploadFile(projectArn, kDebugApkPath, 'ANDROID_APP');
   } else {
-    streamCmd('$tmpDir/script/script/local_utils.sh', ['--build-debug-ipa']);
+    await streamCmd('$tmpDir/script/local_utils.sh', ['--build-debug-ipa']);
     // Upload ipa
     print('Uploading iOS app: $kDebugIpaPath ...');
     appArn = sylph.uploadFile(projectArn, '$kDebugIpaPath', 'IOS_APP');
