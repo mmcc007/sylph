@@ -78,9 +78,6 @@ The resulting artifacts are here:
 https://github.com/mmcc007/sylph/releases  
 (includes a video of test running on device)
 
-# Limitations
-Due to mismatch between Flutter and AWS Device Farm tooling, _Sylph_ currently is limited to working only on pools of android devices.
-
 # Contributing
 When contributing to this repository, please feel free to discuss via issue or pull request.
 
