@@ -3,8 +3,6 @@ import 'dart:convert';
 
 import 'package:sylph/sylph.dart';
 import 'dart:io';
-import 'package:path/path.dart' as p;
-import 'package:resource/resource.dart';
 
 /// Clears a named directory.
 /// Creates directory if none exists.
@@ -15,14 +13,7 @@ void clearDirectory(String dir) {
   Directory(dir).createSync(recursive: true);
 }
 
-/// Reads a named file image from resources.
-/// Returns the file image.
-Future<List<int>> readResourceImage(String fileImageName) async {
-  final resource = Resource('$kResourcesUri/$fileImageName');
-  return resource.readAsBytes();
-}
-
-/// Writes a file image to a path.
+/// Writes a file image to a path on disk.
 Future<void> writeFileImage(List<int> fileImage, String path) async {
   final file = await File(path).create(recursive: true);
   await file.writeAsBytes(fileImage, flush: true);
@@ -41,6 +32,35 @@ String cmd(String cmd, List<String> arguments,
     throw 'command failed: cmd=\'$cmd ${arguments.join(" ")}\'';
   }
   return result.stdout;
+}
+
+/// Execute command [cmd] with arguments [arguments] in a separate process
+/// and stream stdout/stderr.
+Future<void> streamCmd(String cmd, List<String> arguments,
+    [ProcessStartMode mode = ProcessStartMode.normal]) async {
+//  print('streamCmd=\'$cmd ${arguments.join(" ")}\'');
+
+  final process = await Process.start(cmd, arguments, mode: mode);
+
+  if (mode == ProcessStartMode.normal) {
+    final stdoutFuture = process.stdout
+        .transform(utf8.decoder)
+        .transform(LineSplitter())
+        .listen(stdout.writeln)
+        .asFuture();
+    final stderrFuture = process.stderr
+        .transform(utf8.decoder)
+        .transform(LineSplitter())
+        .listen(stderr.writeln)
+        .asFuture();
+
+    await Future.wait([stdoutFuture, stderrFuture]);
+
+    var exitCode = await process.exitCode;
+    if (exitCode != 0) {
+      throw 'command failed: cmd=\'$cmd ${arguments.join(" ")}\'';
+    }
+  }
 }
 
 /// Runs a device farm command.
@@ -64,47 +84,8 @@ Map getDevicePoolInfo(Map config, String poolName) {
   return devicePools.firstWhere((pool) {
 //    print(pool['pool_name']);
     return pool['pool_name'] == poolName;
-  }, orElse: () => null);
+  }, orElse: () => throw 'Error: device pool $poolName not found');
 }
 
-/// Unpacks resources found in package into [tmpDir].
-/// Appium template is used to deliver tests.
-/// Scripts are used to initialize device and run tests.
-Future<void> unpackResources(String tmpDir) async {
-  final testBundlePath = '$tmpDir/$kTestBundle';
-
-  // unpack Appium template
-  await writeFileImage(
-      await readResourceImage(kAppiumTemplate), testBundlePath);
-
-  // unpack scripts
-  final appPath = Directory.current.path;
-//  print('appPath=$appPath');
-  final appName = p.basename(appPath);
-  await unpackScripts('$tmpDir/$appName');
-}
-
-/// Read scripts from resources and install in staging area.
-Future<void> unpackScripts(String dstDir) async {
-  await unpackScript(
-    'test_android.sh',
-    '$dstDir/script',
-  );
-  await unpackScript(
-    'test_ios.sh',
-    '$dstDir/script',
-  );
-}
-
-/// Read script from resources and install in staging area.
-Future<void> unpackScript(String srcPath, String dstDir) async {
-  final resource = Resource('$kResourcesUri/$srcPath');
-  final String script = await resource.readAsString();
-  final file = await File('$dstDir/$srcPath').create(recursive: true);
-  await file.writeAsString(script, flush: true);
-  // make executable
-  cmd('chmod', ['u+x', '$dstDir/$srcPath']);
-}
-
-/// Converts enum value to [String].
+/// Converts [enum] value to [String].
 String enumToStr(dynamic _enum) => _enum.toString().split('.').last;

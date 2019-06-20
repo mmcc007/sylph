@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:sylph/bundle.dart';
 import 'package:sylph/sylph.dart';
 import 'package:sylph/utils.dart';
 import 'package:test/test.dart';
@@ -52,10 +53,33 @@ void main() {
         app: ~/flutter_app
         tests:
           - lib/main.dart''';
-    String expected =
-        '{"aws_user":"user1","project":"ios_test","test_suites":[{"app":"~/flutter_app","tests":["lib/main.dart"],"device_pool":{"android":null,"ios":["Apple iPhone X"]},"test_suite":"my tests 1"},{"app":"~/flutter_app","tests":["lib/main.dart"],"test_suite":"my tests 2"}],"aws_pass":"pass1","device_pool":{"android":null,"ios":["Apple iPhone X"]}}';
-    final Map deviceFarmConfig = loadYaml(deviceFarmConfigStr) as Map;
-    expect(deviceFarmConfig, jsonDecode(expected));
+    final expected = {
+      "aws_user": "user1",
+      "project": "ios_test",
+      "test_suites": [
+        {
+          "app": "~/flutter_app",
+          "tests": ["lib/main.dart"],
+          "device_pool": {
+            "android": null,
+            "ios": ["Apple iPhone X"]
+          },
+          "test_suite": "my tests 1"
+        },
+        {
+          "app": "~/flutter_app",
+          "tests": ["lib/main.dart"],
+          "test_suite": "my tests 2"
+        }
+      ],
+      "aws_pass": "pass1",
+      "device_pool": {
+        "android": null,
+        "ios": ["Apple iPhone X"]
+      }
+    };
+    final Map deviceFarmConfig = loadYaml(deviceFarmConfigStr);
+    expect(deviceFarmConfig, expected);
   });
 
   test('setup project', () {
@@ -115,6 +139,7 @@ void main() {
 //    final filePath = 'test/test_sylph.yaml';
     final filePath = 'example/sylph.yaml';
     final config = await parseYaml(filePath);
+    // change directory to app
     Directory.current = 'example';
     await bundleFlutterTests(config);
   });
