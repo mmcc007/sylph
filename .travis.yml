@@ -71,10 +71,11 @@ jobs:
 
       script:
       - cd example; sylph
-      # bundle artifacts for publishing
-      - tar cvzf /tmp/sylph-artifacts.tar.gz -C /tmp sylph/artifacts
 
       # publish artifacts to GitHub
+      before_deploy:
+      # bundle artifacts for publishing
+      - tar cvzf /tmp/sylph-artifacts.tar.gz -C /tmp sylph/artifacts
       deploy:
         provider: releases
         skip_cleanup: true
