@@ -4,7 +4,7 @@
 _A sylph is a mythological invisible being of the air._
 [Wikipedia](https://en.wikipedia.org/wiki/Sylph)
 # _Sylph_
-_Sylph_ is a command line utility for running Flutter integration and end-to-end tests on pools of real devices in the cloud.
+_Sylph_ is a command line utility for running Flutter integration and end-to-end tests on pools of real iOS and Android devices in the cloud. _Sylph_ runs on a developer mac or in a CI environment.
 
 # Installation
 ```
