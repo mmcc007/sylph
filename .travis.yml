@@ -42,12 +42,12 @@ jobs:
       - sudo ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
 
       # setup osx environment for flutter
-      - export HOMEBREW_NO_AUTO_UPDATE=1
-      - brew install libimobiledevice
-      - brew install ideviceinstaller
-      - brew install ios-deploy
-      - brew install cocoapods || echo 'ignore exit(1)'
-      - brew link --overwrite cocoapods
+#      - export HOMEBREW_NO_AUTO_UPDATE=1
+#      - brew install libimobiledevice
+#      - brew install ideviceinstaller
+#      - brew install ios-deploy
+#      - brew install cocoapods || echo 'ignore exit(1)'
+#      - brew link --overwrite cocoapods
 
       # install pre-compiled flutter
 #      - FLUTTER_CHANNEL=stable
