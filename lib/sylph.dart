@@ -8,6 +8,9 @@ import 'package:yaml/yaml.dart';
 
 enum DeviceType { ios, android }
 
+const kCompletedRunStatus = 'Completed';
+const kSuccessResult = 'Passed';
+
 /// Parses a named yaml file.
 /// Returns as [Map].
 Future<Map> parseYaml(String filePath) async {
@@ -114,7 +117,7 @@ Map runStatus(String runArn, int timeout) {
     // print run status
     print('Run status: $runStatus');
 
-    if (runStatus == 'COMPLETED')
+    if (runStatus == kCompletedRunStatus)
       break;
     else if (i == timeout - 2) throw 'Error: run timed-out';
     sleep(Duration(seconds: 2));
@@ -150,7 +153,7 @@ void runReport(Map run) {
       '    errored: ${counters['errored']}\n'
       '    total: ${counters['total']}\n');
 
-  if (result != 'SUCCEEDED') {
+  if (result != kSuccessResult) {
     print('Error: test failed');
     exit(1);
   }
