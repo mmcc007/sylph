@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:sylph/bundle.dart';
 import 'package:sylph/sylph.dart';
 import 'package:sylph/utils.dart';
 import 'package:test/test.dart';
@@ -138,7 +139,10 @@ void main() {
 //    final filePath = 'test/test_sylph.yaml';
     final filePath = 'example/sylph.yaml';
     final config = await parseYaml(filePath);
+    // change directory to app
     Directory.current = 'example';
+    final tmpDir = config['tmp_dir'];
+//    await unpackResources(tmpDir);
     await bundleFlutterTests(config);
   });
 
