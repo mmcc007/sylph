@@ -35,6 +35,9 @@ Future<void> bundleFlutterTests(Map config) async {
   // clean build dir in case a build is present
   cmd('flutter', ['clean'], '.', true);
 
+  // update .packages in case last build was on a different flutter repo
+  cmd('flutter', ['packages', 'get'], '.', true);
+
   // Copy app dir to test bundle
   cmd('cp', ['-r', '.', defaultAppDir], '.', false);
 
