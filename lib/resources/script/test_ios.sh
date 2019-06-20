@@ -82,6 +82,13 @@ dummy_symbols() {
 
 run_test() {
   local debug_app_path=$1
+
+  # disable reporting analytics
+  flutter config --no-analytics
+
+  # update .packages in case last build was on a different flutter repo
+  flutter packages get
+
   echo "Running flutter drive --no-build $debug_app_path"
   flutter drive --no-build $debug_app_path
 }
