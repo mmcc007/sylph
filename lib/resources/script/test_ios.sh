@@ -74,18 +74,10 @@ unpack_debug_ipa(){
 dummy_symbols() {
   local dummy_symbols_path=$1
 
-  declare -A build
-  while IFS=$'=' read key value; do
-    build[$key]=$value
-  done < $dummy_symbols_path
-
-  for build in "${!build[@]}"
-  do
-    os=${build[$build]}
+  while IFS=$'=' read build os; do
     echo "creating $HOME/Library/Developer/Xcode/iOS DeviceSupport/$os ($build)/Symbols"
     mkdir -p "$HOME/Library/Developer/Xcode/iOS DeviceSupport/$os ($build)/Symbols"
-  done
-
+  done < $dummy_symbols_path
 }
 
 run_test() {
