@@ -41,6 +41,8 @@ bundle() {
   echo not implemented
 }
 
+# currently assumes using forked version of flutter with archiving of debug .app permitted.
+# todo: remove this restriction by permitting on the fly
 build_debug_ipa() {
     APP_NAME="Runner"
     FINAL_APP_NAME="Debug_Runner"
@@ -55,8 +57,9 @@ build_debug_ipa() {
     APP_COMMON_PATH="$IOS_BUILD_DIR/$APP_NAME"
     ARCHIVE_PATH="$APP_COMMON_PATH.xcarchive"
 
-    flutter clean
-    flutter packages get # in case building from a different flutter repo
+    echo "Building debug .ipa for upload to Device Farm..."
+    flutter clean > /dev/null
+    flutter packages get > /dev/null # in case building from a different flutter repo
     echo "Running flutter build ios -t test_driver/main.dart --debug..."
     flutter build ios -t test_driver/main.dart --debug
 
@@ -66,16 +69,20 @@ build_debug_ipa() {
       -scheme $SCHEME \
       -sdk iphoneos \
       -configuration $CONFIGURATION \
-      -archivePath "$ARCHIVE_PATH"
+      -archivePath "$ARCHIVE_PATH" \
+      | xcpretty
 
-    echo "Generating debug .ipa..."
+    echo "Generating debug .ipa at $IOS_BUILD_DIR/$APP_NAME.ipa..."
     xcodebuild -exportArchive \
       -archivePath "$ARCHIVE_PATH" \
       -exportOptionsPlist ios/exportOptions.plist \
-      -exportPath "$IOS_BUILD_DIR"
-    local dst_debug_ipa_path="$default_debug_ipa_dir/$default_debug_ipa_name"
-    echo "Moving $APP_NAME.ipa to $dst_debug_ipa_path"
-    mv "$IOS_BUILD_DIR/$APP_NAME.ipa" "$dst_debug_ipa_path"
+      -exportPath "$IOS_BUILD_DIR" \
+      | xcpretty
+
+    # rename debug .ipa to standard name
+    mv "$IOS_BUILD_DIR/$APP_NAME.ipa" "$IOS_BUILD_DIR/$default_debug_ipa_name"
+
+    echo "Debug .ipa successfully created in $IOS_BUILD_DIR/$default_debug_ipa_name"
 }
 
 main "$@"
