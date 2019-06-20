@@ -56,9 +56,11 @@ build_debug_ipa() {
     ARCHIVE_PATH="$APP_COMMON_PATH.xcarchive"
 
     flutter clean
+    flutter packages get # in case building from a different flutter repo
+    echo "Running flutter build ios -t test_driver/main.dart --debug..."
     flutter build ios -t test_driver/main.dart --debug
 
-    echo "Generating debug archive"
+    echo "Generating debug archive..."
     xcodebuild archive \
       -workspace ios/$APP_NAME.xcworkspace \
       -scheme $SCHEME \
@@ -66,7 +68,7 @@ build_debug_ipa() {
       -configuration $CONFIGURATION \
       -archivePath "$ARCHIVE_PATH"
 
-    echo "Generating debug .ipa"
+    echo "Generating debug .ipa..."
     xcodebuild -exportArchive \
       -archivePath "$ARCHIVE_PATH" \
       -exportOptionsPlist ios/exportOptions.plist \
