@@ -1,8 +1,8 @@
 # Config file for Flutter tests on real device pools.
 # Auto-creates projects and device pools if needed.
 # Configures android and ios test runs.
-# Builds, uploads and runs tests.
-# Then monitors tests and returns final pass/fail result.
+# Builds app, uploads and runs tests.
+# Then monitors tests, returns final pass/fail result and downloads artifacts.
 # Note: assumes the 'aws' command line utility is logged-in.
 
 project_name: example flutter tests 2
