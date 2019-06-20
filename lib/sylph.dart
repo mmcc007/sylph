@@ -9,7 +9,7 @@ import 'package:yaml/yaml.dart';
 enum DeviceType { ios, android }
 
 const kCompletedRunStatus = 'COMPLETED';
-const kSuccessResult = 'Passed';
+const kSuccessResult = 'PASSED';
 
 /// Parses a named yaml file.
 /// Returns as [Map].
