@@ -11,9 +11,9 @@ const kConfigFilePath = 'sylph.yaml'; // todo: allow different names
 
 /// Uploads debug app and integration test to device farm and runs test.
 main(List<String> arguments) async {
-  final runTimeout = 600; // todo: allow different timeouts
-//  final runName = 'android run 1'; // todo: allow different names
-  final runName = 'ios run 1'; // todo: allow different names
+  final localRunTimeout = 600; // todo: allow different timeouts
+  final runName = 'android run 1'; // todo: allow different names
+//  final runName = 'ios run 1'; // todo: allow different names
   print('Starting AWS Device Farm run \'$runName\'...');
   print('Config file: $kConfigFilePath');
 
@@ -24,7 +24,7 @@ main(List<String> arguments) async {
   final projectArn =
       sylph.setupProject(config['project_name'], config['default_job_timeout']);
 
-  await run(config, projectArn, runName, runTimeout);
+  await run(config, projectArn, runName, localRunTimeout);
   print('Completed AWS Device Farm run \'$runName\'.');
 }
 
