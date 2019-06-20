@@ -14,12 +14,95 @@ phases:
       # - avm $APPIUM_VERSION
       # - ln -s /usr/local/avm/versions/$APPIUM_VERSION/node_modules/.bin/appium  /usr/local/avm/versions/$APPIUM_VERSION/node_modules/appium/bin/appium.js
 
-  # The pre-test phase includes commands that setup your test environment.
-  pre_test:
-    commands:
-      # We recommend starting appium server process in the background using the command below.
-      # Appium server log will go to $DEVICEFARM_LOG_DIR directory.
-      # The environment variables below will be auto-populated during run time.
+      # enter flutter app directory in Appium bundle
+      - cd flutter_app
+      - ls -la
+
+      # check for node
+      - node --version
+
+      # check for bash
+      - bash --version
+
+      # ignore failures
+      #- set -o | grep errexit
+      #- set +e # ignore failures
+
+      # test if ideviceinstaller works
+      #- ideviceinstaller -l -o list-all
+      #- ideviceinstaller -U com.orbsoft.counter
+      #- ideviceinstaller -l -o list-all
+      - echo $DEVICEFARM_APP_PATH
+      #- ideviceinstaller -i $DEVICEFARM_APP_PATH
+      #- ideviceinstaller -l -o list-all
+
+      # unpack and install testable .app
+      #- unzip -q $DEVICEFARM_APP_PATH
+      #- ls -la Payload
+      # move to build dir
+      #- mkdir -p build/ios/iphoneos
+      #- mv Payload/Runner.app build/ios/iphoneos
+      #- ls -la
+      #- ls -la build/ios/iphoneos
+
+      #- ideviceinstaller -i build/ios/iphoneos/Runner.app
+      #- ideviceinstaller -l -o list-all
+      #- ideviceinstaller -U com.orbsoft.counter
+      #- ideviceinstaller -l -o list-all
+
+      #- sudo ls -la # check if sudo is working
+
+      # try to fix ios-deploy error
+      #- find /Applications -name "Xcode*.app" -maxdepth 1 # find versions of xcode installed
+      #- ls -la ~/Library/Developer/Xcode/iOS\ DeviceSupport # contains symbols required by ios-deploy
+      # create dummy symbol directories for iPhone 7 Plus
+      #- mkdir -p "$HOME/Library/Developer/Xcode/iOS DeviceSupport/10.3.2 (14F89)/Symbols"
+      #- mkdir -p "$HOME/Library/Developer/Xcode/iOS DeviceSupport/10.3 (14E277)/Symbols"
+      #- ls -la ~/Library/Developer/Xcode/iOS\ DeviceSupport
+      # checkout the device support
+      #- xcode_path=$(xcode-select --print-path)
+      #- echo "xcode_path=$xcode_path"
+      #- ls -la "$xcode_path/Platforms/iPhoneOS.platform/DeviceSupport"
+      #- (cd "$xcode_path/Platforms/iPhoneOS.platform/DeviceSupport"; ln -sfn "`find . -type d -maxdepth 1 -exec basename {} \; | sort -n | tail -1`" Latest)
+      #- ls -la "$xcode_path/Platforms/iPhoneOS.platform/DeviceSupport"
+
+      # upgrade ios-deploy
+      - ios-deploy -V
+      #- xcodebuild -version
+      #- xcode-select --print-path
+      #- gcc --version
+      #- lldb --version
+      #- whoami
+      #- groups
+      #- ls -la /usr/local/Cellar
+      #- sudo chown -R $(whoami) /usr/local/Cellar /usr/local/Homebrew /usr/local/etc /usr/local/etc/bash_completion.d /usr/local/lib/pkgconfig /usr/local/opt /usr/local/share /usr/local/share/aclocal /usr/local/share/doc /usr/local/share/info /usr/local/share/locale /usr/local/share/man /usr/local/share/man/man1 /usr/local/share/man/man3 /usr/local/share/man/man5 /usr/local/share/man/man7 /usr/local/share/zsh /usr/local/share/zsh/site-functions /usr/local/var/homebrew/linked /usr/local/var/homebrew/locks /usr/local/var/log
+      #- ls -la /usr/local/Cellar
+      # install local brew because cannot upgrade ios-deploy
+
+      # try skipping upgrade (takes a long time)
+      #- git clone --depth=1 https://github.com/Homebrew/brew ~/.brew
+      #- export PATH="$HOME/.brew/bin:$HOME/.brew/sbin:$PATH"
+      #- brew install ios-deploy
+      #- which ios-deploy
+      #- ios-deploy -V
+
+      # install testable .app and start
+      #- ios-deploy --verbose --bundle build/ios/iphoneos/Runner.app --no-wifi --justlaunch --args '--enable-dart-profiling --start-paused --enable-checked-mode --verify-entry-points'
+      # listen in background for observatory
+      #- idevicesyslog | while read LOGLINE; do; [[ "${LOGLINE}" = *"Observatory"* ]] && echo $LOGLINE &
+      #- ideviceinstaller -l -o list-all
+
+      # check permissions on /tmp
+      #- ls -la /tmp
+
+      # stop on failures
+      #- set -o | grep errexit
+      #- set -e
+      #- set -o | grep errexit
+
+
+
+      # install flutter
       - echo "Install flutter"
       - FLUTTER_VERSION='v1.5.4-hotfix.2-stable'
       - >-
@@ -40,30 +123,42 @@ phases:
             # Install Flutter
             curl https://storage.googleapis.com/flutter_infra/releases/stable/macos/flutter_macos_$FLUTTER_VERSION.zip -o flutter_macos.zip
             unzip -qq flutter_macos.zip
+            # build experimental flutter from fork
+            #git clone https://github.com/mmcc007/flutter.git -b master
         fi
 
-#      - mv flutter ~/flutter
-#      - echo "export PATH=$PATH:$HOME/flutter/bin:$HOME/flutter/bin/cache/dart-sdk/bin">> ~/.bash_profile
-#      - export PATH=$PATH:$HOME/flutter/bin:$HOME/flutter/bin/cache/dart-sdk/bin
+      - mv flutter ~/flutter
+      #- echo "export PATH=$PATH:$HOME/flutter/bin:$HOME/flutter/bin/cache/dart-sdk/bin">> ~/.bash_profile
+      - export PATH=$PATH:$HOME/flutter/bin:$HOME/flutter/bin/cache/dart-sdk/bin
       - export PATH="$PATH":"$HOME/.pub-cache/bin"
-      - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
-#      - flutter --verbose doctor -v
-      - flutter doctor -v
-#      - flutter --verbose devices
-#      - >-
-#        if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "iOS" ];
-#        then
-#            cd example
-#            cat flutter_01.log
-#            echo "flutter -v packages get"
-#            flutter -v packages get
-#            cat flutter_01.log;cat flutter_02.log
-#            echo "flutter -v build ios --debug --no-codesign"
-#            flutter -v build ios --debug --no-codesign
-#            cat flutter_01.log;cat flutter_02.log
-#            cd -
-#            # exit 1
-#        fi
+      #- export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
+      - which flutter
+      #- flutter precache
+      #- flutter packages get # remove warning about changed flutter repo
+      #- flutter doctor -v
+  #      - flutter --verbose devices
+  #      - >-
+  #        if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "iOS" ];
+  #        then
+  #            cd example
+  #            cat flutter_01.log
+  #            echo "flutter -v packages get"
+  #            flutter -v packages get
+  #            cat flutter_01.log;cat flutter_02.log
+  #            echo "flutter -v build ios --debug --no-codesign"
+  #            flutter -v build ios --debug --no-codesign
+  #            cat flutter_01.log;cat flutter_02.log
+  #            cd -
+  #            # exit 1
+  #        fi
+
+  # The pre-test phase includes commands that setup your test environment.
+  pre_test:
+    commands:
+      # We recommend starting appium server process in the background using the command below.
+      # Appium server log will go to $DEVICEFARM_LOG_DIR directory.
+      # The environment variables below will be auto-populated during run time.
+
 
   # The test phase includes commands that run your test suite execution.
   test:
@@ -80,11 +175,10 @@ phases:
       # Note: For most use cases, the default command works fine.
       # Please refer "https://docs.pytest.org/en/latest/usage.html" for more options on running pytests from command line.
       # - bin/py.test tests/ --junit-xml $DEVICEFARM_LOG_DIR/junitreport.xml
-      - APP_ID=com.example.example
+      - APP_ID=com.orbsoft.counter
       - MAIN=test_driver/main.dart
-      - TEST=test_driver/main_test.dart
+      # - TEST=test_driver/main_test.dart
       - cd flutter_app
-      - ls -la
       - >-
         if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "Android" ];
         then
@@ -101,9 +195,23 @@ phases:
           # flutter -v driver test_driver/main.dart
           # cat flutter_01.log;cat flutter_02.log
 
-          #ios-deploy --bundle build/ios/Debug-iphoneos/Runner.app --no-wifi --justlaunch --args '--enable-dart-profiling --start-paused --enable-checked-mode'
-          #flutter drive --no-build $MAIN
-          flutter --verbose drive $MAIN
+          # echo "ios-deploy -c"
+          # ios-deploy -c
+
+          # echo "ios-deploy --bundle build/ios/Debug-iphoneos/Runner.app --no-wifi --justlaunch --args '--enable-dart-profiling --start-paused --enable-checked-mode --verify-entry-points'"
+          # ios-deploy --bundle build/ios/Debug-iphoneos/Runner.app --no-wifi --justlaunch --args '--enable-dart-profiling --start-paused --enable-checked-mode --verify-entry-points'
+          # echo "ios-deploy exited with $?"
+
+          # echo "flutter --verbose build ios -t MAIN --debug"
+          # flutter --verbose build ios -t $MAIN --debug
+
+          #echo flutter --verbose drive --no-build $MAIN
+          #flutter --verbose drive --no-build $MAIN
+          #echo flutter --verbose drive $MAIN
+          #flutter --verbose drive $MAIN
+          ./script/test_ios.sh --unpack $DEVICEFARM_APP_PATH
+          ./script/test_ios.sh --dummy-symbols build_to_os.txt
+          ./script/test_ios.sh --test test_driver/main.dart
         fi
 
       - echo done.
