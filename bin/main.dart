@@ -1,14 +1,16 @@
+import 'package:sylph/bundle.dart';
 import 'package:sylph/sylph.dart' as sylph;
 import 'package:sylph/utils.dart';
 
 const kDebugApkPath = 'build/app/outputs/apk/debug/app-debug.apk';
-const kDebugIpaPath = 'build/ios/Debug-iphoneos/Runner.ipa';
-const kConfigFilePath = 'sylph.yaml';
+const kDebugIpaPath = 'Debug_Runner.ipa';
+const kConfigFilePath = 'sylph.yaml'; // todo: allow different names
 
 /// Uploads debug app and integration test to device farm and runs test.
 main(List<String> arguments) async {
-  final runTimeout = 1000;
-  final runName = 'android run 1';
+  final runTimeout = 600; // todo: allow different timeouts
+//  final runName = 'android run 1'; // todo: allow different names
+  final runName = 'ios run 1'; // todo: allow different names
   print('Starting AWS Device Farm run \'$runName\'...');
   print('Config file: $kConfigFilePath');
 
@@ -23,13 +25,14 @@ main(List<String> arguments) async {
   print('Completed AWS Device Farm run \'$runName\'.');
 }
 
-/// Processes config file
-/// For each device pool and each test in each testsuite
+/// Processes config file (subject to change)
+/// For each device pool
 /// 1. Initialize the device pool
-/// 2. Prepare build for ios or android based on pool type
+/// 2. Build app for ios or android based on pool type
 /// 3. Package and upload the build and tests
-/// 4. Run tests on device pool
-/// 5. Report and collect artifacts
+/// 4. For each test in each testsuite
+///    1. Run tests on device pool
+///    2. Report and collect artifacts
 void run(Map config, String projectArn, String runName, int runTimeout) async {
   final List testSuites = config['test_suites'];
 //    print('testSuites=$testSuites');
@@ -37,6 +40,7 @@ void run(Map config, String projectArn, String runName, int runTimeout) async {
     print('Running \'${testSuite['test_suite']}\' test suite...');
 
     // todo: update test spec with tests in test suite
+    // (currently only allows one test)
 //    final List tests = testSuite['tests'];
 //    for (var test in tests) {
 //      final poolType = devicePoolInfo['pool_type'];
@@ -44,8 +48,12 @@ void run(Map config, String projectArn, String runName, int runTimeout) async {
 //          'bundling test: $test on $poolType devices in device pool $poolName');
 //    }
 
+    final tmpDir = config['tmp_dir'];
+    // Unpack script used for building debug .ipa and to bundle tests
+    await unpackResources(tmpDir);
+
     // Bundle tests
-    await sylph.bundleFlutterTests(config);
+    await bundleFlutterTests(config);
 
     // Initialize device pools and run tests in each pool
     final List devicePools = testSuite['device_pools'];
@@ -60,12 +68,12 @@ void run(Map config, String projectArn, String runName, int runTimeout) async {
 
       // Build debug app for pool type and upload
       final appArn = buildUploadApp(
-          projectArn, devicePoolInfo['pool_type'], testSuite['main']);
+          projectArn, devicePoolInfo['pool_type'], testSuite['main'], tmpDir);
 
       // Upload test suite (in 2 parts)
 
       // 1. Upload test package
-      final testBundlePath = '${config['tmp_dir']}/${sylph.kTestBundle}';
+      final testBundlePath = '${config['tmp_dir']}/${kTestBundleName}';
       print('Uploading tests: $testBundlePath ...');
       String testPackageArn = sylph.uploadFile(
           projectArn, testBundlePath, 'APPIUM_PYTHON_TEST_PACKAGE');
@@ -85,18 +93,19 @@ void run(Map config, String projectArn, String runName, int runTimeout) async {
 
 /// Builds and uploads app for current pool.
 /// Returns app ARN as [String].
-String buildUploadApp(String projectArn, String poolType, String mainPath) {
+String buildUploadApp(
+    String projectArn, String poolType, String mainPath, String tmpDir) {
   String appArn;
   if (poolType == 'android') {
-    cmd('flutter', ['build', 'apk', '-t', mainPath, '--debug'], '.', false);
+    streamCmd('flutter', ['build', 'apk', '-t', mainPath, '--debug']);
     // Upload apk
     print('Uploading debug android app: $kDebugApkPath ...');
     appArn = sylph.uploadFile(projectArn, kDebugApkPath, 'ANDROID_APP');
   } else {
-    cmd('flutter', ['build', 'ios', '-t', mainPath, '--debug'], '.', false);
+    streamCmd('$tmpDir/script/script/local_utils.sh', ['--build-debug-ipa']);
     // Upload ipa
-    print('Uploading debug iOS app: $kDebugIpaPath ...');
-    appArn = sylph.uploadFile(projectArn, kDebugApkPath, 'IOS_APP');
+    print('Uploading iOS app: $kDebugIpaPath ...');
+    appArn = sylph.uploadFile(projectArn, '$kDebugIpaPath', 'IOS_APP');
   }
   return appArn;
 }
