@@ -116,6 +116,8 @@ phases:
         if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "iOS" ];
         then
             # Run Mac setup code here
+            system_profiler SPSoftwareDataType
+            sw_vers
             ios-deploy -V
             # Install Flutter dependencies
             # brew upgrade ios-deploy
@@ -183,6 +185,7 @@ phases:
       - >-
         if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "Android" ];
         then
+          flutter doctor -v
           ./script/test_android.sh --run-driver "$MAIN"
         fi
 
