@@ -84,7 +84,7 @@ Map getDevicePoolInfo(Map config, String poolName) {
   return devicePools.firstWhere((pool) {
 //    print(pool['pool_name']);
     return pool['pool_name'] == poolName;
-  }, orElse: () => null);
+  }, orElse: () => throw 'Error: device pool $poolName not found');
 }
 
 /// Converts [enum] value to [String].
