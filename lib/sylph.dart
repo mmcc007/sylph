@@ -115,7 +115,7 @@ Map runStatus(String runArn, int timeout) {
     final runStatus = run['status'];
 
     // print run status
-    print('Run status: $runStatus');
+    print('Run status: $runStatus (timeout: $i of $timeout)');
 
     if (runStatus == kCompletedRunStatus) return run;
 
