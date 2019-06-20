@@ -3,7 +3,7 @@ import 'package:sylph/sylph.dart' as sylph;
 import 'package:sylph/utils.dart';
 
 const kDebugApkPath = 'build/app/outputs/apk/debug/app-debug.apk';
-const kDebugIpaPath = 'Debug_Runner.ipa';
+const kDebugIpaPath = 'build/ios/Debug-iphoneos/Debug_Runner.ipa';
 const kConfigFilePath = 'sylph.yaml'; // todo: allow different names
 
 /// Uploads debug app and integration test to device farm and runs test.
@@ -58,13 +58,11 @@ void run(Map config, String projectArn, String runName, int runTimeout) async {
     // Initialize device pools and run tests in each pool
     final List devicePools = testSuite['device_pools'];
     for (var poolName in devicePools) {
-      // lookup device pool
+      // lookup device pool info in config file
       Map devicePoolInfo = getDevicePoolInfo(config, poolName);
-      if (devicePoolInfo == null)
-        throw 'Error: device pool $poolName not found';
 
       // Setup device pool
-      String devicePoolArn = setupDevicePool(config, projectArn);
+      String devicePoolArn = setupDevicePool(devicePoolInfo, projectArn);
 
       // Build debug app for pool type and upload
       final appArn = await buildUploadApp(
@@ -138,11 +136,10 @@ void runTests(
 }
 
 /// Sets-up the named device pool.
-/// todo: pass device pool name.
 /// Returns device pool ARN as [String].
-String setupDevicePool(Map config, String projectArn) {
-  final poolName = config['device_pools'][0]['pool_name'];
-  final devices = config['device_pools'][0]['devices'];
+String setupDevicePool(Map devicePoolInfo, String projectArn) {
+  final poolName = devicePoolInfo['pool_name'];
+  final devices = devicePoolInfo['devices'];
   final devicePoolArn = sylph.setupDevicePool(projectArn, poolName, devices);
   return devicePoolArn;
 }
