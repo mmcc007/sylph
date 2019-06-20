@@ -3,17 +3,42 @@
 
 # Run Flutter integration tests on android device (or emulator)
 
+main() {
+  case $1 in
+    --help)
+        show_help
+        ;;
+    --run-test)
+        if [[ -z $2  || -z $3 ]]; then show_help; fi
+        run_test "$2" "$3"
+        ;;
+    --run-driver)
+        if [[ -z $2 ]]; then show_help; fi
+        run_no_build $2
+        ;;
+    *)
+        show_help
+        ;;
+  esac
+}
+
 show_help() {
-    printf "\n\nusage: %s package test
+    printf "\n\nusage: %s [--help] [--run-test <package name> <test path>] [--run-driver <test main path>
 
 Utility for running integration tests for pre-installed flutter app on android device.
 (app must be built in debug mode with 'enableFlutterDriverExtension()')
 
 where:
-    package
-        name of package to run, eg, com.example.flutterapp
-    test
-        path of test to run, eg, test_driver/main_test.dart
+    --run-test <package name> <test path>
+        run test from dart using a custom setup (similar to --no-build)
+        <package name>
+            name of package to run, eg, com.example.flutterapp
+        <test path>
+            path of test to run, eg, test_driver/main_test.dart
+    --run-driver
+        run test using driver --no-build
+        <test main path>
+            path to test main, eg, test_driver/main.dart
 " "$(basename "$0")"
     exit 1
 }
@@ -58,7 +83,10 @@ run_test() {
 
 }
 
-# if no arguments passed
-if [[ -z $1  || -z $2 ]]; then show_help; fi
+run_no_build() {
+  local test_main="$1"
+  echo "Running flutter drive --no-build $1"
+  flutter drive --no-build "$1"
+}
 
-run_test "$1" "$2"
+main "$@"
