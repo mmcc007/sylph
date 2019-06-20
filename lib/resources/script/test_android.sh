@@ -96,8 +96,8 @@ run_no_build() {
   # update .packages in case last build was on a different flutter repo
   flutter packages get
 
-  echo "Running flutter drive --no-build $1"
-  flutter drive --no-build "$1"
+  echo "Running flutter --verbose drive --no-build $1"
+  flutter drive --verbose --no-build "$1"
 }
 
 main "$@"
