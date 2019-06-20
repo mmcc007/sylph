@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:path/path.dart' as p;
 import 'package:resource/resource.dart';
 import 'package:sylph/utils.dart';
 
@@ -10,6 +9,7 @@ const kAppiumTemplateName = 'appium_bundle.zip';
 const kTestBundleDir = 'test_bundle';
 const kTestBundleName = '$kTestBundleDir.zip';
 const kDefaultFlutterAppName = 'flutter_app';
+const kBuildToOsMapFileName = 'build_to_os.txt';
 
 /// Bundles Flutter tests using appium template found in staging area.
 /// Resulting bundle is saved on disk in temporary location
@@ -41,13 +41,16 @@ Future<void> bundleFlutterTests(Map config) async {
   // Copy scripts to test bundle
   cmd('cp', ['-r', 'script', defaultAppDir], stagingDir, false);
 
+  // Copy build to os map file to test bundle
+  cmd('cp', [kBuildToOsMapFileName, defaultAppDir], stagingDir, false);
+
   // Remove files not used (to reduce zip file size)
   cmd('rm', ['-rf', '$defaultAppDir/ios/Flutter/Flutter.framework'], '.',
       false);
   cmd('rm', ['-rf', '$defaultAppDir/ios/Flutter/App.framework'], '.', false);
 
   // Zip test bundle
-  cmd('zip', ['-rq', testBundlePath, testBundleDir], '.', false);
+  cmd('zip', ['-rq', '../$kTestBundleName', '.'], testBundleDir, false);
 
   // report size of bundle
   final size = (int.parse(cmd('stat', ['-f%z', testBundlePath], '.', true)) /
@@ -68,10 +71,10 @@ Future<void> unpackResources(String tmpDir) async {
       '$tmpDir/$kAppiumTemplateName');
 
   // unpack scripts
-  final appPath = Directory.current.path;
-//  print('appPath=$appPath');
-  final appName = p.basename(appPath);
-  await unpackScripts('$tmpDir');
+  await unpackScripts(tmpDir);
+
+  // unpack build to os map file
+  await unpackFile(kBuildToOsMapFileName, tmpDir);
 }
 
 /// Reads a named file image from resources.
@@ -99,10 +102,14 @@ Future<void> unpackScripts(String dstDir) async {
 
 /// Read script from resources and install in staging area.
 Future<void> unpackScript(String srcPath, String dstDir) async {
+  await unpackFile(srcPath, dstDir);
+  // make executable
+  cmd('chmod', ['u+x', '$dstDir/$srcPath']);
+}
+
+Future unpackFile(String srcPath, String dstDir) async {
   final resource = Resource('$kResourcesUri/$srcPath');
   final String script = await resource.readAsString();
   final file = await File('$dstDir/$srcPath').create(recursive: true);
   await file.writeAsString(script, flush: true);
-  // make executable
-  cmd('chmod', ['u+x', '$dstDir/$srcPath']);
 }
