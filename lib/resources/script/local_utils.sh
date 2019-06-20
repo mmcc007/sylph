@@ -2,13 +2,21 @@
 
 # utils run locally
 
+set -e
+#set -x
+
+# constants
+dummy_ssh_keys_dir='dummy-ssh-keys'
+fastlane_dir='ios/fastlane'
+
 main(){
   case $1 in
     --build-debug-ipa)
         build_debug_ipa
         ;;
-    --bundle)
-        bundle
+    --ci)
+        if [[ -z $2 ]]; then show_help; fi
+        config_ci $2
         ;;
     *)
         show_help
@@ -17,7 +25,7 @@ main(){
 }
 
 show_help() {
-    printf "\n\nusage: %s [--build-debug-ipa] [--bundle]
+    printf "\n\nusage: %s [--build-debug-ipa] [--ci <staging dir>]
 
 Utilities ran locally
 
@@ -25,8 +33,8 @@ where:
     --build-debug-ipa
         package a debug app as a .ipa
         (app must include 'enableFlutterDriverExtension()')
-    --bundle
-        append to appium bundle for upload to Device Farm
+    --ci <staging dir>
+        configure a CI build environment
     --help
         print this message
 " "$(basename "$0")"
@@ -37,8 +45,40 @@ where:
 default_debug_ipa_name='Debug_Runner.ipa'
 default_debug_ipa_dir="."
 
-bundle() {
-  echo not implemented
+# install certificate and provisioning profile using match
+# assumes resources unbundled from sylph
+config_ci() {
+  local app_dir=$1
+
+  # install fastfiles
+#  cp -r "$staging_dir/fastfile" 'ios'
+#  cp "$staging_dir/Gemfile*" 'ios'
+#
+#  # install dummy keys
+#  cp -r "$staging_dir/$dummy_ssh_keys_dir" '.'
+#
+#  echo "Installed fastfiles and keys"
+
+  # setup ssh for fastlane match
+  # set default identity file
+  cat << EOF > ~/.ssh/config
+Host *
+AddKeysToAgent yes
+UseKeychain yes
+IdentityFile $app_dir/dummy-ssh-keys/key
+EOF
+
+  # add MATCH_HOST public key to known hosts
+  ssh-keyscan -t ecdsa -p $MATCH_PORT $MATCH_HOST >> ~/.ssh/known_hosts
+  chmod 600 "$app_dir/dummy-ssh-keys/key"
+  chmod 700 "$app_dir/dummy-ssh-keys"
+
+  # install fastlane
+  gem install bundler:2.0.1 # the fastlane gem file requires bundler 2.0
+  (cd "$app_dir/ios"; bundle install)
+
+  # call match to install developer certificate and provisioning profile
+  (cd "$app_dir/ios"; fastlane enable_match_code_signing mode:debug)
 }
 
 # currently assumes using forked version of flutter with archiving of debug .app permitted.

@@ -32,11 +32,11 @@ Future<void> bundleFlutterTests(Map config) async {
   // create default app dir in test bundle
   cmd('mkdir', [defaultAppDir], '.', false);
 
-  // clean build dir in case a build is present
-  cmd('flutter', ['clean'], '.', true);
-
   // update .packages in case last build was on a different flutter repo
   cmd('flutter', ['packages', 'get'], '.', true);
+
+  // clean build dir in case a build is present
+  cmd('flutter', ['clean'], '.', true);
 
   // Copy app dir to test bundle
   cmd('cp', ['-r', '.', defaultAppDir], '.', false);
@@ -78,6 +78,24 @@ Future<void> unpackResources(String tmpDir) async {
 
   // unpack build to os map file
   await unpackFile(kBuildToOsMapFileName, tmpDir);
+
+  // unpack components used in a CI environment
+  final envVars = Platform.environment;
+  if (envVars['CI'] == 'true') {
+    print('CI environment detected. Unpacking related resources');
+    // unpack fastlane
+    await unpackFile('fastlane/Appfile', 'ios');
+    await unpackFile('fastlane/Fastfile', 'ios');
+    await unpackFile('GemFile', 'ios');
+    await unpackFile('GemFile.lock', 'ios');
+
+    // unpack dummy keys
+    await unpackFile('dummy-ssh-keys/key', '.');
+    await unpackFile('dummy-ssh-keys/key.pub', '.');
+
+    // unpack export options
+    await unpackFile('exportOptions.plist', 'ios');
+  }
 }
 
 /// Reads a named file image from resources.

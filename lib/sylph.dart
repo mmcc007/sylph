@@ -8,8 +8,8 @@ import 'package:yaml/yaml.dart';
 
 enum DeviceType { ios, android }
 
-const kCompletedRunStatus = 'Completed';
-const kSuccessResult = 'Passed';
+const kCompletedRunStatus = 'COMPLETED';
+const kSuccessResult = 'PASSED';
 
 /// Parses a named yaml file.
 /// Returns as [Map].
@@ -96,7 +96,7 @@ String scheduleRun(String runName, String projectArn, String appArn,
     runName,
     '--test',
     'testSpecArn=$testSpecArn,type=APPIUM_PYTHON,testPackageArn=$testPackageArn',
-    // Set per job timeout ???
+    // todo: Set per job timeout ???
     //    '--execution-configuration',
     //    'jobTimeoutMinutes=5,accountsCleanup=false,appPackagesCleanup=false,videoCapture=true,skipAppResign=true'
   ])['run']['arn'];
@@ -106,7 +106,7 @@ String scheduleRun(String runName, String projectArn, String appArn,
 /// Returns final run as [Map].
 Map runStatus(String runArn, int timeout) {
   Map run;
-  for (int i = 0; i < timeout; i++) {
+  for (int i = 0; i < timeout; i = i + 2) {
     run = deviceFarmCmd([
       'get-run',
       '--arn',
@@ -115,14 +115,13 @@ Map runStatus(String runArn, int timeout) {
     final runStatus = run['status'];
 
     // print run status
-    print('Run status: $runStatus');
+    print('Run status: $runStatus (timeout: $i of $timeout)');
 
-    if (runStatus == kCompletedRunStatus)
-      break;
-    else if (i == timeout - 2) throw 'Error: run timed-out';
+    if (runStatus == kCompletedRunStatus) return run;
+
     sleep(Duration(seconds: 2));
   }
-  return run;
+  throw 'Error: run timed-out';
 }
 
 /// Runs run report.

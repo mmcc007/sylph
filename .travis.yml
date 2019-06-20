@@ -1,6 +1,9 @@
 os: osx
 language: generic
 
+# only build on tag releases
+#if: tag IS present
+
 jobs:
   include:
     - stage: Run Sylph on AWS Device Farms
@@ -8,10 +11,13 @@ jobs:
       before_install:
 
       # install correct version of java on osx to run sdkmanager
-      - java -version
-      - export HOMEBREW_NO_AUTO_UPDATE=1
-      - brew cask uninstall java; brew tap caskroom/versions; brew cask install java8;
-      - java -version
+#      - java -version
+#      - export HOMEBREW_NO_AUTO_UPDATE=1
+#      - brew cask uninstall java; brew tap caskroom/versions; brew cask install java8;
+#      - java -version
+
+        # Add missing java module used by sdkmanager, etc...
+      - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
 
       # Install android tools
       - ANDROID_SDK_TOOLS=4333796 # android-28
@@ -35,18 +41,20 @@ jobs:
       # fix timezone warning on osx
       - sudo ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
 
-      # setup osx environment for flutter and simulators
-      - export HOMEBREW_NO_AUTO_UPDATE=1
-      - brew install libimobiledevice
-      - brew install ideviceinstaller
-      - brew install ios-deploy
-      - brew install cocoapods || echo 'ignore exit(1)'
-      - brew link --overwrite cocoapods
+      # setup osx environment for flutter
+#      - export HOMEBREW_NO_AUTO_UPDATE=1
+#      - brew install libimobiledevice
+#      - brew install ideviceinstaller
+#      - brew install ios-deploy
+#      - brew install cocoapods || echo 'ignore exit(1)'
+#      - brew link --overwrite cocoapods
 
       # install pre-compiled flutter
-      - FLUTTER_CHANNEL=stable
-      - FLUTTER_VERSION=1.2.1-${FLUTTER_CHANNEL}
-      - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
+#      - FLUTTER_CHANNEL=stable
+#      - FLUTTER_VERSION=1.2.1-${FLUTTER_CHANNEL}
+#      - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
+      # build experimental flutter from fork
+      - git clone https://github.com/mmcc007/flutter.git -b master
       - export PATH="$PATH":"$HOME/.pub-cache/bin"
       - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
       - flutter doctor -v
@@ -63,10 +71,11 @@ jobs:
 
       script:
       - cd example; sylph
-      # bundle artifacts for publishing
-      - tar cvzf /tmp/sylph-artifacts.tar.gz -C /tmp sylph/artifacts
 
       # publish artifacts to GitHub
+      before_deploy:
+      # bundle artifacts for publishing
+      - tar cvzf /tmp/sylph-artifacts.tar.gz -C /tmp sylph/artifacts
       deploy:
         provider: releases
         skip_cleanup: true

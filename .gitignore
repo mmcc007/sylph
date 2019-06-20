@@ -15,3 +15,7 @@ doc/api/
 
 # Project
 test/sort_test.dart
+
+example.old/
+test_bundle.zip
+test_bundle/
