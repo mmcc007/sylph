@@ -1,0 +1,119 @@
+opt_out_usage # disable sending analytics
+
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:ios)
+setup_travis # unlock travis keychain (may remove at some point)
+
+# suppress output
+def suppress_output
+  original_stdout, original_stderr = $stdout.clone, $stderr.clone
+  $stderr.reopen File.new('/dev/null', 'w')
+  $stdout.reopen File.new('/dev/null', 'w')
+  yield
+ensure
+  $stdout.reopen original_stdout
+  $stderr.reopen original_stderr
+end
+
+platform :ios do
+
+  desc "enable match code signing"
+  lane :enable_match_code_signing do |options|
+
+    # establish release or debug mode local vars
+    signing_type=''
+    build_configuration=''
+    #profile_name='' <-- this is an environment var
+    app_identifier=CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
+    if options[:mode]=="debug"
+      signing_type='development'
+      build_configuration='Debug'
+      profile_name='sigh_' + app_identifier + '_development_profile-path'
+    else
+      signing_type='appstore'
+      build_configuration='Release'
+      profile_name='sigh_' + app_identifier + '_appstore_profile-path'
+    end
+    puts "signing_type: #{signing_type}"
+    puts "build_configuration: #{build_configuration}"
+    puts "profile_name: #{profile_name}"
+    puts "app_identifier: #{app_identifier}"
+
+    puts 'Retrieving signing certificates and profiles...'
+    # Stop fastlane from echoing back PUBLISHING_MATCH_CERTIFICATE_REPO var.
+    suppress_output {
+      # Retrieves all the necessary certs and provisioning profiles.
+        #force_for_new_devices: true,
+        #readonly: false
+      sync_code_signing(
+        git_url: ENV['PUBLISHING_MATCH_CERTIFICATE_REPO'],
+        type: signing_type,
+        keychain_name: 'fastlane_tmp_keychain',
+        readonly: true
+      )
+    }
+    puts 'Certificates and profiles installed'
+
+    disable_automatic_code_signing
+
+    # set provisioning profile
+    update_project_provisioning(
+      xcodeproj: 'Runner.xcodeproj',
+      target_filter: 'Runner',
+      build_configuration: build_configuration,
+      profile: ENV[profile_name],
+    )
+  end
+
+
+  desc "build debug .app"
+  lane :build_debug do
+    #pre_build_debug
+    enable_match_code_signing mode:'debug'
+    #sh ("cd ../.. && flutter build ios --debug")
+    sh ("cd ../.. && flutter build ios --debug test_driver/main.dart")
+    #build_app(workspace: "Runner.xcworkspace", scheme: "Runner")
+  end
+
+  desc "Build debug .ipa"
+  lane :build_debug_ipa do
+    enable_match_code_signing mode:'debug'
+    #build_app(workspace: "Runner.xcworkspace", scheme: "Runner")
+    build_app(export_method: 'development', output_name: "Debug_Runner.ipa")
+    sh ("cd .. && mv Debug_Runner.ipa ..")
+    sh ("cd .. && mv Debug_Runner.app.dSYM.zip ..")
+  end
+
+  desc "Resign debug .ipa"
+  lane :resign_app do
+    resign(
+      ipa: "../../Debug_Runner.ipa", # can omit if using the `ipa` action
+      signing_identity: "iPhone Distribution: Maurice McCabe (ET2VMHJPVM)",
+      #provisioning_profile: "path/to/profile", # can omit if using the _sigh_ action
+    )
+  end
+
+  desc "Build release .ipa"
+  lane :build_release do
+    enable_match_code_signing mode:'release'
+    #build_app(workspace: "Runner.xcworkspace", scheme: "Runner")
+    build_app(output_name: "Release_Runner.ipa")
+    sh ("cd .. && mv Release_Runner.ipa ..")
+    sh ("cd .. && mv Release_Runner.app.dSYM.zip ..")
+  end
+
+end

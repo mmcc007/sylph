@@ -1,0 +1,8 @@
+app_identifier("com.orbsoft.counter") # The bundle identifier of your app
+apple_id("mmcc007@gmail.com") # Your Apple email address
+
+itc_team_id("118607454") # App Store Connect Team ID
+team_id("ET2VMHJPVM") # Developer Portal Team ID
+
+# For more information about the Appfile, see:
+#     https://docs.fastlane.tools/advanced/#appfile

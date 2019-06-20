@@ -5,7 +5,7 @@
 # Then monitors tests and returns final pass/fail result.
 # Note: assumes the 'aws' command line utility is logged-in.
 
-project_name: flutter tests
+project_name: example flutter tests
 default_job_timeout: 5 # minutes
 
 tmp_dir: /tmp/sylph
@@ -34,6 +34,6 @@ test_suites:
     tests:
       - test_driver/main_test.dart
     device_pools:
-      - android pool 1
-#      - ios pool 1
+#      - android pool 1
+      - ios pool 1
     job_timeout: 5 # minutes

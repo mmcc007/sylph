@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:sylph/bundle.dart';
 import 'package:sylph/sylph.dart' as sylph;
@@ -102,6 +103,11 @@ Future<String> buildUploadApp(
     print('Uploading debug android app: $kDebugApkPath ...');
     appArn = sylph.uploadFile(projectArn, kDebugApkPath, 'ANDROID_APP');
   } else {
+    final envVars = Platform.environment;
+    if (envVars['CI'] == 'true') {
+      await streamCmd(
+          '$tmpDir/script/local_utils.sh', ['--ci', Directory.current.path]);
+    }
     await streamCmd('$tmpDir/script/local_utils.sh', ['--build-debug-ipa']);
     // Upload ipa
     print('Uploading iOS app: $kDebugIpaPath ...');
