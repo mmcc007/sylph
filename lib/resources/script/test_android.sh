@@ -3,6 +3,10 @@
 
 # Run Flutter integration tests on android device (or emulator)
 
+# exit on error
+set -e
+set -x
+
 main() {
   case $1 in
     --help)
@@ -85,6 +89,13 @@ run_test() {
 
 run_no_build() {
   local test_main="$1"
+
+  # disable reporting analytics
+  flutter config --no-analytics
+
+  # update .packages in case last build was on a different flutter repo
+  flutter packages get
+
   echo "Running flutter drive --no-build $1"
   flutter drive --no-build "$1"
 }
