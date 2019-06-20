@@ -52,8 +52,8 @@ void run(Map config, String projectArn, String runName, int runTimeout) async {
 //    }
 
     final tmpDir = config['tmp_dir'];
-    // Unpack script used for building debug .ipa and to bundle tests
-    await unpackResources(tmpDir);
+    // Unpack resources used for building debug .ipa and to bundle tests
+    await unpackResources(tmpDir); // todo: remove here or in bundler
 
     // Bundle tests
     await bundleFlutterTests(config);
