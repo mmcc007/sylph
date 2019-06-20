@@ -2,7 +2,7 @@ os: osx
 language: generic
 
 # only build on tag releases
-if: tag IS present
+#if: tag IS present
 
 jobs:
   include:
