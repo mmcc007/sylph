@@ -74,7 +74,7 @@ unpack_debug_ipa(){
 dummy_symbols() {
   local dummy_symbols_path=$1
 
-  typeset -A build
+  declare -A build
   while IFS=$'=' read key value; do
     build[$key]=$value
   done < $dummy_symbols_path
