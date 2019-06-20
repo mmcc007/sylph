@@ -141,8 +141,6 @@ void main() {
     final config = await parseYaml(filePath);
     // change directory to app
     Directory.current = 'example';
-    final tmpDir = config['tmp_dir'];
-//    await unpackResources(tmpDir);
     await bundleFlutterTests(config);
   });
 
