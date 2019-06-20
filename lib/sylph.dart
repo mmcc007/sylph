@@ -8,7 +8,7 @@ import 'package:yaml/yaml.dart';
 
 enum DeviceType { ios, android }
 
-const kCompletedRunStatus = 'Completed';
+const kCompletedRunStatus = 'COMPLETED';
 const kSuccessResult = 'Passed';
 
 /// Parses a named yaml file.
@@ -106,7 +106,7 @@ String scheduleRun(String runName, String projectArn, String appArn,
 /// Returns final run as [Map].
 Map runStatus(String runArn, int timeout) {
   Map run;
-  for (int i = 0; i < timeout; i++) {
+  for (int i = 0; i < timeout; i = i + 2) {
     run = deviceFarmCmd([
       'get-run',
       '--arn',
@@ -117,12 +117,11 @@ Map runStatus(String runArn, int timeout) {
     // print run status
     print('Run status: $runStatus');
 
-    if (runStatus == kCompletedRunStatus)
-      break;
-    else if (i == timeout - 2) throw 'Error: run timed-out';
+    if (runStatus == kCompletedRunStatus) return run;
+
     sleep(Duration(seconds: 2));
   }
-  return run;
+  throw 'Error: run timed-out';
 }
 
 /// Runs run report.
