@@ -78,6 +78,24 @@ Future<void> unpackResources(String tmpDir) async {
 
   // unpack build to os map file
   await unpackFile(kBuildToOsMapFileName, tmpDir);
+
+  // unpack components used in a CI environment
+  final envVars = Platform.environment;
+  if (envVars['CI'] == 'true') {
+    print('CI environment detected. Unpacking related resources');
+    // unpack fastlane
+    await unpackFile('fastlane/Appfile', 'ios');
+    await unpackFile('fastlane/Fastfile', 'ios');
+    await unpackFile('GemFile', 'ios');
+    await unpackFile('GemFile.lock', 'ios');
+
+    // unpack dummy keys
+    await unpackFile('dummy-ssh-keys/key', '.');
+    await unpackFile('dummy-ssh-keys/key.pub', '.');
+
+    // unpack export options
+    await unpackFile('exportOptions.plist', 'ios');
+  }
 }
 
 /// Reads a named file image from resources.

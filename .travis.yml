@@ -1,6 +1,9 @@
 os: osx
 language: generic
 
+# only build on tag releases
+if: tag IS present
+
 jobs:
   include:
     - stage: Run Sylph on AWS Device Farms
@@ -35,7 +38,7 @@ jobs:
       # fix timezone warning on osx
       - sudo ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
 
-      # setup osx environment for flutter and simulators
+      # setup osx environment for flutter
       - export HOMEBREW_NO_AUTO_UPDATE=1
       - brew install libimobiledevice
       - brew install ideviceinstaller
@@ -44,9 +47,11 @@ jobs:
       - brew link --overwrite cocoapods
 
       # install pre-compiled flutter
-      - FLUTTER_CHANNEL=stable
-      - FLUTTER_VERSION=1.2.1-${FLUTTER_CHANNEL}
-      - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
+#      - FLUTTER_CHANNEL=stable
+#      - FLUTTER_VERSION=1.2.1-${FLUTTER_CHANNEL}
+#      - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
+      # build experimental flutter from fork
+      - git clone https://github.com/mmcc007/flutter.git -b master
       - export PATH="$PATH":"$HOME/.pub-cache/bin"
       - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
       - flutter doctor -v
