@@ -11,10 +11,13 @@ jobs:
       before_install:
 
       # install correct version of java on osx to run sdkmanager
-      - java -version
-      - export HOMEBREW_NO_AUTO_UPDATE=1
-      - brew cask uninstall java; brew tap caskroom/versions; brew cask install java8;
-      - java -version
+#      - java -version
+#      - export HOMEBREW_NO_AUTO_UPDATE=1
+#      - brew cask uninstall java; brew tap caskroom/versions; brew cask install java8;
+#      - java -version
+
+        # Add missing java module used by sdkmanager, etc...
+      - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
 
       # Install android tools
       - ANDROID_SDK_TOOLS=4333796 # android-28
