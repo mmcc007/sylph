@@ -56,7 +56,7 @@ String setupDevicePool(String projectArn, String poolName, List devices) {
 
   if (pool == null) {
     // create new device pool
-    print('Creating device pool $poolName ...');
+    print('Creating new device pool $poolName ...');
     // convert devices to rules
     List rules = deviceSpecToRules(devices);
 
