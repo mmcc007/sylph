@@ -11,7 +11,7 @@ const kConfigFilePath = 'sylph.yaml'; // todo: allow different names
 
 /// Uploads debug app and integration test to device farm and runs test.
 main(List<String> arguments) async {
-  final localRunTimeout = 600; // todo: allow different timeouts
+  final localRunTimeout = 720; // todo: allow different timeouts
   final runName = 'android run 1'; // todo: allow different names
 //  final runName = 'ios run 1'; // todo: allow different names
   print('Starting AWS Device Farm run \'$runName\'...');
@@ -128,7 +128,7 @@ void runTests(
   String artifactsDir,
 ) {
   // Schedule run
-  print('Scheduling \'$runName\' on AWS Device Farms');
+  print('Starting run \'$runName\' on AWS Device Farms');
   String runArn = sylph.scheduleRun(
       runName, projectArn, appArn, devicePoolArn, testSpecArn, testPackageArn);
 
