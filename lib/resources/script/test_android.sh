@@ -5,7 +5,7 @@
 
 # exit on error
 set -e
-set -x
+#set -x
 
 main() {
   case $1 in
@@ -13,8 +13,8 @@ main() {
         show_help
         ;;
     --run-test)
-        if [[ -z $2  || -z $3 ]]; then show_help; fi
-        run_test "$2" "$3"
+        if [[ -z $2 ]]; then show_help; fi
+        run_custom_test "$2"
         ;;
     --run-driver)
         if [[ -z $2 ]]; then show_help; fi
@@ -27,7 +27,7 @@ main() {
 }
 
 show_help() {
-    printf "\n\nusage: %s [--help] [--run-test <package name> <test path>] [--run-driver <test main path>
+    printf "\n\nusage: %s [--help] [--run-test <test path>] [--run-driver <test main path>
 
 Utility for running integration tests for pre-installed flutter app on android device.
 (app must be built in debug mode with 'enableFlutterDriverExtension()')
@@ -35,8 +35,6 @@ Utility for running integration tests for pre-installed flutter app on android d
 where:
     --run-test <package name> <test path>
         run test from dart using a custom setup (similar to --no-build)
-        <package name>
-            name of package to run, eg, com.example.flutterapp
         <test path>
             path of test to run, eg, test_driver/main_test.dart
     --run-driver
@@ -47,52 +45,35 @@ where:
     exit 1
 }
 
-run_test() {
-    # note: assumes debug apk installed on device
-    local package_name=$1
-    local test_path=$2
+# note: assumes debug apk installed on device
+run_custom_test() {
+    local test_path=$1
 
-    echo "Starting Flutter app $package_name in debug mode..."
+    local app_id=$(grep applicationId android/app/build.gradle | awk '{print $2}')
 
-    # check if logcat is working
-    local begin_main=$( (adb logcat -v time &) | grep -m 1 "beginning of main")
-    echo "begin_main=$begin_main"
+    echo "Starting Flutter app $app_id in debug mode..."
 
     adb version
     adb start-server
 
     # stop app on device
-    # (if running locally or started incorrectly by CI/CD)
-    adb shell am force-stop "$package_name"
+    # (if already running locally or started incorrectly by CI/CD)
+    adb shell am force-stop "$app_id"
 
     # clear log (to avoid picking up any earlier observatory announcements on local re-runs)
-    # (could comment out if running in CI/CD)
     [[ ! $USERNAME == 'device-farm' ]] && adb logcat -c
 
     # start app on device
-#    adb shell am start -a android.intent.action.RUN -f 0x20000000 --ez enable-background-compilation true --ez enable-dart-profiling true --ez enable-checked-mode true "$package_name/$package_name.MainActivity"
-    # new way
-    adb shell am start -a android.intent.action.RUN -f 0x20000000 --ez enable-background-compilation true --ez enable-dart-profiling true --ez enable-checked-mode true --ez verify-entry-points true --ez start-paused true "$package_name/$package_name.MainActivity"
+    adb shell am start -a android.intent.action.RUN -f 0x20000000 --ez enable-background-compilation true --ez enable-dart-profiling true --ez enable-checked-mode true --ez verify-entry-points true --ez start-paused true "$app_id/$app_id.MainActivity"
 
     # wait for observatory startup on device and get port number
-#    adb shell -x logcat -v time -t 1 # check if logcat is working
-    adb logcat -v time -t 1 # check if logcat is working
-#    obs_str=$(adb logcat -e "Observatory listening on" -m 1)
-#    obs_str=$( (adb shell -x logcat -v time -t 1 &) | grep -m 1 "Observatory listening on")
-#    obs_str=$( (adb shell -x logcat -v time &) | grep -m 1 "Observatory listening on")
     obs_str=$( (adb logcat -v time &) | grep -m 1 "Observatory listening on")
-#    obs_str=$( adb logcat -d | grep -m 1 "Observatory listening on")
-
     obs_port_str=$(echo "$obs_str" | grep -Eo '[^:]*$')
     obs_port=$(echo "$obs_port_str" | grep -Eo '^[0-9]+')
     obs_token=$(echo "$obs_port_str" | grep -Eo '\/.*\/$')
-
-#    obs_port=$(echo "$obs_str" | grep -Eo '([0-9]+)/$')
-#    obs_port=${obs_port%?}
     echo Observatory on port "$obs_port"
 
     # forward a local port to observatory port on device
-#    forwarded_port=`adb forward tcp:0 tcp:$obs_port`
     forwarded_port=4723 # re-use appium server port for now
     if [[ ! "$USERNAME" == 'device-farm' ]]; then
       forwarded_port=$(adb forward tcp:0 tcp:"$obs_port")
@@ -102,17 +83,14 @@ run_test() {
     echo Local port "$forwarded_port" forwarded to observatory port "$obs_port"
 
     # run test
-    echo "Running integration test $test_path on app $package_name ..."
-#    pub get # may be required when running in CI/CD
+    echo "Running integration test $test_path on app $app_id ..."
     flutter packages get # may be required when running in CI/CD
     flutter packages get # may be required when running in CI/CD
     export VM_SERVICE_URL=http://127.0.0.1:"$forwarded_port$obs_token"
-#    dart "$test_path" --observer $forwarded_port
     dart "$test_path"
-#    flutter driver --use-existing-app=http://127.0.0.1:$forwarded_port --no-keep-app-running lib/main.dart
-
 }
 
+# note: requires android sdk be installed to get app identifier (eg, com.example.example)
 run_no_build() {
   local test_main="$1"
 
