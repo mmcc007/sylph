@@ -155,6 +155,7 @@ void runReport(Map run) {
 
   if (result != kSuccessResult) {
     print('Error: test failed');
+    // todo: download artifacts on failure too
     exit(1);
   }
 }
@@ -166,6 +167,7 @@ String findDeviceArn(String name, String model, String os) {
   final devices = deviceFarmCmd([
     'list-devices',
   ])['devices'];
+  // todo: change to using name/platform/os/formFactor
   Map device = devices.firstWhere(
       (device) => (device['name'] == name &&
           device['modelId'] == model &&
