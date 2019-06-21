@@ -54,34 +54,60 @@ run_test() {
 
     echo "Starting Flutter app $package_name in debug mode..."
 
+    # check if logcat is working
+    local begin_main=$( (adb logcat -v time &) | grep -m 1 "beginning of main")
+    echo "begin_main=$begin_main"
+
+    adb version
+    adb start-server
+
     # stop app on device
     # (if running locally or started incorrectly by CI/CD)
     adb shell am force-stop "$package_name"
 
     # clear log (to avoid picking up any earlier observatory announcements on local re-runs)
     # (could comment out if running in CI/CD)
-    adb logcat -c
+    [[ ! $USERNAME == 'device-farm' ]] && adb logcat -c
 
     # start app on device
-    adb shell am start -a android.intent.action.RUN -f 0x20000000 --ez enable-background-compilation true --ez enable-dart-profiling true --ez enable-checked-mode true "$package_name/$package_name.MainActivity"
+#    adb shell am start -a android.intent.action.RUN -f 0x20000000 --ez enable-background-compilation true --ez enable-dart-profiling true --ez enable-checked-mode true "$package_name/$package_name.MainActivity"
+    # new way
+    adb shell am start -a android.intent.action.RUN -f 0x20000000 --ez enable-background-compilation true --ez enable-dart-profiling true --ez enable-checked-mode true --ez verify-entry-points true --ez start-paused true "$package_name/$package_name.MainActivity"
 
     # wait for observatory startup on device and get port number
-    obs_str=$(adb logcat -e "Observatory listening on" -m 1)
-    obs_port=$(echo "$obs_str" | grep -Eo '([0-9]+)/$')
-    obs_port=${obs_port%?}
+#    adb shell -x logcat -v time -t 1 # check if logcat is working
+    adb logcat -v time -t 1 # check if logcat is working
+#    obs_str=$(adb logcat -e "Observatory listening on" -m 1)
+#    obs_str=$( (adb shell -x logcat -v time -t 1 &) | grep -m 1 "Observatory listening on")
+#    obs_str=$( (adb shell -x logcat -v time &) | grep -m 1 "Observatory listening on")
+    obs_str=$( (adb logcat -v time &) | grep -m 1 "Observatory listening on")
+#    obs_str=$( adb logcat -d | grep -m 1 "Observatory listening on")
+
+    obs_port_str=$(echo "$obs_str" | grep -Eo '[^:]*$')
+    obs_port=$(echo "$obs_port_str" | grep -Eo '^[0-9]+')
+    obs_token=$(echo "$obs_port_str" | grep -Eo '\/.*\/$')
+
+#    obs_port=$(echo "$obs_str" | grep -Eo '([0-9]+)/$')
+#    obs_port=${obs_port%?}
     echo Observatory on port "$obs_port"
 
     # forward a local port to observatory port on device
 #    forwarded_port=`adb forward tcp:0 tcp:$obs_port`
     forwarded_port=4723 # re-use appium server port for now
-    adb forward tcp:"$forwarded_port" tcp:"$obs_port"
+    if [[ ! "$USERNAME" == 'device-farm' ]]; then
+      forwarded_port=$(adb forward tcp:0 tcp:"$obs_port")
+    else
+      adb forward tcp:"$forwarded_port" tcp:"$obs_port"
+    fi
     echo Local port "$forwarded_port" forwarded to observatory port "$obs_port"
 
     # run test
     echo "Running integration test $test_path on app $package_name ..."
 #    pub get # may be required when running in CI/CD
     flutter packages get # may be required when running in CI/CD
-    export VM_SERVICE_URL=http://127.0.0.1:"$forwarded_port"
+    flutter packages get # may be required when running in CI/CD
+    export VM_SERVICE_URL=http://127.0.0.1:"$forwarded_port$obs_token"
+#    dart "$test_path" --observer $forwarded_port
     dart "$test_path"
 #    flutter driver --use-existing-app=http://127.0.0.1:$forwarded_port --no-keep-app-running lib/main.dart
 
