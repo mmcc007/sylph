@@ -30,7 +30,7 @@ test_suites:
     testspec: test_spec.yaml
     tests:
       - lib/main.dart
-    device_pools:
+    pool_names:
       - android pool 1
 #      - ios pool 1
     job_timeout: 5 # minutes
