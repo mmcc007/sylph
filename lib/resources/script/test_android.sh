@@ -49,7 +49,7 @@ where:
 run_custom_test() {
     local test_path=$1
 
-    local app_id=$(grep applicationId android/app/build.gradle | awk '{print $2}')
+    local app_id=$(grep applicationId android/app/build.gradle | awk '{print $2}' | tr -d '"')
 
     echo "Starting Flutter app $app_id in debug mode..."
 
