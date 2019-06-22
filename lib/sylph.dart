@@ -39,8 +39,9 @@ String setupProject(String projectName, int jobTimeoutMinutes) {
       '--default-job-timeout-minutes',
       '$jobTimeoutMinutes'
     ])['project']['arn'];
-  } else
+  } else {
     return project['arn'];
+  }
 }
 
 /// Set up a device pool if named pool does not exist.
@@ -75,8 +76,9 @@ String setupDevicePool(String projectArn, String poolName, List devices) {
       //        '--max-devices', '${devices.length}'
     ])['devicePool'];
     return newPool['arn'];
-  } else
+  } else {
     return pool['arn'];
+  }
 }
 
 /// Schedules a run.
@@ -138,10 +140,10 @@ void runReport(Map run) {
 
   // print device minutes
   final deviceMinutes = run['deviceMinutes'];
-  if (deviceMinutes != null)
+  if (deviceMinutes != null) {
     print(
         '  Device minutes: ${deviceMinutes['total']} (${deviceMinutes['metered']} metered).');
-
+  }
   // print counters
   final counters = run['counters'];
   print('  Counters:\n'
@@ -220,8 +222,9 @@ String uploadFile(String projectArn, String filePath, String fileType) {
     sleep(Duration(seconds: 1));
     if (upload['status'] == 'SUCCEEDED')
       break;
-    else if (i == 4)
+    else if (i == 4) {
       throw 'Error: file upload failed: file path = \'$filePath\'';
+    }
   }
   return uploadArn;
 }

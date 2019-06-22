@@ -160,8 +160,9 @@ void main() {
         for (var test in tests) {
           // lookup device pool
           Map devicePool = getDevicePoolInfo(config, poolName);
-          if (devicePool == null)
+          if (devicePool == null) {
             throw 'Exception: device pool $poolName not found';
+          }
           final poolType = devicePool['pool_type'];
           print(
               'running test: $test on $poolType devices in device pool $poolName');
