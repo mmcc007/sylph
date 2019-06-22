@@ -60,8 +60,8 @@ void run(Map config, String projectArn, String runName, int runTimeout,
     await bundleFlutterTests(config);
 
     // Initialize device pools and run tests in each pool
-    final List devicePools = testSuite['device_pools'];
-    for (var poolName in devicePools) {
+    for (final poolName in testSuite['pool_names']) {
+      print('\nStarting Device Farm run on pool \'$poolName\'...\n');
       // lookup device pool info in config file
       Map devicePoolInfo = getDevicePoolInfo(config, poolName);
 
@@ -86,7 +86,7 @@ void run(Map config, String projectArn, String runName, int runTimeout,
       String testSpecArn =
           sylph.uploadFile(projectArn, testSpecPath, 'APPIUM_PYTHON_TEST_SPEC');
 
-      // construct artifacts dir for this run
+      // construct artifacts dir for this device farm run
       final runArtifactsDir =
           '${config['artifacts_dir']}/$runName $timestamp/$poolName';
 
@@ -116,7 +116,7 @@ Future<String> buildUploadApp(
     await streamCmd('$tmpDir/script/local_utils.sh', ['--build-debug-ipa']);
     // Upload ipa
     print('Uploading iOS app: $kDebugIpaPath ...');
-    appArn = sylph.uploadFile(projectArn, '$kDebugIpaPath', 'IOS_APP');
+    appArn = sylph.uploadFile(projectArn, kDebugIpaPath, 'IOS_APP');
   }
   return appArn;
 }
