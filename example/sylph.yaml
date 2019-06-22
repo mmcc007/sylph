@@ -10,6 +10,8 @@ default_job_timeout: 7 # minutes, set at project creation
 
 tmp_dir: /tmp/sylph
 
+artifacts_dir: ~/sylph_artifacts
+
 device_pools:
 
   - pool_name: android pool 1
@@ -38,5 +40,5 @@ test_suites:
       - test_driver/main_test.dart
     device_pools:
       - android pool 1
-#      - ios pool 1
+      - ios pool 1
     job_timeout: 7 # minutes, set per job
