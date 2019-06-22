@@ -9,19 +9,17 @@ import 'package:yaml/yaml.dart';
 
 void main() {
   test('parse yaml', () async {
-    final filePath = 'test/test_sylph.yaml';
+    final filePath = 'test/sylph_test.yaml';
     await parseYaml(filePath);
   });
 
   test('get first poolname and devices', () async {
-    final filePath = 'test/test_sylph.yaml';
+    final filePath = 'test/sylph_test.yaml';
     final config = await parseYaml(filePath);
-    print('config=$config');
-    String deviceType = deviceTypeStr(DeviceType.ios);
-    print('deviceType=$deviceType');
-    final poolName = config['device_pools'][deviceType][0]['device_pool'];
-    final devices = config['device_pools'][deviceType][0]['devices'];
-    expect(poolName, 'pool 1');
+//    print('config=$config');
+    final poolName = config['device_pools'][1]['pool_name'];
+    final devices = config['device_pools'][1]['devices'];
+    expect(poolName, 'ios pool 1');
     expect(devices, [
       {'model': 'A1865', 'name': 'Apple iPhone X', 'os': 12.0},
 //      {'model': 'A1865xxx', 'name': 'Apple iPhone 7', 'os': '12.0xxx'}
@@ -94,7 +92,7 @@ void main() {
     final model = 'A1865';
     final os = '12.0';
 
-    String result = findDeviceArn(name, model, '$os');
+    String result = findDeviceArn(name, model, os);
     expect(result,
         'arn:aws:devicefarm:us-west-2::device:D125AEEE8614463BAE106865CAF4470E');
   });
@@ -136,24 +134,27 @@ void main() {
   });
 
   test('bundle flutter test', () async {
-//    final filePath = 'test/test_sylph.yaml';
+//    final filePath = 'test/sylph_test.yaml';
     final filePath = 'example/sylph.yaml';
     final config = await parseYaml(filePath);
     // change directory to app
+    final origDir = Directory.current;
     Directory.current = 'example';
     await bundleFlutterTests(config);
+    // change back for tests to continue
+    Directory.current = origDir;
   });
 
   test('iterate thru test suites', () async {
-    final filePath = 'test/test_sylph.yaml';
+    final filePath = 'test/sylph_test.yaml';
     final config = await parseYaml(filePath);
 //    print('config=$config');
 
     final List testSuites = config['test_suites'];
-//    print('testSuites=$testSuites');
+    print('testSuites=$testSuites');
     for (var testSuite in testSuites) {
       print('Running ${testSuite['test_suite']} ...');
-      final List devicePools = testSuite['device_pools'];
+      final List devicePools = testSuite['pool_names'];
       for (var poolName in devicePools) {
 //        print('poolType=$poolType, poolName=$poolName');
         final List tests = testSuite['tests'];
@@ -187,7 +188,18 @@ void main() {
 
     final poolName = 'android pool 1';
     Map devicePool = getDevicePoolInfo(config, poolName);
-    print('resulting devicePool=$devicePool');
+    final expected = {
+      'pool_type': 'android',
+      'devices': [
+        {
+          'model': 'SM-G960U1',
+          'name': 'Samsung Galaxy S9 (Unlocked)',
+          'os': '8.0.0'
+        }
+      ],
+      'pool_name': 'android pool 1'
+    };
+    expect(devicePool, expected);
   });
 
   test('check pool type', () async {
