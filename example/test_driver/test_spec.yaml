@@ -129,7 +129,7 @@ phases:
       # Note: For most use cases, the default command works fine.
       # Please refer "https://docs.pytest.org/en/latest/usage.html" for more options on running pytests from command line.
       # - bin/py.test tests/ --junit-xml $DEVICEFARM_LOG_DIR/junitreport.xml
-      - APP_ID=com.orbsoft.counter
+      #- APP_ID=com.orbsoft.counter
       - MAIN=test_driver/main.dart
       - TEST=test_driver/main_test.dart
       - cd flutter_app
@@ -138,7 +138,7 @@ phases:
         then
           flutter doctor -v
           #./script/test_android.sh --run-driver "$MAIN"
-          ./script/test_android.sh --run-test com.example.example "$TEST"
+          ./script/test_android.sh --run-test "$TEST"
         fi
 
         if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "iOS" ];
