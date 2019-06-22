@@ -14,11 +14,11 @@ main() {
         ;;
     --run-test)
         if [[ -z $2 ]]; then show_help; fi
-        run_custom_test "$2"
+        custom_run_test "$2"
         ;;
     --run-driver)
         if [[ -z $2 ]]; then show_help; fi
-        run_no_build $2
+        run_no_build "$2"
         ;;
     *)
         show_help
@@ -33,7 +33,7 @@ Utility for running integration tests for pre-installed flutter app on android d
 (app must be built in debug mode with 'enableFlutterDriverExtension()')
 
 where:
-    --run-test <package name> <test path>
+    --run-test <test path>
         run test from dart using a custom setup (similar to --no-build)
         <test path>
             path of test to run, eg, test_driver/main_test.dart
@@ -46,10 +46,11 @@ where:
 }
 
 # note: assumes debug apk installed on device
-run_custom_test() {
+custom_run_test() {
     local test_path=$1
 
-    local app_id=$(grep applicationId android/app/build.gradle | awk '{print $2}' | tr -d '"')
+    local app_id
+    app_id=$(grep applicationId android/app/build.gradle | awk '{print $2}' | tr -d '"')
 
     echo "Starting Flutter app $app_id in debug mode..."
 
@@ -100,8 +101,8 @@ run_no_build() {
   # update .packages in case last build was on a different flutter repo
   flutter packages get
 
-  echo "Running flutter --verbose drive --no-build $1"
-  flutter drive --verbose --no-build "$1"
+  echo "Running flutter --verbose drive --no-build $test_main"
+  flutter drive --verbose --no-build "$test_main"
 }
 
 main "$@"
