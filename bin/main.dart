@@ -12,9 +12,9 @@ const kConfigFilePath = 'sylph.yaml'; // todo: allow different names
 /// Uploads debug app and integration test to device farm and runs test.
 main(List<String> arguments) async {
   final localRunTimeout = 720; // todo: allow different timeouts
-  final runName = 'android run 1'; // todo: allow different names
-//  final runName = 'ios run 1'; // todo: allow different names
-  print('Starting AWS Device Farm run \'$runName\'...');
+  final runName = 'android and ios run 1'; // todo: allow different names
+  final timestamp = genTimestamp();
+  print('Starting AWS Device Farm run \'$runName\' at $timestamp ...');
   print('Config file: $kConfigFilePath');
 
   // Parse config file
@@ -24,7 +24,7 @@ main(List<String> arguments) async {
   final projectArn =
       sylph.setupProject(config['project_name'], config['default_job_timeout']);
 
-  await run(config, projectArn, runName, localRunTimeout);
+  await run(config, projectArn, runName, localRunTimeout, timestamp);
   print('Completed AWS Device Farm run \'$runName\'.');
 }
 
@@ -36,7 +36,8 @@ main(List<String> arguments) async {
 /// 4. For each test in each testsuite
 ///    1. Run tests on device pool
 ///    2. Report and collect artifacts
-void run(Map config, String projectArn, String runName, int runTimeout) async {
+void run(Map config, String projectArn, String runName, int runTimeout,
+    DateTime timestamp) async {
   final List testSuites = config['test_suites'];
 //    print('testSuites=$testSuites');
   for (var testSuite in testSuites) {
@@ -85,9 +86,13 @@ void run(Map config, String projectArn, String runName, int runTimeout) async {
       String testSpecArn =
           sylph.uploadFile(projectArn, testSpecPath, 'APPIUM_PYTHON_TEST_SPEC');
 
+      // construct artifacts dir for this run
+      final runArtifactsDir =
+          '${config['artifacts_dir']}/$runName $timestamp/$poolName';
+
       // run tests and report
       runTests(runName, runTimeout, projectArn, devicePoolArn, appArn,
-          testPackageArn, testSpecArn, '${config['tmp_dir']}/artifacts');
+          testPackageArn, testSpecArn, runArtifactsDir);
     }
   }
 }
@@ -118,15 +123,14 @@ Future<String> buildUploadApp(
 
 /// Runs the test suite and downloads artifacts.
 void runTests(
-  String runName,
-  int runTimeout,
-  String projectArn,
-  String devicePoolArn,
-  String appArn,
-  String testPackageArn,
-  String testSpecArn,
-  String artifactsDir,
-) {
+    String runName,
+    int runTimeout,
+    String projectArn,
+    String devicePoolArn,
+    String appArn,
+    String testPackageArn,
+    String testSpecArn,
+    String artifactsDir) {
   // Schedule run
   print('Starting run \'$runName\' on AWS Device Farms');
   String runArn = sylph.scheduleRun(

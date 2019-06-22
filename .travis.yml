@@ -75,12 +75,12 @@ jobs:
       # publish artifacts to GitHub
       before_deploy:
       # bundle artifacts for publishing
-      - tar cvzf /tmp/sylph-artifacts.tar.gz -C /tmp sylph/artifacts
+      - zip -r /tmp/sylph_artifacts.zip ~/sylph_artifacts
       deploy:
         provider: releases
         skip_cleanup: true
         api_key:
           secure: OCyFLrBnorKGT3g7uf0BClF85lb+d6KDcvAvZvEiAec4P1GoaYoxz7iXAYEQ7rLBp1QYu94sW6diM2vd4g9V3NAGQAMzFLdVYkIyueHXE+PW4Z4i5SFm8d8VSTck1SCN4gBtd1j3pKbFCMH8637lrZ24uz46f4Gk4qlQ1PVbfkSIFm/eKTtFzRQO4XCOiMj+sHd/M72+jhfzDhwXAi7cG6Qf+cPpvAGLK7mZvsjg6UBrYltn7sOhG6P8XO927GXz/N8VutHvz6Ip0c0yNXpjoMiNub2YMzAxNmnxurabxDhZubtEqwn5bwohOce6mxqC3z6MH5Xq8RUW7BpmpFakHw+usFp1tTQ3QSBeVblZTX++wOzEnvF9vGh0IhMDr8iJBYFGjQtpJyW2Iz0EaU5W64Qh/FxCjgpyqN2hOQY43wLxnK3vpoBiqKOV+ZscXEgyJF0pfnMbFjahU/b/mbGbu6EmQvkWFxN5xnPH0qQ0u2yIlvDydgzWmX3nEjuYTBVFn3eEfQAfjZOEP9bmo3cK4ObyQSaqQAVJPS+ZCkGRlF7WPzJtWQX6kl9wNSAG94dq6MQ8dl/7NrIr1JXNxwcTb/q8CuYEpq6ZrbMlaFCFvgdFdpKqZCoCkD284wnyUUQUDLM3O6Tr2nYNTLHVGriPhcRSjdCVvZYDWo4wx1WYbAY=
-        file: /tmp/sylph-artifacts.tar.gz
+        file: /tmp/sylph_artifacts.zip
         on:
           tags: true
