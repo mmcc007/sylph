@@ -75,7 +75,7 @@ jobs:
       # publish artifacts to GitHub
       before_deploy:
       # bundle artifacts for publishing
-      - zip -r /tmp/sylph_artifacts.zip /tmp/sylph_artifacts
+      - (cd /tmp; zip -r /tmp/sylph_artifacts.zip sylph_artifacts)
       deploy:
         provider: releases
         skip_cleanup: true
