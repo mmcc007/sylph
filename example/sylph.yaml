@@ -1,8 +1,8 @@
 # Config file for Flutter tests on real device pools.
 # Auto-creates projects and device pools if needed.
 # Configures android and ios test runs.
-# Builds, uploads and runs tests.
-# Then monitors tests and returns final pass/fail result.
+# Builds app, uploads and runs tests.
+# Then monitors tests, returns final pass/fail result and downloads artifacts.
 # Note: assumes the 'aws' command line utility is logged-in.
 
 project_name: example flutter tests 2
@@ -10,13 +10,18 @@ default_job_timeout: 7 # minutes, set at project creation
 
 tmp_dir: /tmp/sylph
 
+artifacts_dir: /tmp/sylph_artifacts
+
 device_pools:
 
   - pool_name: android pool 1
     pool_type: android
     devices:
-      - name: Samsung Galaxy S9 (Unlocked)
-        model: SM-G960U1
+#      - name: Samsung Galaxy S9 (Unlocked)
+#        model: SM-G960U1
+#        os: 8.0.0
+      - name: Google Pixel 2
+        model: Google Pixel 2
         os: 8.0.0
 
   - pool_name: ios pool 1
@@ -34,6 +39,6 @@ test_suites:
     tests:
       - test_driver/main_test.dart
     device_pools:
-#      - android pool 1
+      - android pool 1
       - ios pool 1
     job_timeout: 7 # minutes, set per job
