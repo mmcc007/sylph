@@ -10,7 +10,7 @@ default_job_timeout: 7 # minutes, set at project creation
 
 tmp_dir: /tmp/sylph
 
-artifacts_dir: ~/sylph_artifacts
+artifacts_dir: /tmp/sylph_artifacts
 
 device_pools:
 
