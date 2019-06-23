@@ -103,27 +103,33 @@ void main() {
     ];
 
     // convert devices to rules
-    List rules = deviceSpecToRules(devices);
+    List rules = devicesToRules(devices);
     print(jsonEncode(rules));
   });
 
-  test('setup device pool', () {
+  test('setup device pool', () async {
     final projectArn =
         'arn:aws:devicefarm:us-west-2:122621792560:project:fb4de03d-c6ac-4d25-bd27-4a59214d2a8b';
-    final poolName = 'flutter test pool 2';
-    final List devices = [
-      {'name': 'Apple iPhone X', 'model': 'A1865', 'os': '12.0'}
-    ];
+    final poolName = 'android pool 1';
+    final configFilePath = 'test/sylph_test.yaml';
+
+    Map config = await parseYaml(configFilePath);
+
+    Map devicePoolInfo = getDevicePoolInfo(config, poolName);
 
     // check for existing pool
-    String result = setupDevicePool(projectArn, poolName, devices);
+    String result = setupDevicePool(devicePoolInfo, projectArn);
 
     print(result);
   });
 
   test('monitor run progress until complete', () {
+    // failed run
+//    final runArn =
+//        'arn:aws:devicefarm:us-west-2:122621792560:run:18ccd74d-2cbc-4d61-a9ca-2fcf656d4d48/cc93dcee-d406-48a6-b8e6-5eaaeb290b11';
+    // successful run
     final runArn =
-        'arn:aws:devicefarm:us-west-2:122621792560:run:18ccd74d-2cbc-4d61-a9ca-2fcf656d4d48/cc93dcee-d406-48a6-b8e6-5eaaeb290b11';
+        'arn:aws:devicefarm:us-west-2:122621792560:job:25b6693b-ecdc-40b6-b736-29de562c18b9/db578606-ebc4-4c1e-a72e-a14b30cbe898/00000';
     final timeout = 100;
     Map result;
 
@@ -212,7 +218,7 @@ void main() {
     expect(devicePoolInfo['pool_type'], enumToStr(DeviceType.android));
   });
 
-  test('download artifacts', () {
+  test('download artifacts by run', () {
     // get project arn
     // aws devicefarm list-projects
     // get project runs
@@ -237,5 +243,75 @@ void main() {
         orElse: () => null);
     print(project);
     expect(project['name'], projectName);
+  });
+
+  test('download artifacts by job', () {
+    // get project arn
+    // aws devicefarm list-projects
+    // get project runs
+    // aws devicefarm list-runs --arn <project arn>
+    // get artifacts by run, by test suite, by test, etc..
+    // aws devicefarm list-artifacts --arn <run arn>
+    // download each artifact
+    DateTime sylphRunTimestamp = genTimestamp();
+    final projectName = 'example flutter tests 2';
+    final poolName = 'pool 1'; // only used in dir path
+    final downloadDirPrefix = '/tmp/sylph artifacts';
+    final runStartDate = 1561183228.503; // a successful run on ios
+
+    // expected device from pool in job
+    final jobDevice = {'name': 'iPhone X', 'model': 'A1865', 'os': '12.0'};
+
+    // list projects
+    final projects = deviceFarmCmd(['list-projects'])['projects'];
+
+    // get project arn
+    final project = projects.firstWhere(
+        (project) => project['name'] == projectName,
+        orElse: () => null);
+    final projectArn = project['arn'];
+    expect(projectArn,
+        'arn:aws:devicefarm:us-west-2:122621792560:project:25b6693b-ecdc-40b6-b736-29de562c18b9');
+
+    // list runs
+    final runs = deviceFarmCmd(['list-runs', '--arn', projectArn])['runs'];
+//    print('runs=$runs');
+    // get a run
+    final run = runs.firstWhere((run) => '${run['created']}' == '$runStartDate',
+        orElse: () => null);
+    final runArn = run['arn'];
+    expect(runArn,
+        'arn:aws:devicefarm:us-west-2:122621792560:run:25b6693b-ecdc-40b6-b736-29de562c18b9/db578606-ebc4-4c1e-a72e-a14b30cbe898');
+
+    // list jobs
+    final List jobs = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
+
+    // get a job
+    final job = jobs.firstWhere((job) => isJobOnDevice(job, jobDevice),
+        orElse: () => null);
+    final jobArn = job['arn'];
+    expect(jobArn,
+        'arn:aws:devicefarm:us-west-2:122621792560:job:25b6693b-ecdc-40b6-b736-29de562c18b9/db578606-ebc4-4c1e-a72e-a14b30cbe898/00000');
+
+    // generate job download dir
+    String jobDownloadDir = generateRunArtifactsDir(
+        downloadDirPrefix, projectName, sylphRunTimestamp, poolName, jobDevice);
+
+    // download job artifacts
+    downloadJobArtifacts(runArn, jobDevice, jobDownloadDir);
+  });
+
+  test('get first device in pool', () async {
+    final filePath = 'test/sylph_test.yaml';
+    final poolName = 'android pool 1';
+    final config = await parseYaml(filePath);
+    final devicePoolInfo = getDevicePoolInfo(config, poolName);
+    final devices = devicePoolInfo['devices'];
+    final expected = {
+      'model': 'SM-G960U1',
+      'name': 'Samsung Galaxy S9 (Unlocked)',
+      'os': '8.0.0'
+    };
+    expect(devices.first, expected);
   });
 }

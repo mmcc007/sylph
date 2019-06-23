@@ -4,28 +4,62 @@ import 'dart:io';
 import 'package:sylph/bundle.dart';
 import 'package:sylph/sylph.dart' as sylph;
 import 'package:sylph/utils.dart';
+import 'package:args/args.dart';
+
+const usage = 'usage: sylph [--help] [--config <config file>]';
+const sampleUsage = 'sample usage: sylph';
 
 const kDebugApkPath = 'build/app/outputs/apk/debug/app-debug.apk';
 const kDebugIpaPath = 'build/ios/Debug-iphoneos/Debug_Runner.ipa';
-const kConfigFilePath = 'sylph.yaml'; // todo: allow different names
 
 /// Uploads debug app and integration test to device farm and runs test.
 main(List<String> arguments) async {
-  final localRunTimeout = 720; // todo: allow different timeouts
-  final runName = 'android and ios run 1'; // todo: allow different names
+  ArgResults argResults;
+
+  final configArg = 'config';
+  final helpArg = 'help';
+  final ArgParser argParser = new ArgParser(allowTrailingOptions: false)
+    ..addOption(configArg,
+        abbr: 'c',
+        defaultsTo: 'sylph.yaml',
+        help: 'Path to config file.',
+        valueHelp: 'sylph.yaml')
+    ..addFlag(helpArg,
+        help: 'Display this help information.', negatable: false);
+  try {
+    argResults = argParser.parse(arguments);
+  } on ArgParserException catch (e) {
+    _handleError(argParser, e.toString());
+  }
+
+  // show help
+  if (argResults[helpArg]) {
+    _showUsage(argParser);
+    exit(0);
+  }
+
+  // validate args
+  final configFilePath = argResults[configArg];
+  final file = File(configFilePath);
+  if (!await file.exists()) {
+    _handleError(argParser, "File not found: $configFilePath");
+  }
+
+  final sylphRunTimeout = 720; // todo: allow different timeouts
   final timestamp = genTimestamp();
-  print('Starting AWS Device Farm run \'$runName\' at $timestamp ...');
-  print('Config file: $kConfigFilePath');
+  final sylphRunName = 'sylph run at $timestamp'; // todo: allow different names
+  print('Starting Sylph run \'$sylphRunName\' on AWS Device Farm ...');
+  print('Config file: $configFilePath');
 
   // Parse config file
-  Map config = await sylph.parseYaml(kConfigFilePath);
+  Map config = await sylph.parseYaml(configFilePath);
 
   // Setup project (if needed)
   final projectArn =
       sylph.setupProject(config['project_name'], config['default_job_timeout']);
 
-  await run(config, projectArn, runName, localRunTimeout, timestamp);
-  print('Completed AWS Device Farm run \'$runName\'.');
+  await run(config, projectArn, sylphRunName, sylphRunTimeout, timestamp);
+  print('Completed AWS Device Farm run \'$sylphRunName\'.');
 }
 
 /// Processes config file (subject to change)
@@ -36,8 +70,8 @@ main(List<String> arguments) async {
 /// 4. For each test in each testsuite
 ///    1. Run tests on device pool
 ///    2. Report and collect artifacts
-void run(Map config, String projectArn, String runName, int runTimeout,
-    DateTime timestamp) async {
+void run(Map config, String projectArn, String sylphRunName,
+    int sylphRunTimeout, DateTime sylphRunTimestamp) async {
   final List testSuites = config['test_suites'];
 //    print('testSuites=$testSuites');
   for (var testSuite in testSuites) {
@@ -61,12 +95,13 @@ void run(Map config, String projectArn, String runName, int runTimeout,
 
     // Initialize device pools and run tests in each pool
     for (final poolName in testSuite['pool_names']) {
-      print('\nStarting Device Farm run on pool \'$poolName\'...\n');
+      print(
+          '\nStarting \'${testSuite['test_suite']}\' run \'$sylphRunName\' in project \'${config['project_name']}\' on pool \'$poolName\'...\n');
       // lookup device pool info in config file
       Map devicePoolInfo = getDevicePoolInfo(config, poolName);
 
       // Setup device pool
-      String devicePoolArn = setupDevicePool(devicePoolInfo, projectArn);
+      String devicePoolArn = sylph.setupDevicePool(devicePoolInfo, projectArn);
 
       // Build debug app for pool type and upload
       final appArn = await buildUploadApp(
@@ -86,13 +121,25 @@ void run(Map config, String projectArn, String runName, int runTimeout,
       String testSpecArn =
           sylph.uploadFile(projectArn, testSpecPath, 'APPIUM_PYTHON_TEST_SPEC');
 
+      // get first device in device pool (currently supporting only one device per pool)
+      final jobDevice = devicePoolInfo['devices'].first;
+
       // construct artifacts dir for this device farm run
-      final runArtifactsDir =
-          '${config['artifacts_dir']}/$runName $timestamp/$poolName';
+      final runArtifactsDir = generateRunArtifactsDir(config['artifacts_dir'],
+          config['project_name'], sylphRunTimestamp, poolName, jobDevice);
 
       // run tests and report
-      runTests(runName, runTimeout, projectArn, devicePoolArn, appArn,
-          testPackageArn, testSpecArn, runArtifactsDir);
+      runTests(
+          sylphRunName,
+          sylphRunTimeout,
+          projectArn,
+          devicePoolArn,
+          appArn,
+          testPackageArn,
+          testSpecArn,
+          runArtifactsDir,
+          testSuite['job_timeout'],
+          jobDevice);
     }
   }
 }
@@ -124,34 +171,39 @@ Future<String> buildUploadApp(
 /// Runs the test suite and downloads artifacts.
 void runTests(
     String runName,
-    int runTimeout,
+    int sylphRunTimeout,
     String projectArn,
     String devicePoolArn,
     String appArn,
     String testPackageArn,
     String testSpecArn,
-    String artifactsDir) {
+    String artifactsDir,
+    int jobTimeout,
+    Map jobDevice) {
   // Schedule run
   print('Starting run \'$runName\' on AWS Device Farms');
-  String runArn = sylph.scheduleRun(
-      runName, projectArn, appArn, devicePoolArn, testSpecArn, testPackageArn);
+  String runArn = sylph.scheduleRun(runName, projectArn, appArn, devicePoolArn,
+      testSpecArn, testPackageArn, jobTimeout);
 
   // Monitor run progress
-  final run = sylph.runStatus(runArn, runTimeout);
+  final run = sylph.runStatus(runArn, sylphRunTimeout);
 
   // Output run result
   sylph.runReport(run);
 
   // Download artifacts
   print('Downloading artifacts...');
-  sylph.downloadArtifacts(runArn, artifactsDir);
+  sylph.downloadJobArtifacts(runArn, jobDevice, artifactsDir);
 }
 
-/// Sets-up the named device pool.
-/// Returns device pool ARN as [String].
-String setupDevicePool(Map devicePoolInfo, String projectArn) {
-  final poolName = devicePoolInfo['pool_name'];
-  final devices = devicePoolInfo['devices'];
-  final devicePoolArn = sylph.setupDevicePool(projectArn, poolName, devices);
-  return devicePoolArn;
+void _handleError(ArgParser argParser, String msg) {
+  stderr.writeln(msg);
+  _showUsage(argParser);
+  exit(1);
+}
+
+void _showUsage(ArgParser argParser) {
+  print('$usage');
+  print('\n$sampleUsage\n');
+  print(argParser.usage);
 }

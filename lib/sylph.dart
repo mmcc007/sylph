@@ -3,11 +3,11 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:sylph/utils.dart';
 import 'package:path/path.dart' as p;
-import 'package:uuid/uuid.dart';
 import 'package:yaml/yaml.dart';
 
 enum DeviceType { ios, android }
 
+const kUploadTimeout = 5;
 const kCompletedRunStatus = 'COMPLETED';
 const kSuccessResult = 'PASSED';
 
@@ -31,7 +31,7 @@ String setupProject(String projectName, int jobTimeoutMinutes) {
 
   if (project == null) {
     // create new project
-    print('Creating project for $projectName ...');
+    print('Creating new project for \'$projectName\' ...');
     return deviceFarmCmd([
       'create-project',
       '--name',
@@ -46,7 +46,9 @@ String setupProject(String projectName, int jobTimeoutMinutes) {
 
 /// Set up a device pool if named pool does not exist.
 /// Returns the device pool ARN as [String].
-String setupDevicePool(String projectArn, String poolName, List devices) {
+String setupDevicePool(Map devicePoolInfo, String projectArn) {
+  final poolName = devicePoolInfo['pool_name'];
+  final devices = devicePoolInfo['devices'];
   // check for existing pool
   final pools = deviceFarmCmd([
     'list-device-pools',
@@ -60,9 +62,9 @@ String setupDevicePool(String projectArn, String poolName, List devices) {
 
   if (pool == null) {
     // create new device pool
-    print('Creating new device pool $poolName ...');
+    print('Creating new device pool \'$poolName\' ...');
     // convert devices to rules
-    List rules = deviceSpecToRules(devices);
+    List rules = devicesToRules(devices);
 
     final newPool = deviceFarmCmd([
       'create-device-pool',
@@ -73,7 +75,8 @@ String setupDevicePool(String projectArn, String poolName, List devices) {
       '--rules',
       jsonEncode(rules),
       // number of devices in pool should not exceed number of devices requested
-      //        '--max-devices', '${devices.length}'
+      // An error occurred (ArgumentException) when calling the CreateDevicePool operation: A static device pool can not have max devices parameter
+//      '--max-devices', '${devices.length}'
     ])['devicePool'];
     return newPool['arn'];
   } else {
@@ -83,8 +86,14 @@ String setupDevicePool(String projectArn, String poolName, List devices) {
 
 /// Schedules a run.
 /// Returns the run ARN as [String].
-String scheduleRun(String runName, String projectArn, String appArn,
-    String devicePoolArn, String testSpecArn, String testPackageArn) {
+String scheduleRun(
+    String runName,
+    String projectArn,
+    String appArn,
+    String devicePoolArn,
+    String testSpecArn,
+    String testPackageArn,
+    int runTimeout) {
   // Schedule run
   return deviceFarmCmd([
     'schedule-run',
@@ -98,18 +107,18 @@ String scheduleRun(String runName, String projectArn, String appArn,
     runName,
     '--test',
     'testSpecArn=$testSpecArn,type=APPIUM_PYTHON,testPackageArn=$testPackageArn',
-    // todo: Set per job timeout ???
-    //    '--execution-configuration',
-    //    'jobTimeoutMinutes=5,accountsCleanup=false,appPackagesCleanup=false,videoCapture=true,skipAppResign=true'
+    '--execution-configuration',
+    'jobTimeoutMinutes=$runTimeout,accountsCleanup=false,appPackagesCleanup=false,videoCapture=true,skipAppResign=false'
   ])['run']['arn'];
 }
 
 /// Tracks run status.
 /// Returns final run as [Map].
-Map runStatus(String runArn, int localTimeout) {
+// todo: add per job status (test on each device in pool) to run status
+Map runStatus(String runArn, int sylphRunTimeout) {
   const timeoutIncrement = 2;
   Map run;
-  for (int i = 0; i < localTimeout; i = i + timeoutIncrement) {
+  for (int i = 0; i < sylphRunTimeout; i += timeoutIncrement) {
     run = deviceFarmCmd([
       'get-run',
       '--arn',
@@ -118,7 +127,7 @@ Map runStatus(String runArn, int localTimeout) {
     final runStatus = run['status'];
 
     // print run status
-    print('Run status: $runStatus (local timeout: $i of $localTimeout)');
+    print('Run status: $runStatus (sylph run timeout: $i of $sylphRunTimeout)');
 
     if (runStatus == kCompletedRunStatus) return run;
 
@@ -128,6 +137,7 @@ Map runStatus(String runArn, int localTimeout) {
 }
 
 /// Runs run report.
+// todo: add per job report (test on each device in pool) to run report
 void runReport(Map run) {
   // print intro
   print(
@@ -169,7 +179,6 @@ String findDeviceArn(String name, String model, String os) {
   final devices = deviceFarmCmd([
     'list-devices',
   ])['devices'];
-  // todo: change to using name/platform/os/formFactor
   Map device = devices.firstWhere(
       (device) => (device['name'] == name &&
           device['modelId'] == model &&
@@ -179,18 +188,17 @@ String findDeviceArn(String name, String model, String os) {
   return device['arn'];
 }
 
-/// Converts a list of devices to a list of rules.
+/// Converts a list of Device Farm [devices] to a list of rules.
 /// Used for building a device pool.
 /// Returns rules as [List].
-List deviceSpecToRules(List devices) {
+List devicesToRules(List devices) {
   // convert devices to rules
   final List rules = devices
       .map((device) => {
             'attribute': 'ARN',
             'operator': 'IN',
             'value': '[\"' +
-                findDeviceArn(
-                    device['name'], device['model'], "${device['os']}") +
+                findDeviceArn(device['name'], device['model'], device['os']) +
                 '\"]'
           })
       .toList();
@@ -229,23 +237,47 @@ String uploadFile(String projectArn, String filePath, String fileType) {
   return uploadArn;
 }
 
-/// Downloads artifacts generated by a run.
-// todo: organize artifacts by device in each pool
-void downloadArtifacts(String runArn, String runArtifactsDir) {
-//  runArtifactsDir = runArtifactsDir.replaceAll(' ', '_');
+/// Downloads artifacts generated during a run.
+void downloadJobArtifacts(String runArn, Map jobDevice, String jobDownloadDir) {
+  // list jobs
+  final List jobs = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
+  // check only one job and on expected device then download artifacts
+  if (jobs.length == 1) {
+    final job = jobs.first;
+    // confirm job is on expected device
+    if (isJobOnDevice(job, jobDevice)) {
+      downloadArtifacts(job['arn'], jobDownloadDir);
+    } else {
+      throw ('Error: job not on expected device: ${deviceDesc(jobDevice)}');
+    }
+  } else {
+    throw ('Error: multiple jobs found where one expected: $jobs');
+  }
+}
+
+/// Downloads artifacts generated during a run.
+/// [arn] can be a run, job, suite, or test ARN.
+void downloadArtifacts(String arn, String artifactsDir) {
   // create directory
-  clearDirectory(runArtifactsDir);
+  clearDirectory(artifactsDir);
 
   final artifacts = deviceFarmCmd(
-      ['list-artifacts', '--arn', runArn, '--type', 'FILE'])['artifacts'];
+      ['list-artifacts', '--arn', arn, '--type', 'FILE'])['artifacts'];
 
   for (final artifact in artifacts) {
     final name = artifact['name'];
     final extension = artifact['extension'];
     final fileUrl = artifact['url'];
-    final fileName =
-        name.replaceAll(' ', '_') + '.' + Uuid().v1() + '.' + extension;
-    final filePath = runArtifactsDir + '/' + fileName;
+    final artifactArn = artifact['arn'];
+
+    // avoid duplicate filenames
+    final regExp = RegExp(r'(\/\d*){4}$'); // get last four numbers of arn
+    // returns an empty element at start of list that is removed
+    final artifactIDs = regExp.stringMatch(artifactArn).split('/')..removeAt(0);
+
+    // use last artifactID to make unique
+    final fileName = '$name ${artifactIDs[3]}.$extension'.replaceAll(' ', '_');
+    final filePath = '$artifactsDir/$fileName';
     print(filePath);
     cmd('wget', ['-O', filePath, fileUrl]);
   }
