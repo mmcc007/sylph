@@ -31,7 +31,7 @@ String setupProject(String projectName, int jobTimeoutMinutes) {
 
   if (project == null) {
     // create new project
-    print('Creating project for $projectName ...');
+    print('Creating new project for $projectName ...');
     return deviceFarmCmd([
       'create-project',
       '--name',
@@ -46,7 +46,9 @@ String setupProject(String projectName, int jobTimeoutMinutes) {
 
 /// Set up a device pool if named pool does not exist.
 /// Returns the device pool ARN as [String].
-String setupDevicePool(String projectArn, String poolName, List devices) {
+String setupDevicePool(Map devicePoolInfo, String projectArn) {
+  final poolName = devicePoolInfo['pool_name'];
+  final devices = devicePoolInfo['devices'];
   // check for existing pool
   final pools = deviceFarmCmd([
     'list-device-pools',
@@ -62,7 +64,7 @@ String setupDevicePool(String projectArn, String poolName, List devices) {
     // create new device pool
     print('Creating new device pool $poolName ...');
     // convert devices to rules
-    List rules = deviceSpecToRules(devices);
+    List rules = devicesToRules(devices);
 
     final newPool = deviceFarmCmd([
       'create-device-pool',
@@ -73,7 +75,8 @@ String setupDevicePool(String projectArn, String poolName, List devices) {
       '--rules',
       jsonEncode(rules),
       // number of devices in pool should not exceed number of devices requested
-      //        '--max-devices', '${devices.length}'
+      // An error occurred (ArgumentException) when calling the CreateDevicePool operation: A static device pool can not have max devices parameter
+//      '--max-devices', '${devices.length}'
     ])['devicePool'];
     return newPool['arn'];
   } else {
@@ -83,8 +86,14 @@ String setupDevicePool(String projectArn, String poolName, List devices) {
 
 /// Schedules a run.
 /// Returns the run ARN as [String].
-String scheduleRun(String runName, String projectArn, String appArn,
-    String devicePoolArn, String testSpecArn, String testPackageArn) {
+String scheduleRun(
+    String runName,
+    String projectArn,
+    String appArn,
+    String devicePoolArn,
+    String testSpecArn,
+    String testPackageArn,
+    String runTimeout) {
   // Schedule run
   return deviceFarmCmd([
     'schedule-run',
@@ -98,9 +107,8 @@ String scheduleRun(String runName, String projectArn, String appArn,
     runName,
     '--test',
     'testSpecArn=$testSpecArn,type=APPIUM_PYTHON,testPackageArn=$testPackageArn',
-    // todo: Set per job timeout ???
-    //    '--execution-configuration',
-    //    'jobTimeoutMinutes=5,accountsCleanup=false,appPackagesCleanup=false,videoCapture=true,skipAppResign=true'
+    '--execution-configuration',
+    'jobTimeoutMinutes=$runTimeout,accountsCleanup=false,appPackagesCleanup=false,videoCapture=true,skipAppResign=false'
   ])['run']['arn'];
 }
 
@@ -171,7 +179,6 @@ String findDeviceArn(String name, String model, String os) {
   final devices = deviceFarmCmd([
     'list-devices',
   ])['devices'];
-  // todo: change to using name/platform/os/formFactor
   Map device = devices.firstWhere(
       (device) => (device['name'] == name &&
           device['modelId'] == model &&
@@ -181,18 +188,17 @@ String findDeviceArn(String name, String model, String os) {
   return device['arn'];
 }
 
-/// Converts a list of devices to a list of rules.
+/// Converts a list of Device Farm [devices] to a list of rules.
 /// Used for building a device pool.
 /// Returns rules as [List].
-List deviceSpecToRules(List devices) {
+List devicesToRules(List devices) {
   // convert devices to rules
   final List rules = devices
       .map((device) => {
             'attribute': 'ARN',
             'operator': 'IN',
             'value': '[\"' +
-                findDeviceArn(
-                    device['name'], device['model'], "${device['os']}") +
+                findDeviceArn(device['name'], device['model'], device['os']) +
                 '\"]'
           })
       .toList();
