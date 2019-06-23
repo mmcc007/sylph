@@ -64,19 +64,8 @@ EOF
   (cd "$app_dir/ios"; fastlane enable_match_code_signing mode:debug)
 }
 
-# currently assumes using forked version of flutter with archiving of debug .app permitted.
-# todo: remove this restriction by permitting on the fly
 build_debug_ipa() {
     local default_debug_ipa_name='Debug_Runner.ipa'
-
-    # cleanup on control-c
-    lay_interrupt_signal_traps
-
-    # checkout the xcode backend (just in case)
-    recover_disabler
-
-    # remove the debug .ipa disabler
-    remove_disabler
 
     APP_NAME="Runner"
     SCHEME=$APP_NAME
@@ -96,6 +85,15 @@ build_debug_ipa() {
     echo "Running flutter build ios -t test_driver/main.dart --debug..."
     flutter build ios -t test_driver/main.dart --debug
 
+    # cleanup on control-c
+    lay_interrupt_signal_traps
+
+    # checkout the xcode backend (just in case)
+    recover_archive_disabler
+
+    # remove the debug .ipa disabler
+    remove_archive_disabler
+
     echo "Generating debug archive..."
     xcodebuild archive \
       -workspace ios/$APP_NAME.xcworkspace \
@@ -104,6 +102,12 @@ build_debug_ipa() {
       -configuration $CONFIGURATION \
       -archivePath "$ARCHIVE_PATH" \
       | xcpretty
+
+     # checkout the xcode backend to recover disabler
+     recover_archive_disabler
+
+     # release signal traps
+     remove_traps
 
     echo "Generating debug .ipa at $IOS_BUILD_DIR/$APP_NAME.ipa..."
     xcodebuild -exportArchive \
@@ -115,17 +119,11 @@ build_debug_ipa() {
     # rename debug .ipa to standard name
     mv "$IOS_BUILD_DIR/$APP_NAME.ipa" "$IOS_BUILD_DIR/$default_debug_ipa_name"
 
-     # checkout the xcode backend to recover disabler
-     recover_disabler
-
-     # release signal traps
-     remove_traps
-
     echo "Debug .ipa successfully created in $IOS_BUILD_DIR/$default_debug_ipa_name"
 }
 
 # temporarily remove debug .ipa archive disabler
-remove_disabler() {
+remove_archive_disabler() {
   local flutter_path
   flutter_path="$(dirname "$(dirname "$(command -v flutter)")")"
   local xcode_backend_path="$flutter_path/packages/flutter_tools/bin/xcode_backend.sh"
@@ -152,36 +150,37 @@ remove_disabler() {
 '
   # define regular expression
   local re="(.*)$pattern(.*)"
-  local replaced
+  # xcode_backend.sh with disabler removed
+  local removed_disabler
 
-  # search and remove pattern
+  # search for and remove pattern
   if [[ $original =~ $re ]]; then
-    replaced=${BASH_REMATCH[1]}${BASH_REMATCH[2]}
+    removed_disabler=${BASH_REMATCH[1]}${BASH_REMATCH[2]}
   else
-    echo "FATAL ERROR: by-passing debug archiving disabler failed"
+    echo "FATAL ERROR: removal of archive disabler failed. Please create issue in https://github.com/mmcc007/sylph/issues"
     exit 1
   fi
 
   # write out new script
-  echo "$replaced" > "$xcode_backend_path"
+  echo "$removed_disabler" > "$xcode_backend_path"
 
-  echo "Removed disabler in xcode_backend.sh (required while archiving debug .ipa)"
+  echo "Removed archive disabler in flutter"
 
 }
 
 # recover debug .ipa archive disabler
-recover_disabler(){
+recover_archive_disabler(){
   local flutter_path
   flutter_path="$(dirname "$(dirname "$(command -v flutter)")")"
 
   local xcode_backend_path="packages/flutter_tools/bin/xcode_backend.sh"
   (cd "$flutter_path"; git checkout "$xcode_backend_path")
-  echo "Recovered disabler in xcode_backend.sh"
+  echo "Recovered archive disabler in flutter"
 }
 
 interrupt_signal_handler() {
-  echo -en "\n## Caught interrupt signal; Cleaning up and exiting \n"
-  recover_disabler
+  echo -en "\n## Sylph caught interrupt signal; Cleaning up and exiting \n"
+  recover_archive_disabler
 #  exit $?
   exit 1
 }
