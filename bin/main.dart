@@ -48,7 +48,7 @@ main(List<String> arguments) async {
   final sylphRunTimeout = 720; // todo: allow different timeouts
   final timestamp = genTimestamp();
   final sylphRunName = 'sylph run at $timestamp'; // todo: allow different names
-  print('Starting AWS Device Farm run \'$sylphRunName\' ...');
+  print('Starting Sylph run \'$sylphRunName\' on AWS Device Farm ...');
   print('Config file: $configFilePath');
 
   // Parse config file
@@ -71,7 +71,7 @@ main(List<String> arguments) async {
 ///    1. Run tests on device pool
 ///    2. Report and collect artifacts
 void run(Map config, String projectArn, String sylphRunName,
-    int sylphRunTimeout, DateTime timestamp) async {
+    int sylphRunTimeout, DateTime sylphRunTimestamp) async {
   final List testSuites = config['test_suites'];
 //    print('testSuites=$testSuites');
   for (var testSuite in testSuites) {
@@ -95,7 +95,8 @@ void run(Map config, String projectArn, String sylphRunName,
 
     // Initialize device pools and run tests in each pool
     for (final poolName in testSuite['pool_names']) {
-      print('\nStarting Device Farm run on pool \'$poolName\'...\n');
+      print(
+          '\nStarting \'${testSuite['test_suite']}\' run \'$sylphRunName\' in project \'${config['project_name']}\' on pool \'$poolName\'...\n');
       // lookup device pool info in config file
       Map devicePoolInfo = getDevicePoolInfo(config, poolName);
 
@@ -120,9 +121,12 @@ void run(Map config, String projectArn, String sylphRunName,
       String testSpecArn =
           sylph.uploadFile(projectArn, testSpecPath, 'APPIUM_PYTHON_TEST_SPEC');
 
+      // get first device in device pool (currently supporting only one device per pool)
+      final jobDevice = devicePoolInfo['devices'].first;
+
       // construct artifacts dir for this device farm run
-      final runArtifactsDir =
-          '${config['artifacts_dir']}/$sylphRunName/$poolName';
+      final runArtifactsDir = generateRunArtifactsDir(config['artifacts_dir'],
+          config['project_name'], sylphRunTimestamp, poolName, jobDevice);
 
       // run tests and report
       runTests(
@@ -134,7 +138,8 @@ void run(Map config, String projectArn, String sylphRunName,
           testPackageArn,
           testSpecArn,
           runArtifactsDir,
-          testSuite['job_timeout']);
+          testSuite['job_timeout'],
+          jobDevice);
     }
   }
 }
@@ -173,7 +178,8 @@ void runTests(
     String testPackageArn,
     String testSpecArn,
     String artifactsDir,
-    String jobTimeout) {
+    int jobTimeout,
+    Map jobDevice) {
   // Schedule run
   print('Starting run \'$runName\' on AWS Device Farms');
   String runArn = sylph.scheduleRun(runName, projectArn, appArn, devicePoolArn,
@@ -187,7 +193,7 @@ void runTests(
 
   // Download artifacts
   print('Downloading artifacts...');
-  sylph.downloadArtifacts(runArn, artifactsDir);
+  sylph.downloadJobArtifacts(runArn, jobDevice, artifactsDir);
 }
 
 void _handleError(ArgParser argParser, String msg) {

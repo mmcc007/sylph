@@ -96,3 +96,29 @@ DateTime genTimestamp() {
       DateTime.now().millisecondsSinceEpoch);
   return timestamp;
 }
+
+/// Generates device descriptor as [String]
+String deviceDesc(Map device) {
+  return 'name=${device['model']}, model=${device['model']}, os=${device['os']}';
+}
+
+/// checks if job running on correct device
+bool isJobOnDevice(Map job, Map device) {
+  final deviceFarmDevice = job['device'];
+  if (deviceFarmDevice['model'] == device['name'] &&
+      deviceFarmDevice['modelId'] == device['model'] &&
+      deviceFarmDevice['os'] == device['os']) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+/// generates a download directory for a Device Farm run's artifacts
+String generateRunArtifactsDir(String downloadDirPrefix, String projectName,
+    DateTime sylphRunTimestamp, String poolName, Map device) {
+  final downloadDir = '$downloadDirPrefix/' +
+      '$projectName-$sylphRunTimestamp/$poolName/${device['name']}-${device['model']}-${device['os']}'
+          .replaceAll(' ', '_');
+  return downloadDir;
+}
