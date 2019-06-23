@@ -3,11 +3,11 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:sylph/utils.dart';
 import 'package:path/path.dart' as p;
-import 'package:uuid/uuid.dart';
 import 'package:yaml/yaml.dart';
 
 enum DeviceType { ios, android }
 
+const kUploadTimeout = 5;
 const kCompletedRunStatus = 'COMPLETED';
 const kSuccessResult = 'PASSED';
 
@@ -249,7 +249,7 @@ void downloadArtifacts(String arn, String runArtifactsDir) {
     // avoid duplicate filenames
     final regExp = RegExp(r'(\/\d*){4}$'); // get last four numbers of arn
     // returns an empty element at start of list that is removed
-    var artifactIDs = regExp.stringMatch(artifactArn).split('/')..removeAt(0);
+    final artifactIDs = regExp.stringMatch(artifactArn).split('/')..removeAt(0);
 
     // use last artifactID to make unique
     final fileName = '$name ${artifactIDs[3]}.$extension'.replaceAll(' ', '_');
