@@ -5,10 +5,6 @@
 set -e
 #set -x
 
-# constants
-dummy_ssh_keys_dir='dummy-ssh-keys'
-fastlane_dir='ios/fastlane'
-
 main(){
   case $1 in
     --build-debug-ipa)
@@ -16,7 +12,7 @@ main(){
         ;;
     --ci)
         if [[ -z $2 ]]; then show_help; fi
-        config_ci $2
+        config_ci "$2"
         ;;
     *)
         show_help
@@ -41,23 +37,10 @@ where:
     exit 1
 }
 
-# constants
-default_debug_ipa_name='Debug_Runner.ipa'
-default_debug_ipa_dir="."
-
 # install certificate and provisioning profile using match
 # assumes resources unbundled from sylph
 config_ci() {
   local app_dir=$1
-
-  # install fastfiles
-#  cp -r "$staging_dir/fastfile" 'ios'
-#  cp "$staging_dir/Gemfile*" 'ios'
-#
-#  # install dummy keys
-#  cp -r "$staging_dir/$dummy_ssh_keys_dir" '.'
-#
-#  echo "Installed fastfiles and keys"
 
   # setup ssh for fastlane match
   # set default identity file
@@ -69,7 +52,7 @@ IdentityFile $app_dir/dummy-ssh-keys/key
 EOF
 
   # add MATCH_HOST public key to known hosts
-  ssh-keyscan -t ecdsa -p $MATCH_PORT $MATCH_HOST >> ~/.ssh/known_hosts
+  ssh-keyscan -t ecdsa -p "$MATCH_PORT" "$MATCH_HOST" >> ~/.ssh/known_hosts
   chmod 600 "$app_dir/dummy-ssh-keys/key"
   chmod 700 "$app_dir/dummy-ssh-keys"
 
@@ -84,6 +67,8 @@ EOF
 # currently assumes using forked version of flutter with archiving of debug .app permitted.
 # todo: remove this restriction by permitting on the fly
 build_debug_ipa() {
+    local default_debug_ipa_name='Debug_Runner.ipa'
+
     # cleanup on control-c
     lay_interrupt_signal_traps
 
@@ -94,7 +79,6 @@ build_debug_ipa() {
     remove_disabler
 
     APP_NAME="Runner"
-    FINAL_APP_NAME="Debug_Runner"
     SCHEME=$APP_NAME
 
 #    IOS_BUILD_DIR=$PWD/build/ios/Release-iphoneos
@@ -142,11 +126,17 @@ build_debug_ipa() {
 
 # temporarily remove debug .ipa archive disabler
 remove_disabler() {
-  local flutter_path="$(dirname $(dirname $(which flutter)))"
+  local flutter_path
+  flutter_path="$(dirname "$(dirname "$(command -v flutter)")")"
   local xcode_backend_path="$flutter_path/packages/flutter_tools/bin/xcode_backend.sh"
 
-  local original=$(<"$xcode_backend_path")
+  local original
 
+  # read in script
+  original=$(<"$xcode_backend_path")
+
+  # define pattern that matches disabler code to remove
+  # shellcheck disable=SC2016
   local pattern='
   if \[\[ \"\$ACTION\" == \"install\" \&\& \"\$build_mode\" != \"release\" \]\]\; then
     EchoError "========================================================================"
@@ -160,22 +150,30 @@ remove_disabler() {
     exit -1
   fi
 '
+  # define regular expression
   local re="(.*)$pattern(.*)"
-
   local replaced
 
+  # search and remove pattern
   if [[ $original =~ $re ]]; then
     replaced=${BASH_REMATCH[1]}${BASH_REMATCH[2]}
   else
     echo "FATAL ERROR: by-passing debug archiving disabler failed"
-    exit -1
+    exit 1
   fi
+
+  # write out new script
   echo "$replaced" > "$xcode_backend_path"
+
+  echo "Removed disabler in xcode_backend.sh (required while archiving debug .ipa)"
+
 }
 
 # recover debug .ipa archive disabler
 recover_disabler(){
-  local flutter_path="$(dirname $(dirname $(which flutter)))"
+  local flutter_path
+  flutter_path="$(dirname "$(dirname "$(command -v flutter)")")"
+
   local xcode_backend_path="packages/flutter_tools/bin/xcode_backend.sh"
   (cd "$flutter_path"; git checkout "$xcode_backend_path")
   echo "Recovered disabler in xcode_backend.sh"
@@ -185,7 +183,7 @@ interrupt_signal_handler() {
   echo -en "\n## Caught interrupt signal; Cleaning up and exiting \n"
   recover_disabler
 #  exit $?
-  exit -1
+  exit 1
 }
 
 lay_interrupt_signal_traps() {
