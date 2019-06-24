@@ -24,7 +24,7 @@ Future<void> writeFileImage(List<int> fileImage, String path) async {
 /// Returns stdout as [String].
 String cmd(String cmd, List<String> arguments,
     [String workingDir = '.', bool silent = true]) {
-  print('cmd=\'$cmd ${arguments.join(" ")}\'');
+//  print('cmd=\'$cmd ${arguments.join(" ")}\'');
   final result = Process.runSync(cmd, arguments, workingDirectory: workingDir);
   if (!silent) stdout.write(result.stdout);
   if (result.exitCode != 0) {
@@ -98,18 +98,6 @@ String deviceDesc(Map device) {
   return 'name=${device['name']}, model=${device['model']}, os=${device['os']}';
 }
 
-/// checks if job running on correct device
-//bool isJobOnDevice(Map job, Map device) {
-//  final deviceFarmDevice = job['device'];
-//  if (deviceFarmDevice['model'] == device['name'] &&
-//      deviceFarmDevice['modelId'] == device['model'] &&
-//      deviceFarmDevice['os'] == device['os']) {
-//    return true;
-//  } else {
-//    return false;
-//  }
-//}
-
 /// generates a download directory for each Device Farm run's artifacts
 String generateRunArtifactsDir(String downloadDirPrefix, String sylphRunName,
     String projectName, String poolName) {
@@ -135,17 +123,8 @@ Map getSylphDevice(jobDevice) {
   };
 }
 
-///// Compares a jobDevice to a sylph device
-//bool isDeviceEqual(Map device, String name, String model, String os) {
-//  return device['name'] == name &&
-//      device['modelId'] == model &&
-//      device['os'] == os;
-//}
-
 /// Compares a jobDevice to a sylph device
 bool isDeviceEqual(Map jobDevice, Map sylphDevice) {
-//  print('jobDevice=$jobDevice');
-//  print('sylphDevice=$sylphDevice');
   return jobDevice['name'] == sylphDevice['name'] &&
       jobDevice['modelId'] == sylphDevice['model'] &&
       jobDevice['os'] == sylphDevice['os'];
