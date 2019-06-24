@@ -24,7 +24,7 @@ Future<void> writeFileImage(List<int> fileImage, String path) async {
 /// Returns stdout as [String].
 String cmd(String cmd, List<String> arguments,
     [String workingDir = '.', bool silent = true]) {
-//  print('cmd=\'$cmd ${arguments.join(" ")}\'');
+  print('cmd=\'$cmd ${arguments.join(" ")}\'');
   final result = Process.runSync(cmd, arguments, workingDirectory: workingDir);
   if (!silent) stdout.write(result.stdout);
   if (result.exitCode != 0) {
@@ -78,13 +78,9 @@ String deviceTypeStr(DeviceType deviceType) {
 
 /// Gets device pool from config file.
 /// Returns as [Map].
-Map getDevicePoolInfo(Map config, String poolName) {
-  final List devicePools = config['device_pools'];
-//  print('devicePools=$devicePools');
-  return devicePools.firstWhere((pool) {
-//    print(pool['pool_name']);
-    return pool['pool_name'] == poolName;
-  }, orElse: () => throw 'Error: device pool $poolName not found');
+Map getDevicePoolInfo(List devicePools, String poolName) {
+  return devicePools.firstWhere((pool) => pool['pool_name'] == poolName,
+      orElse: () => throw 'Error: device pool $poolName not found');
 }
 
 /// Converts [enum] value to [String].
@@ -99,26 +95,69 @@ DateTime genTimestamp() {
 
 /// Generates device descriptor as [String]
 String deviceDesc(Map device) {
-  return 'name=${device['model']}, model=${device['model']}, os=${device['os']}';
+  return 'name=${device['name']}, model=${device['model']}, os=${device['os']}';
 }
 
 /// checks if job running on correct device
-bool isJobOnDevice(Map job, Map device) {
-  final deviceFarmDevice = job['device'];
-  if (deviceFarmDevice['model'] == device['name'] &&
-      deviceFarmDevice['modelId'] == device['model'] &&
-      deviceFarmDevice['os'] == device['os']) {
-    return true;
-  } else {
-    return false;
-  }
+//bool isJobOnDevice(Map job, Map device) {
+//  final deviceFarmDevice = job['device'];
+//  if (deviceFarmDevice['model'] == device['name'] &&
+//      deviceFarmDevice['modelId'] == device['model'] &&
+//      deviceFarmDevice['os'] == device['os']) {
+//    return true;
+//  } else {
+//    return false;
+//  }
+//}
+
+/// generates a download directory for each Device Farm run's artifacts
+String generateRunArtifactsDir(String downloadDirPrefix, String sylphRunName,
+    String projectName, String poolName) {
+  final downloadDir = '$downloadDirPrefix/' +
+      '$sylphRunName/$projectName/$poolName'.replaceAll(' ', '_');
+  return downloadDir;
 }
 
-/// generates a download directory for a Device Farm run's artifacts
-String generateRunArtifactsDir(String downloadDirPrefix, String projectName,
-    DateTime sylphRunTimestamp, String poolName, Map device) {
-  final downloadDir = '$downloadDirPrefix/' +
-      '$projectName-$sylphRunTimestamp/$poolName/${device['name']}-${device['model']}-${device['os']}'
+/// generates a download directory for each Device Farm run job's artifacts
+String generateJobArtifactsDir(String runArtifactDir, Map sylphDevice) {
+  final downloadDir = '$runArtifactDir/' +
+      '${sylphDevice['name']}-${sylphDevice['model']}-${sylphDevice['os']}'
           .replaceAll(' ', '_');
   return downloadDir;
+}
+
+/// Maps a job device to a sylph device
+Map getSylphDevice(jobDevice) {
+  return {
+    'name': jobDevice['name'],
+    'model': jobDevice['modelId'],
+    'os': jobDevice['os']
+  };
+}
+
+///// Compares a jobDevice to a sylph device
+//bool isDeviceEqual(Map device, String name, String model, String os) {
+//  return device['name'] == name &&
+//      device['modelId'] == model &&
+//      device['os'] == os;
+//}
+
+/// Compares a jobDevice to a sylph device
+bool isDeviceEqual(Map jobDevice, Map sylphDevice) {
+//  print('jobDevice=$jobDevice');
+//  print('sylphDevice=$sylphDevice');
+  return jobDevice['name'] == sylphDevice['name'] &&
+      jobDevice['modelId'] == sylphDevice['model'] &&
+      jobDevice['os'] == sylphDevice['os'];
+}
+
+/// Formats a list of ARNs for Device Farm API
+/// Returns a formatted [String]
+String formatArns(List arns) {
+  String formatted = '';
+  for (final arn in arns) {
+    formatted += '\\"$arn\\",';
+  }
+  // remove last char
+  return formatted.substring(0, formatted.length - 1);
 }

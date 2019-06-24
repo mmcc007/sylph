@@ -45,14 +45,15 @@ main(List<String> arguments) async {
     _handleError(argParser, "File not found: $configFilePath");
   }
 
-  final sylphRunTimeout = 720; // todo: allow different timeouts
   final timestamp = genTimestamp();
-  final sylphRunName = 'sylph run at $timestamp'; // todo: allow different names
+  final sylphRunName = 'sylph run at $timestamp';
   print('Starting Sylph run \'$sylphRunName\' on AWS Device Farm ...');
   print('Config file: $configFilePath');
 
   // Parse config file
   Map config = await sylph.parseYaml(configFilePath);
+
+  final sylphRunTimeout = config['sylph_timeout'];
 
   // Setup project (if needed)
   final projectArn =
@@ -86,9 +87,11 @@ void run(Map config, String projectArn, String sylphRunName,
 //          'bundling test: $test on $poolType devices in device pool $poolName');
 //    }
 
+    // sylph staging dir
     final tmpDir = config['tmp_dir'];
+
     // Unpack resources used for building debug .ipa and to bundle tests
-    await unpackResources(tmpDir); // todo: remove here or in bundler
+    await unpackResources(tmpDir);
 
     // Bundle tests
     await bundleFlutterTests(config);
@@ -98,7 +101,7 @@ void run(Map config, String projectArn, String sylphRunName,
       print(
           '\nStarting \'${testSuite['test_suite']}\' run \'$sylphRunName\' in project \'${config['project_name']}\' on pool \'$poolName\'...\n');
       // lookup device pool info in config file
-      Map devicePoolInfo = getDevicePoolInfo(config, poolName);
+      Map devicePoolInfo = getDevicePoolInfo(config['device_pools'], poolName);
 
       // Setup device pool
       String devicePoolArn = sylph.setupDevicePool(devicePoolInfo, projectArn);
@@ -124,9 +127,9 @@ void run(Map config, String projectArn, String sylphRunName,
       // get first device in device pool (currently supporting only one device per pool)
       final jobDevice = devicePoolInfo['devices'].first;
 
-      // construct artifacts dir for this device farm run
+      // construct artifacts dir for device farm run
       final runArtifactsDir = generateRunArtifactsDir(config['artifacts_dir'],
-          config['project_name'], sylphRunTimestamp, poolName, jobDevice);
+          sylphRunName, config['project_name'], poolName);
 
       // run tests and report
       runTests(
@@ -193,7 +196,7 @@ void runTests(
 
   // Download artifacts
   print('Downloading artifacts...');
-  sylph.downloadJobArtifacts(runArn, jobDevice, artifactsDir);
+  sylph.downloadJobArtifacts(runArn, artifactsDir);
 }
 
 void _handleError(ArgParser argParser, String msg) {
