@@ -63,8 +63,7 @@ String setupDevicePool(Map devicePoolInfo, String projectArn) {
   if (pool == null) {
     // create new device pool
     print('Creating new device pool \'$poolName\' ...');
-    // convert devices to rules
-//    List rules = devicesToRules(devices);
+    // convert devices to a rule
     String rules = devicesToRule(devices);
 
     final newPool = deviceFarmCmd([
@@ -74,7 +73,6 @@ String setupDevicePool(Map devicePoolInfo, String projectArn) {
       '--project-arn',
       projectArn,
       '--rules',
-//      jsonEncode(rules),
       rules,
       // number of devices in pool should not exceed number of devices requested
       // An error occurred (ArgumentException) when calling the CreateDevicePool operation: A static device pool can not have max devices parameter
@@ -175,19 +173,6 @@ void runReport(Map run) {
   }
 }
 
-/// Finds the ARN of a device.
-/// Returns device ARN  as [String].
-String findDeviceArn(Map sylphDevice) {
-  final jobDevices = deviceFarmCmd([
-    'list-devices',
-  ])['devices'];
-  Map jobDevice = jobDevices.firstWhere(
-      (device) => (isDeviceEqual(device, sylphDevice)),
-      orElse: () =>
-          throw 'Error: device does not exist: ${deviceDesc(sylphDevice)}');
-  return jobDevice['arn'];
-}
-
 /// Finds the ARNs of devices
 /// Returns device ARNs as a [List]
 List findDevicesArns(List sylphDevices) {
@@ -205,21 +190,6 @@ List findDevicesArns(List sylphDevices) {
   }
 
   return deviceArns;
-}
-
-/// Converts a list of sylph devices [sylphDevices] to a list of rules.
-/// Used for building a device pool.
-/// Returns rules as [List].
-List devicesToRules(List sylphDevices) {
-  // convert devices to rules
-  final List rules = sylphDevices
-      .map((sylphDevice) => {
-            'attribute': 'ARN',
-            'operator': 'IN',
-            'value': '[\"' + findDeviceArn(sylphDevice) + '\"]'
-          })
-      .toList();
-  return rules;
 }
 
 /// Converts a list of sylph devices [sylphDevices] to a rule.
