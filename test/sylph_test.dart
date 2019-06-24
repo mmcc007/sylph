@@ -88,18 +88,21 @@ void main() {
   });
 
   test('find device ARN', () {
-    final name = 'Apple iPhone X';
-    final model = 'A1865';
-    final os = '12.0';
+    final sylphDevice = {
+      'name': 'Apple iPhone X',
+      'model': 'A1865',
+      'os': '12.0'
+    };
 
-    String result = findDeviceArn(name, model, os);
+    String result = findDevicesArns([sylphDevice]).first;
     expect(result,
         'arn:aws:devicefarm:us-west-2::device:D125AEEE8614463BAE106865CAF4470E');
   });
 
   test('convert devices to rules', () {
     final List devices = [
-      {'name': 'Apple iPhone X', 'model': 'A1865', 'os': '12.0'}
+      {'name': 'Apple iPhone X', 'model': 'A1865', 'os': '12.0'},
+      {'name': 'Google Pixel', 'model': 'Pixel', 'os': '8.0.0'}
     ];
 
     // convert devices to rules
@@ -107,15 +110,29 @@ void main() {
     print(jsonEncode(rules));
   });
 
+  test('convert devices to a rule', () {
+    final List devices = [
+      {'name': 'Apple iPhone X', 'model': 'A1865', 'os': '12.0'},
+      {'name': 'Google Pixel', 'model': 'Pixel', 'os': '8.0.0'}
+    ];
+
+    // convert devices to rule
+    final rule = devicesToRule(devices);
+    print(jsonEncode(rule));
+  });
+
   test('setup device pool', () async {
+//    final projectArn =
+//        'arn:aws:devicefarm:us-west-2:122621792560:project:fb4de03d-c6ac-4d25-bd27-4a59214d2a8b';
+    // 'test artifacts download'
     final projectArn =
-        'arn:aws:devicefarm:us-west-2:122621792560:project:fb4de03d-c6ac-4d25-bd27-4a59214d2a8b';
+        'arn:aws:devicefarm:us-west-2:122621792560:project:e1c97f71-f534-432b-9e86-3bd7529e327b';
     final poolName = 'android pool 1';
     final configFilePath = 'test/sylph_test.yaml';
 
     Map config = await parseYaml(configFilePath);
 
-    Map devicePoolInfo = getDevicePoolInfo(config, poolName);
+    Map devicePoolInfo = getDevicePoolInfo(config['device_pools'], poolName);
 
     // check for existing pool
     String result = setupDevicePool(devicePoolInfo, projectArn);
@@ -166,7 +183,7 @@ void main() {
         final List tests = testSuite['tests'];
         for (var test in tests) {
           // lookup device pool
-          Map devicePool = getDevicePoolInfo(config, poolName);
+          Map devicePool = getDevicePoolInfo(config['device_pools'], poolName);
           if (devicePool == null) {
             throw 'Exception: device pool $poolName not found';
           }
@@ -193,7 +210,7 @@ void main() {
 //    }
 
     final poolName = 'android pool 1';
-    Map devicePool = getDevicePoolInfo(config, poolName);
+    Map devicePool = getDevicePoolInfo(config['device_pools'], poolName);
     final expected = {
       'pool_type': 'android',
       'devices': [
@@ -212,7 +229,7 @@ void main() {
     final filePath = 'test/sylph_test.yaml';
     final config = await parseYaml(filePath);
     final poolName = 'android pool 1';
-    Map devicePoolInfo = getDevicePoolInfo(config, poolName);
+    Map devicePoolInfo = getDevicePoolInfo(config['device_pools'], poolName);
     print('resulting devicePool=$devicePoolInfo');
 
     expect(devicePoolInfo['pool_type'], enumToStr(DeviceType.android));
@@ -253,14 +270,12 @@ void main() {
     // get artifacts by run, by test suite, by test, etc..
     // aws devicefarm list-artifacts --arn <run arn>
     // download each artifact
-    DateTime sylphRunTimestamp = genTimestamp();
+    final sylphRunTimestamp = genTimestamp();
+    final sylphRunName = 'dummy sylph run $sylphRunTimestamp';
     final projectName = 'example flutter tests 2';
     final poolName = 'pool 1'; // only used in dir path
     final downloadDirPrefix = '/tmp/sylph artifacts';
     final runStartDate = 1561183228.503; // a successful run on ios
-
-    // expected device from pool in job
-    final jobDevice = {'name': 'iPhone X', 'model': 'A1865', 'os': '12.0'};
 
     // list projects
     final projects = deviceFarmCmd(['list-projects'])['projects'];
@@ -286,26 +301,25 @@ void main() {
     // list jobs
     final List jobs = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
 
-    // get a job
-    final job = jobs.firstWhere((job) => isJobOnDevice(job, jobDevice),
-        orElse: () => null);
+    // get a job (use first for this test)
+    final job = jobs.first;
     final jobArn = job['arn'];
     expect(jobArn,
         'arn:aws:devicefarm:us-west-2:122621792560:job:25b6693b-ecdc-40b6-b736-29de562c18b9/db578606-ebc4-4c1e-a72e-a14b30cbe898/00000');
 
-    // generate job download dir
-    String jobDownloadDir = generateRunArtifactsDir(
-        downloadDirPrefix, projectName, sylphRunTimestamp, poolName, jobDevice);
+    // generate run download dir
+    String runDownloadDir = generateRunArtifactsDir(
+        downloadDirPrefix, sylphRunName, projectName, poolName);
 
     // download job artifacts
-    downloadJobArtifacts(runArn, jobDevice, jobDownloadDir);
+    downloadJobArtifacts(runArn, runDownloadDir);
   });
 
   test('get first device in pool', () async {
     final filePath = 'test/sylph_test.yaml';
     final poolName = 'android pool 1';
     final config = await parseYaml(filePath);
-    final devicePoolInfo = getDevicePoolInfo(config, poolName);
+    final devicePoolInfo = getDevicePoolInfo(config['device_pools'], poolName);
     final devices = devicePoolInfo['devices'];
     final expected = {
       'model': 'SM-G960U1',
