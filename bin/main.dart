@@ -45,14 +45,15 @@ main(List<String> arguments) async {
     _handleError(argParser, "File not found: $configFilePath");
   }
 
-  final sylphRunTimeout = 720; // todo: allow different timeouts
   final timestamp = genTimestamp();
-  final sylphRunName = 'sylph run at $timestamp'; // todo: allow different names
+  final sylphRunName = 'sylph run at $timestamp';
   print('Starting Sylph run \'$sylphRunName\' on AWS Device Farm ...');
   print('Config file: $configFilePath');
 
   // Parse config file
   Map config = await sylph.parseYaml(configFilePath);
+
+  final sylphRunTimeout = config['sylph_timeout'];
 
   // Setup project (if needed)
   final projectArn =
