@@ -23,9 +23,6 @@ Future<void> bundleFlutterTests(Map config) async {
 
   print('Creating test bundle for upload...');
 
-  // create fresh staging area
-  await unpackResources(stagingDir); // again
-
   // unzip template into test bundle dir
   cmd('unzip', ['-q', appiumTemplatePath, '-d', testBundleDir], '.', false);
 

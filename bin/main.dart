@@ -87,9 +87,11 @@ void run(Map config, String projectArn, String sylphRunName,
 //          'bundling test: $test on $poolType devices in device pool $poolName');
 //    }
 
+    // sylph staging dir
     final tmpDir = config['tmp_dir'];
+
     // Unpack resources used for building debug .ipa and to bundle tests
-    await unpackResources(tmpDir); // todo: remove here or in bundler
+    await unpackResources(tmpDir);
 
     // Bundle tests
     await bundleFlutterTests(config);
