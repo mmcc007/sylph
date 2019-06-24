@@ -101,7 +101,7 @@ void run(Map config, String projectArn, String sylphRunName,
       print(
           '\nStarting \'${testSuite['test_suite']}\' run \'$sylphRunName\' in project \'${config['project_name']}\' on pool \'$poolName\'...\n');
       // lookup device pool info in config file
-      Map devicePoolInfo = getDevicePoolInfo(config, poolName);
+      Map devicePoolInfo = getDevicePoolInfo(config['device_pools'], poolName);
 
       // Setup device pool
       String devicePoolArn = sylph.setupDevicePool(devicePoolInfo, projectArn);
@@ -127,9 +127,9 @@ void run(Map config, String projectArn, String sylphRunName,
       // get first device in device pool (currently supporting only one device per pool)
       final jobDevice = devicePoolInfo['devices'].first;
 
-      // construct artifacts dir for this device farm run
+      // construct artifacts dir for device farm run
       final runArtifactsDir = generateRunArtifactsDir(config['artifacts_dir'],
-          config['project_name'], sylphRunTimestamp, poolName, jobDevice);
+          sylphRunName, config['project_name'], poolName);
 
       // run tests and report
       runTests(
@@ -196,7 +196,7 @@ void runTests(
 
   // Download artifacts
   print('Downloading artifacts...');
-  sylph.downloadJobArtifacts(runArn, jobDevice, artifactsDir);
+  sylph.downloadJobArtifacts(runArn, artifactsDir);
 }
 
 void _handleError(ArgParser argParser, String msg) {

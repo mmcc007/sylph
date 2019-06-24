@@ -64,7 +64,8 @@ String setupDevicePool(Map devicePoolInfo, String projectArn) {
     // create new device pool
     print('Creating new device pool \'$poolName\' ...');
     // convert devices to rules
-    List rules = devicesToRules(devices);
+//    List rules = devicesToRules(devices);
+    String rules = devicesToRule(devices);
 
     final newPool = deviceFarmCmd([
       'create-device-pool',
@@ -73,7 +74,8 @@ String setupDevicePool(Map devicePoolInfo, String projectArn) {
       '--project-arn',
       projectArn,
       '--rules',
-      jsonEncode(rules),
+//      jsonEncode(rules),
+      rules,
       // number of devices in pool should not exceed number of devices requested
       // An error occurred (ArgumentException) when calling the CreateDevicePool operation: A static device pool can not have max devices parameter
 //      '--max-devices', '${devices.length}'
@@ -133,6 +135,7 @@ Map runStatus(String runArn, int sylphRunTimeout) {
 
     sleep(Duration(seconds: timeoutIncrement));
   }
+  // todo: cancel run on device farm
   throw 'Error: run timed-out';
 }
 
@@ -174,35 +177,57 @@ void runReport(Map run) {
 
 /// Finds the ARN of a device.
 /// Returns device ARN  as [String].
-String findDeviceArn(String name, String model, String os) {
-  assert(name != null && model != null && os != null);
-  final devices = deviceFarmCmd([
+String findDeviceArn(Map sylphDevice) {
+  final jobDevices = deviceFarmCmd([
     'list-devices',
   ])['devices'];
-  Map device = devices.firstWhere(
-      (device) => (device['name'] == name &&
-          device['modelId'] == model &&
-          device['os'] == os),
+  Map jobDevice = jobDevices.firstWhere(
+      (device) => (isDeviceEqual(device, sylphDevice)),
       orElse: () =>
-          throw 'Error: device does not exist: name=$name, model=$model, os=$os');
-  return device['arn'];
+          throw 'Error: device does not exist: ${deviceDesc(sylphDevice)}');
+  return jobDevice['arn'];
 }
 
-/// Converts a list of Device Farm [devices] to a list of rules.
+/// Finds the ARNs of devices
+/// Returns device ARNs as a [List]
+List findDevicesArns(List sylphDevices) {
+  final deviceArns = [];
+  // get all devices
+  final jobsDevices = deviceFarmCmd([
+    'list-devices',
+  ])['devices'];
+  for (final sylphDevice in sylphDevices) {
+    Map jobDevice = jobsDevices.firstWhere(
+        (jobDevice) => (isDeviceEqual(jobDevice, sylphDevice)),
+        orElse: () =>
+            throw 'Error: device does not exist: ${deviceDesc(sylphDevice)}');
+    deviceArns.add(jobDevice['arn']);
+  }
+
+  return deviceArns;
+}
+
+/// Converts a list of sylph devices [sylphDevices] to a list of rules.
 /// Used for building a device pool.
 /// Returns rules as [List].
-List devicesToRules(List devices) {
+List devicesToRules(List sylphDevices) {
   // convert devices to rules
-  final List rules = devices
-      .map((device) => {
+  final List rules = sylphDevices
+      .map((sylphDevice) => {
             'attribute': 'ARN',
             'operator': 'IN',
-            'value': '[\"' +
-                findDeviceArn(device['name'], device['model'], device['os']) +
-                '\"]'
+            'value': '[\"' + findDeviceArn(sylphDevice) + '\"]'
           })
       .toList();
   return rules;
+}
+
+/// Converts a list of sylph devices [sylphDevices] to a rule.
+/// Used for building a device pool.
+/// Returns rule as formatted [String].
+String devicesToRule(List sylphDevices) {
+  // convert devices to rule
+  return '[{"attribute": "ARN", "operator": "IN","value": "[${formatArns(findDevicesArns(sylphDevices))}]"}]';
 }
 
 /// Uploads a file to device farm.
@@ -237,21 +262,33 @@ String uploadFile(String projectArn, String filePath, String fileType) {
   return uploadArn;
 }
 
-/// Downloads artifacts generated during a run.
-void downloadJobArtifacts(String runArn, Map jobDevice, String jobDownloadDir) {
+/// Downloads artifacts for each job generated during a run.
+void downloadJobArtifacts(String runArn, String runArtifactDir) {
   // list jobs
   final List jobs = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
-  // check only one job and on expected device then download artifacts
-  if (jobs.length == 1) {
-    final job = jobs.first;
-    // confirm job is on expected device
-    if (isJobOnDevice(job, jobDevice)) {
-      downloadArtifacts(job['arn'], jobDownloadDir);
-    } else {
-      throw ('Error: job not on expected device: ${deviceDesc(jobDevice)}');
-    }
-  } else {
-    throw ('Error: multiple jobs found where one expected: $jobs');
+//  // check only one job and on expected device then download artifacts
+//  if (jobs.length == 1) {
+//    final job = jobs.first;
+//    // confirm job is on expected device
+//    if (isJobOnDevice(job, jobDevice)) {
+//      downloadArtifacts(job['arn'], jobDownloadDir);
+//    } else {
+//      throw ('Error: job not on expected device: ${deviceDesc(jobDevice)}');
+//    }
+//  } else {
+//    throw ('Error: multiple jobs found where one expected: $jobs');
+//  }
+
+  for (final job in jobs) {
+    // get sylph device
+    final sylphDevice = getSylphDevice(job['device']);
+
+    // generate job artifacts dir
+    final jobArtifactsDir =
+        generateJobArtifactsDir(runArtifactDir, sylphDevice);
+
+    // download job artifacts
+    downloadArtifacts(job['arn'], jobArtifactsDir);
   }
 }
 
