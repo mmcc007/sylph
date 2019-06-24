@@ -106,8 +106,8 @@ void main() {
     ];
 
     // convert devices to rules
-    List rules = devicesToRules(devices);
-    print(jsonEncode(rules));
+    final rules = devicesToRule(devices);
+    print(rules);
   });
 
   test('convert devices to a rule', () {
