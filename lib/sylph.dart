@@ -196,7 +196,6 @@ List findDevicesArns(List sylphDevices) {
 /// Used for building a device pool.
 /// Returns rule as formatted [String].
 String devicesToRule(List sylphDevices) {
-  // convert devices to rule
   return '[{"attribute": "ARN", "operator": "IN","value": "[${formatArns(findDevicesArns(sylphDevices))}]"}]';
 }
 
@@ -236,18 +235,6 @@ String uploadFile(String projectArn, String filePath, String fileType) {
 void downloadJobArtifacts(String runArn, String runArtifactDir) {
   // list jobs
   final List jobs = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
-//  // check only one job and on expected device then download artifacts
-//  if (jobs.length == 1) {
-//    final job = jobs.first;
-//    // confirm job is on expected device
-//    if (isJobOnDevice(job, jobDevice)) {
-//      downloadArtifacts(job['arn'], jobDownloadDir);
-//    } else {
-//      throw ('Error: job not on expected device: ${deviceDesc(jobDevice)}');
-//    }
-//  } else {
-//    throw ('Error: multiple jobs found where one expected: $jobs');
-//  }
 
   for (final job in jobs) {
     // get sylph device
@@ -265,6 +252,7 @@ void downloadJobArtifacts(String runArn, String runArtifactDir) {
 /// Downloads artifacts generated during a run.
 /// [arn] can be a run, job, suite, or test ARN.
 void downloadArtifacts(String arn, String artifactsDir) {
+  print('Downloading artifacts to $artifactsDir');
   // create directory
   clearDirectory(artifactsDir);
 
@@ -285,7 +273,6 @@ void downloadArtifacts(String arn, String artifactsDir) {
     // use last artifactID to make unique
     final fileName = '$name ${artifactIDs[3]}.$extension'.replaceAll(' ', '_');
     final filePath = '$artifactsDir/$fileName';
-    print(filePath);
     cmd('wget', ['-O', filePath, fileUrl]);
   }
 }
