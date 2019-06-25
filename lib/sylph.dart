@@ -173,8 +173,8 @@ void runReport(Map run) {
   }
 }
 
-/// Finds the ARNs of devices
-/// Returns device ARNs as a [List]
+/// Finds the ARNs of devices for a [List] of sylph devices.
+/// Returns device ARNs as a [List].
 List findDevicesArns(List sylphDevices) {
   final deviceArns = [];
   // get all devices
@@ -192,7 +192,7 @@ List findDevicesArns(List sylphDevices) {
   return deviceArns;
 }
 
-/// Converts a list of sylph devices [sylphDevices] to a rule.
+/// Converts a [List] of sylph devices to a rule.
 /// Used for building a device pool.
 /// Returns rule as formatted [String].
 String devicesToRule(List sylphDevices) {
