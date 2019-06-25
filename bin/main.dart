@@ -46,7 +46,7 @@ main(List<String> arguments) async {
   }
 
   final timestamp = genTimestamp();
-  final sylphRunName = 'sylph run at $timestamp';
+  final sylphRunName = 'sylph run $timestamp';
   print('Starting Sylph run \'$sylphRunName\' on AWS Device Farm ...');
   print('Config file: $configFilePath');
 
@@ -59,8 +59,8 @@ main(List<String> arguments) async {
   final projectArn =
       sylph.setupProject(config['project_name'], config['default_job_timeout']);
 
-  await run(config, projectArn, sylphRunName, sylphRunTimeout, timestamp);
-  print('Completed AWS Device Farm run \'$sylphRunName\'.');
+  await sylphRun(config, projectArn, sylphRunName, sylphRunTimeout, timestamp);
+  print('Completed Sylph run \'$sylphRunName\'.');
 }
 
 /// Processes config file (subject to change)
@@ -71,11 +71,18 @@ main(List<String> arguments) async {
 /// 4. For each test in each testsuite
 ///    1. Run tests on device pool
 ///    2. Report and collect artifacts
-void run(Map config, String projectArn, String sylphRunName,
+void sylphRun(Map config, String projectArn, String sylphRunName,
     int sylphRunTimeout, DateTime sylphRunTimestamp) async {
-  final List testSuites = config['test_suites'];
-//    print('testSuites=$testSuites');
-  for (var testSuite in testSuites) {
+  // sylph staging dir
+  final tmpDir = config['tmp_dir'];
+
+  // Unpack resources used for building debug .ipa and to bundle tests
+  await unpackResources(tmpDir);
+
+  // Bundle tests
+  await bundleFlutterTests(config);
+
+  for (var testSuite in config['test_suites']) {
     print('Running \'${testSuite['test_suite']}\' test suite...');
 
     // todo: update test spec with tests in test suite
@@ -86,15 +93,6 @@ void run(Map config, String projectArn, String sylphRunName,
 //      print(
 //          'bundling test: $test on $poolType devices in device pool $poolName');
 //    }
-
-    // sylph staging dir
-    final tmpDir = config['tmp_dir'];
-
-    // Unpack resources used for building debug .ipa and to bundle tests
-    await unpackResources(tmpDir);
-
-    // Bundle tests
-    await bundleFlutterTests(config);
 
     // Initialize device pools and run tests in each pool
     for (final poolName in testSuite['pool_names']) {
@@ -124,9 +122,6 @@ void run(Map config, String projectArn, String sylphRunName,
       String testSpecArn =
           sylph.uploadFile(projectArn, testSpecPath, 'APPIUM_PYTHON_TEST_SPEC');
 
-      // get first device in device pool (currently supporting only one device per pool)
-      final jobDevice = devicePoolInfo['devices'].first;
-
       // construct artifacts dir for device farm run
       final runArtifactsDir = generateRunArtifactsDir(config['artifacts_dir'],
           sylphRunName, config['project_name'], poolName);
@@ -141,37 +136,37 @@ void run(Map config, String projectArn, String sylphRunName,
           testPackageArn,
           testSpecArn,
           runArtifactsDir,
-          testSuite['job_timeout'],
-          jobDevice);
+          testSuite['job_timeout']);
     }
   }
 }
 
-/// Builds and uploads app for current pool.
-/// Returns app ARN as [String].
+/// Builds and uploads debug app (.ipa or .apk) for current pool type.
+/// Returns debug app ARN as [String].
 Future<String> buildUploadApp(
     String projectArn, String poolType, String mainPath, String tmpDir) async {
   String appArn;
   if (poolType == 'android') {
+    print('Building debug .apk from $mainPath...');
     await streamCmd('flutter', ['build', 'apk', '-t', mainPath, '--debug']);
     // Upload apk
     print('Uploading debug android app: $kDebugApkPath ...');
     appArn = sylph.uploadFile(projectArn, kDebugApkPath, 'ANDROID_APP');
   } else {
-    final envVars = Platform.environment;
-    if (envVars['CI'] == 'true') {
+    print('Building debug .ipa from $mainPath...');
+    if (Platform.environment['CI'] == 'true') {
       await streamCmd(
           '$tmpDir/script/local_utils.sh', ['--ci', Directory.current.path]);
     }
     await streamCmd('$tmpDir/script/local_utils.sh', ['--build-debug-ipa']);
     // Upload ipa
-    print('Uploading iOS app: $kDebugIpaPath ...');
+    print('Uploading debug iOS app: $kDebugIpaPath ...');
     appArn = sylph.uploadFile(projectArn, kDebugIpaPath, 'IOS_APP');
   }
   return appArn;
 }
 
-/// Runs the test suite and downloads artifacts.
+/// Runs the test suite on each device in device pool and downloads artifacts.
 void runTests(
     String runName,
     int sylphRunTimeout,
@@ -181,10 +176,9 @@ void runTests(
     String testPackageArn,
     String testSpecArn,
     String artifactsDir,
-    int jobTimeout,
-    Map jobDevice) {
+    int jobTimeout) {
   // Schedule run
-  print('Starting run \'$runName\' on AWS Device Farms');
+  print('Starting run \'$runName\' on AWS Device Farms...');
   String runArn = sylph.scheduleRun(runName, projectArn, appArn, devicePoolArn,
       testSpecArn, testPackageArn, jobTimeout);
 
