@@ -116,7 +116,6 @@ String scheduleRun(
 
 /// Tracks run status.
 /// Returns final run status as [Map].
-// todo: add per job status (test on each device in pool) to run status
 Map runStatus(String runArn, int sylphRunTimeout, String poolName) {
   const timeoutIncrement = 2;
   Map runStatus;
@@ -132,10 +131,10 @@ Map runStatus(String runArn, int sylphRunTimeout, String poolName) {
     print(
         'Run status on device pool \'$poolName\`: $runStatusFlag (sylph run timeout: $i of $sylphRunTimeout)');
 
-    // print job status
+    // print job status' for this run
     final jobsInfo = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
     for (final jobInfo in jobsInfo) {
-      print('\t\t${jobProgress(jobInfo)}');
+      print('\t\t${jobStatus(jobInfo)}');
     }
 
     if (runStatusFlag == kCompletedRunStatus) return runStatus;
@@ -146,11 +145,12 @@ Map runStatus(String runArn, int sylphRunTimeout, String poolName) {
   throw 'Error: run timed-out';
 }
 
-String jobProgress(Map jobInfo) {
-  final jobCounters = jobInfo['counters'];
-  final deviceMinutes = jobInfo['deviceMinutes'];
+/// Generates string of job status info from a [Map] of job info
+String jobStatus(Map job) {
+  final jobCounters = job['counters'];
+  final deviceMinutes = job['deviceMinutes'];
   return sprintf('device: %-15s, passed: %s, failed: %s, minutes: %s', [
-    jobInfo['name'],
+    job['name'],
     jobCounters['passed'],
     jobCounters['failed'],
     deviceMinutes['total']
@@ -158,8 +158,8 @@ String jobProgress(Map jobInfo) {
 }
 
 /// Runs run report.
-// todo: add per job report (test result on each device in pool) to run report
-void runReport(Map run) {
+/// Returns [bool] for pass/fail of run.
+bool runReport(Map run) {
   // print intro
   print(
       'Run \'${run['name']}\' completed ${run['completedJobs']} of ${run['totalJobs']} jobs.');
@@ -187,10 +187,10 @@ void runReport(Map run) {
       '    total: ${counters['total']}\n');
 
   if (result != kSuccessResult) {
-    print('Error: test failed');
-    // todo: download artifacts on failure too
-    exit(1);
+    print('Warning: run failed. Continuing...');
+    return false;
   }
+  return true;
 }
 
 /// Finds the ARNs of devices for a [List] of sylph devices.

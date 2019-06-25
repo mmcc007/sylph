@@ -59,20 +59,30 @@ main(List<String> arguments) async {
   final projectArn =
       sylph.setupProject(config['project_name'], config['default_job_timeout']);
 
-  await sylphRun(config, projectArn, sylphRunName, sylphRunTimeout, timestamp);
   print('Completed Sylph run \'$sylphRunName\'.');
+  final sylphRunSucceeded = await sylphRun(
+      config, projectArn, sylphRunName, sylphRunTimeout, timestamp);
+  if (sylphRunSucceeded) {
+    print('Sylph run \'$sylphRunName\' suceeded.');
+    exit(0);
+  } else {
+    print('Sylph run \'$sylphRunName\' failed.');
+    exit(1);
+  }
 }
 
-/// Processes config file (subject to change)
-/// For each device pool
-/// 1. Initialize the device pool
-/// 2. Build app for ios or android based on pool type
-/// 3. Package and upload the build and tests
-/// 4. For each test in each testsuite
-///    1. Run tests on device pool
-///    2. Report and collect artifacts
-void sylphRun(Map config, String projectArn, String sylphRunName,
+/// Processes config file (subject to change).
+/// For each device pool:
+/// 1. Initialize the device pool.
+/// 2. Build app for ios or android based on pool type.
+/// 3. Package and upload the build and tests.
+/// 4. For each test in each testsuite.
+///    1. Run tests on device pool.
+///    2. Report and collect artifacts.
+/// Returns [Future<bool>] for pass or fail.
+Future<bool> sylphRun(Map config, String projectArn, String sylphRunName,
     int sylphRunTimeout, DateTime sylphRunTimestamp) async {
+  bool sylphRunSucceeded = true;
   // sylph staging dir
   final tmpDir = config['tmp_dir'];
 
@@ -127,7 +137,7 @@ void sylphRun(Map config, String projectArn, String sylphRunName,
           sylphRunName, config['project_name'], poolName);
 
       // run tests and report
-      runTests(
+      final runSucceeded = runTests(
           sylphRunName,
           sylphRunTimeout,
           projectArn,
@@ -138,8 +148,14 @@ void sylphRun(Map config, String projectArn, String sylphRunName,
           runArtifactsDir,
           testSuite['job_timeout'],
           poolName);
+
+      // track sylph run success
+      if (sylphRunSucceeded & !runSucceeded) {
+        sylphRunSucceeded = false;
+      }
     }
   }
+  return sylphRunSucceeded;
 }
 
 /// Builds and uploads debug app (.ipa or .apk) for current pool type.
@@ -168,7 +184,8 @@ Future<String> buildUploadApp(
 }
 
 /// Runs the test suite on each device in device pool and downloads artifacts.
-void runTests(
+/// Returns [bool] on pass/fail.
+bool runTests(
     String runName,
     int sylphRunTimeout,
     String projectArn,
@@ -179,6 +196,7 @@ void runTests(
     String artifactsDir,
     int jobTimeout,
     poolName) {
+  bool runSucceeded = false;
   // Schedule run
   print('Starting run \'$runName\' on AWS Device Farms...');
   String runArn = sylph.scheduleRun(runName, projectArn, appArn, devicePoolArn,
@@ -188,11 +206,12 @@ void runTests(
   final run = sylph.runStatus(runArn, sylphRunTimeout, poolName);
 
   // Output run result
-  sylph.runReport(run);
+  runSucceeded = sylph.runReport(run);
 
   // Download artifacts
   print('Downloading artifacts...');
   sylph.downloadJobArtifacts(runArn, artifactsDir);
+  return runSucceeded;
 }
 
 void _handleError(ArgParser argParser, String msg) {
