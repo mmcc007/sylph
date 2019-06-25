@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:sylph/utils.dart';
 import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
+import 'package:sprintf/sprintf.dart';
 
 enum DeviceType { ios, android }
 
@@ -131,12 +132,29 @@ Map runStatus(String runArn, int sylphRunTimeout, String poolName) {
     print(
         'Run status on device pool \'$poolName\`: $runStatusFlag (sylph run timeout: $i of $sylphRunTimeout)');
 
+    // print job status
+    final jobsInfo = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
+    for (final jobInfo in jobsInfo) {
+      print('\t\t${jobProgress(jobInfo)}');
+    }
+
     if (runStatusFlag == kCompletedRunStatus) return runStatus;
 
     sleep(Duration(seconds: timeoutIncrement));
   }
   // todo: cancel run on device farm
   throw 'Error: run timed-out';
+}
+
+String jobProgress(Map jobInfo) {
+  final jobCounters = jobInfo['counters'];
+  final deviceMinutes = jobInfo['deviceMinutes'];
+  return sprintf('device: %-15s, passed: %s, failed: %s, minutes: %s', [
+    jobInfo['name'],
+    jobCounters['passed'],
+    jobCounters['failed'],
+    deviceMinutes['total']
+  ]);
 }
 
 /// Runs run report.

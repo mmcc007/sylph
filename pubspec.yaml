@@ -12,6 +12,7 @@ dependencies:
   args: ^1.5.1
   yaml: ^2.1.15
   resource: ^2.1.5
+  sprintf: ^4.0.2
 
 dev_dependencies:
   test: ^1.0.0
