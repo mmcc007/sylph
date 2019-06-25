@@ -14,7 +14,7 @@ const kBuildToOsMapFileName = 'build_to_os.txt';
 /// Bundles Flutter tests using appium template found in staging area.
 /// Resulting bundle is saved on disk in temporary location
 /// for later upload.
-Future<void> bundleFlutterTests(Map config) async {
+Future<int> bundleFlutterTests(Map config) async {
   final stagingDir = config['tmp_dir'];
   final appiumTemplatePath = '$stagingDir/$kAppiumTemplateName';
   final testBundleDir = '$stagingDir/$kTestBundleDir';
@@ -58,12 +58,15 @@ Future<void> bundleFlutterTests(Map config) async {
           1024)
       .round();
   print('Test bundle created (size $size MB)');
+
+  return size;
 }
 
 /// Unpacks resources found in package into [tmpDir].
 /// Appium template is used to deliver tests.
 /// Scripts are used to initialize device and run tests.
 Future<void> unpackResources(String tmpDir) async {
+  print('Unpacking sylph resources to $tmpDir');
   clearDirectory(tmpDir);
 
   // unpack Appium template
