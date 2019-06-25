@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:sylph/bundle.dart';
@@ -6,6 +5,15 @@ import 'package:sylph/sylph.dart';
 import 'package:sylph/utils.dart';
 import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
+
+const kTestProjectName = 'test artifacts download';
+const kTestProjectArn =
+    'arn:aws:devicefarm:us-west-2:122621792560:project:e1c97f71-f534-432b-9e86-3bd7529e327b';
+// successful run with multiple jobs
+const kSuccessfulRunArn =
+    'arn:aws:devicefarm:us-west-2:122621792560:run:e1c97f71-f534-432b-9e86-3bd7529e327b/50e59618-6925-45aa-87f6-c5184ef62407';
+const kFirstJobArn =
+    'arn:aws:devicefarm:us-west-2:122621792560:job:e1c97f71-f534-432b-9e86-3bd7529e327b/50e59618-6925-45aa-87f6-c5184ef62407/00000';
 
 void main() {
   test('parse yaml', () async {
@@ -84,7 +92,9 @@ void main() {
     final projectName = 'flutter test';
     final jobTimeoutMinutes = 5;
     final result = setupProject(projectName, jobTimeoutMinutes);
-    print(result);
+    final expected =
+        'arn:aws:devicefarm:us-west-2:122621792560:project:c43f0049-7b2f-42ed-9e4b-c6c46de9de23';
+    expect(result, expected);
   });
 
   test('find device ARN', () {
@@ -99,26 +109,17 @@ void main() {
         'arn:aws:devicefarm:us-west-2::device:D125AEEE8614463BAE106865CAF4470E');
   });
 
-  test('convert devices to rules', () {
-    final List devices = [
-      {'name': 'Apple iPhone X', 'model': 'A1865', 'os': '12.0'},
-      {'name': 'Google Pixel', 'model': 'Pixel', 'os': '8.0.0'}
-    ];
-
-    // convert devices to rules
-    List rules = devicesToRules(devices);
-    print(jsonEncode(rules));
-  });
-
   test('convert devices to a rule', () {
     final List devices = [
       {'name': 'Apple iPhone X', 'model': 'A1865', 'os': '12.0'},
       {'name': 'Google Pixel', 'model': 'Pixel', 'os': '8.0.0'}
     ];
 
-    // convert devices to rule
-    final rule = devicesToRule(devices);
-    print(jsonEncode(rule));
+    // convert devices to rules
+    final rules = devicesToRule(devices);
+    final expected =
+        '[{"attribute": "ARN", "operator": "IN","value": "[\\"arn:aws:devicefarm:us-west-2::device:D125AEEE8614463BAE106865CAF4470E\\",\\"arn:aws:devicefarm:us-west-2::device:6B26991B2257455788C5B8EA3C9F91C4\\"]"}]';
+    expect(rules, expected);
   });
 
   test('setup device pool', () async {
@@ -135,35 +136,31 @@ void main() {
     Map devicePoolInfo = getDevicePoolInfo(config['device_pools'], poolName);
 
     // check for existing pool
-    String result = setupDevicePool(devicePoolInfo, projectArn);
-
-    print(result);
+    final result = setupDevicePool(devicePoolInfo, projectArn);
+    final expected =
+        'arn:aws:devicefarm:us-west-2:122621792560:devicepool:e1c97f71-f534-432b-9e86-3bd7529e327b/762d6c56-e189-43ca-aded-bf59c7e20904';
+    expect(result, expected);
   });
 
-  test('monitor run progress until complete', () {
-    // failed run
-//    final runArn =
-//        'arn:aws:devicefarm:us-west-2:122621792560:run:18ccd74d-2cbc-4d61-a9ca-2fcf656d4d48/cc93dcee-d406-48a6-b8e6-5eaaeb290b11';
-    // successful run
-    final runArn =
-        'arn:aws:devicefarm:us-west-2:122621792560:job:25b6693b-ecdc-40b6-b736-29de562c18b9/db578606-ebc4-4c1e-a72e-a14b30cbe898/00000';
+  test('monitor successful run progress until complete', () {
     final timeout = 100;
-    Map result;
-
-    result = runStatus(runArn, timeout);
+    final poolName = 'dummy pool name';
+    final result = runStatus(kSuccessfulRunArn, timeout, poolName);
 
     // generate report
     runReport(result);
   });
 
   test('bundle flutter test', () async {
-//    final filePath = 'test/sylph_test.yaml';
-    final filePath = 'example/sylph.yaml';
+    final filePath = 'test/sylph_test.yaml';
+//    final filePath = 'example/sylph.yaml';
     final config = await parseYaml(filePath);
     // change directory to app
     final origDir = Directory.current;
     Directory.current = 'example';
-    await bundleFlutterTests(config);
+    await unpackResources(config['tmp_dir']);
+    final bundleSize = await bundleFlutterTests(config);
+    expect(bundleSize, 5);
     // change back for tests to continue
     Directory.current = origDir;
   });
@@ -174,7 +171,17 @@ void main() {
 //    print('config=$config');
 
     final List testSuites = config['test_suites'];
-    print('testSuites=$testSuites');
+    final expectedSuites = [
+      {
+        'tests': ['lib/main.dart'],
+        'pool_names': ['android pool 1'],
+        'testspec': 'test_spec.yaml',
+        'job_timeout': 5,
+        'app_path': '/Users/jenkins/flutter_app',
+        'test_suite': 'my tests 1'
+      }
+    ];
+    expect(testSuites, expectedSuites);
     for (var testSuite in testSuites) {
       print('Running ${testSuite['test_suite']} ...');
       final List devicePools = testSuite['pool_names'];
@@ -198,27 +205,13 @@ void main() {
     final filePath = 'test/sylph_test.yaml';
     final config = await parseYaml(filePath);
 
-    //    for (var pools in devicePools) {
-//      if (devicePool != null) return;
-//      final List poolList = pools;
-//      print('poolList=$poolList');
-//      devicePool = poolList.firstWhere((pool) {
-//        print(pool['device_pool_name']);
-//        return pool['device_pool_name'] == poolName;
-//      }, orElse: () => null);
-//      print('devicePool=$devicePool');
-//    }
-
     final poolName = 'android pool 1';
     Map devicePool = getDevicePoolInfo(config['device_pools'], poolName);
     final expected = {
       'pool_type': 'android',
       'devices': [
-        {
-          'model': 'SM-G960U1',
-          'name': 'Samsung Galaxy S9 (Unlocked)',
-          'os': '8.0.0'
-        }
+        {'model': 'Pixel', 'name': 'Google Pixel', 'os': '8.0.0'},
+        {'model': 'Google Pixel 2', 'name': 'Google Pixel 2', 'os': '8.0.0'}
       ],
       'pool_name': 'android pool 1'
     };
@@ -230,8 +223,6 @@ void main() {
     final config = await parseYaml(filePath);
     final poolName = 'android pool 1';
     Map devicePoolInfo = getDevicePoolInfo(config['device_pools'], poolName);
-    print('resulting devicePool=$devicePoolInfo');
-
     expect(devicePoolInfo['pool_type'], enumToStr(DeviceType.android));
   });
 
@@ -245,10 +236,8 @@ void main() {
     // download each artifact
     DateTime timestamp = genTimestamp();
     final downloadDir = '/tmp/tmp/artifacts xxx $timestamp';
-    final runArn =
-        'arn:aws:devicefarm:us-west-2:122621792560:run:fef6e39b-8ab0-44f4-b6ae-09115edbce36/42c84f3d-e061-4f23-ac7c-8d5d3a6b8f0f';
     // list artifacts
-    downloadArtifacts(runArn, downloadDir);
+    downloadArtifacts(kSuccessfulRunArn, downloadDir);
   });
 
   test('run device farm command', () {
@@ -258,7 +247,6 @@ void main() {
     final project = projects.firstWhere(
         (project) => project['name'] == projectName,
         orElse: () => null);
-    print(project);
     expect(project['name'], projectName);
   });
 
@@ -272,10 +260,10 @@ void main() {
     // download each artifact
     final sylphRunTimestamp = genTimestamp();
     final sylphRunName = 'dummy sylph run $sylphRunTimestamp';
-    final projectName = 'example flutter tests 2';
-    final poolName = 'pool 1'; // only used in dir path
+    final runName = 'sylph run at 2019-06-23 23:44:16.214'; // multiple jobs
+    final projectName = kTestProjectName;
+    final poolName = 'dummy pool 1'; // only used in dir path
     final downloadDirPrefix = '/tmp/sylph artifacts';
-    final runStartDate = 1561183228.503; // a successful run on ios
 
     // list projects
     final projects = deviceFarmCmd(['list-projects'])['projects'];
@@ -285,27 +273,23 @@ void main() {
         (project) => project['name'] == projectName,
         orElse: () => null);
     final projectArn = project['arn'];
-    expect(projectArn,
-        'arn:aws:devicefarm:us-west-2:122621792560:project:25b6693b-ecdc-40b6-b736-29de562c18b9');
+    expect(projectArn, kTestProjectArn);
 
     // list runs
     final runs = deviceFarmCmd(['list-runs', '--arn', projectArn])['runs'];
 //    print('runs=$runs');
     // get a run
-    final run = runs.firstWhere((run) => '${run['created']}' == '$runStartDate',
+    final run = runs.firstWhere((run) => '${run['name']}' == runName,
         orElse: () => null);
     final runArn = run['arn'];
-    expect(runArn,
-        'arn:aws:devicefarm:us-west-2:122621792560:run:25b6693b-ecdc-40b6-b736-29de562c18b9/db578606-ebc4-4c1e-a72e-a14b30cbe898');
+    expect(runArn, kSuccessfulRunArn);
 
     // list jobs
     final List jobs = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
+    expect(jobs.length, 2);
 
-    // get a job (use first for this test)
-    final job = jobs.first;
-    final jobArn = job['arn'];
-    expect(jobArn,
-        'arn:aws:devicefarm:us-west-2:122621792560:job:25b6693b-ecdc-40b6-b736-29de562c18b9/db578606-ebc4-4c1e-a72e-a14b30cbe898/00000');
+    // confirm first job
+    expect(jobs.first['arn'], kFirstJobArn);
 
     // generate run download dir
     String runDownloadDir = generateRunArtifactsDir(
@@ -321,11 +305,16 @@ void main() {
     final config = await parseYaml(filePath);
     final devicePoolInfo = getDevicePoolInfo(config['device_pools'], poolName);
     final devices = devicePoolInfo['devices'];
-    final expected = {
-      'model': 'SM-G960U1',
-      'name': 'Samsung Galaxy S9 (Unlocked)',
-      'os': '8.0.0'
-    };
+    final expected = {'model': 'Pixel', 'name': 'Google Pixel', 'os': '8.0.0'};
     expect(devices.first, expected);
+  });
+
+  test('generate job progress report for current run', () {
+    final runArn = kSuccessfulRunArn;
+    final jobsInfo = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
+    for (final jobInfo in jobsInfo) {
+//      print('jobInfo=$jobInfo');
+      print('\t\t${jobStatus(jobInfo)}');
+    }
   });
 }

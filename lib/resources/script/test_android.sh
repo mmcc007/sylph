@@ -14,11 +14,15 @@ main() {
         ;;
     --run-test)
         if [[ -z $2 ]]; then show_help; fi
-        custom_run_test "$2"
+        custom_test_runner "$2"
         ;;
     --run-driver)
         if [[ -z $2 ]]; then show_help; fi
         run_no_build "$2"
+        ;;
+    --get-appid)
+        if [[ -z $2 ]]; then show_help; fi
+        getAppIdFromApk "$2" #dev
         ;;
     *)
         show_help
@@ -46,13 +50,17 @@ where:
 }
 
 # note: assumes debug apk installed on device
-custom_run_test() {
+# note: by-passes flutter drives dependency on Android SDK which requires installing the SDK
+#       (see https://github.com/flutter/flutter/issues/34909)
+custom_test_runner() {
     local test_path=$1
 
     local app_id
     app_id=$(grep applicationId android/app/build.gradle | awk '{print $2}' | tr -d '"')
 
     echo "Starting Flutter app $app_id in debug mode..."
+
+    flutter packages get # may be required when running in CI/CD
 
     adb version
     adb start-server
@@ -85,10 +93,26 @@ custom_run_test() {
 
     # run test
     echo "Running integration test $test_path on app $app_id ..."
-    flutter packages get # may be required when running in CI/CD
-    flutter packages get # may be required when running in CI/CD
     export VM_SERVICE_URL=http://127.0.0.1:"$forwarded_port$obs_token"
     dart "$test_path"
+}
+
+# get app id from .apk
+# assumes .apk available on Device Farm host
+# dev
+getAppIdFromApk() {
+  local apk_path="$1"
+
+  # regular expression (required)
+  local re="^\"L.*/MainActivity;"
+  # sed substitute expression
+  local se="s:^\"L\(.*\)/MainActivity;:\1:p"
+  # tr expression
+  local te=' / .';
+
+  local app_id="$(unzip -p $apk_path classes.dex | strings | grep -Eo $re | sed -n -e $se | tr $te)"
+
+  echo "$app_id"
 }
 
 # note: requires android sdk be installed to get app identifier (eg, com.example.example)

@@ -4,10 +4,12 @@ import 'dart:convert';
 import 'package:sylph/utils.dart';
 import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
+import 'package:sprintf/sprintf.dart';
 
 enum DeviceType { ios, android }
 
 const kUploadTimeout = 5;
+const kUploadSucceeded = 'SUCCEEDED';
 const kCompletedRunStatus = 'COMPLETED';
 const kSuccessResult = 'PASSED';
 
@@ -63,8 +65,7 @@ String setupDevicePool(Map devicePoolInfo, String projectArn) {
   if (pool == null) {
     // create new device pool
     print('Creating new device pool \'$poolName\' ...');
-    // convert devices to rules
-//    List rules = devicesToRules(devices);
+    // convert devices to a rule
     String rules = devicesToRule(devices);
 
     final newPool = deviceFarmCmd([
@@ -74,7 +75,6 @@ String setupDevicePool(Map devicePoolInfo, String projectArn) {
       '--project-arn',
       projectArn,
       '--rules',
-//      jsonEncode(rules),
       rules,
       // number of devices in pool should not exceed number of devices requested
       // An error occurred (ArgumentException) when calling the CreateDevicePool operation: A static device pool can not have max devices parameter
@@ -115,23 +115,29 @@ String scheduleRun(
 }
 
 /// Tracks run status.
-/// Returns final run as [Map].
-// todo: add per job status (test on each device in pool) to run status
-Map runStatus(String runArn, int sylphRunTimeout) {
+/// Returns final run status as [Map].
+Map runStatus(String runArn, int sylphRunTimeout, String poolName) {
   const timeoutIncrement = 2;
-  Map run;
+  Map runStatus;
   for (int i = 0; i < sylphRunTimeout; i += timeoutIncrement) {
-    run = deviceFarmCmd([
+    runStatus = deviceFarmCmd([
       'get-run',
       '--arn',
       runArn,
     ])['run'];
-    final runStatus = run['status'];
+    final runStatusFlag = runStatus['status'];
 
     // print run status
-    print('Run status: $runStatus (sylph run timeout: $i of $sylphRunTimeout)');
+    print(
+        'Run status on device pool \'$poolName\`: $runStatusFlag (sylph run timeout: $i of $sylphRunTimeout)');
 
-    if (runStatus == kCompletedRunStatus) return run;
+    // print job status' for this run
+    final jobsInfo = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
+    for (final jobInfo in jobsInfo) {
+      print('\t\t${jobStatus(jobInfo)}');
+    }
+
+    if (runStatusFlag == kCompletedRunStatus) return runStatus;
 
     sleep(Duration(seconds: timeoutIncrement));
   }
@@ -139,9 +145,21 @@ Map runStatus(String runArn, int sylphRunTimeout) {
   throw 'Error: run timed-out';
 }
 
+/// Generates string of job status info from a [Map] of job info
+String jobStatus(Map job) {
+  final jobCounters = job['counters'];
+  final deviceMinutes = job['deviceMinutes'];
+  return sprintf('device: %-15s, passed: %s, failed: %s, minutes: %s', [
+    job['name'],
+    jobCounters['passed'],
+    jobCounters['failed'],
+    deviceMinutes['total']
+  ]);
+}
+
 /// Runs run report.
-// todo: add per job report (test on each device in pool) to run report
-void runReport(Map run) {
+/// Returns [bool] for pass/fail of run.
+bool runReport(Map run) {
   // print intro
   print(
       'Run \'${run['name']}\' completed ${run['completedJobs']} of ${run['totalJobs']} jobs.');
@@ -169,27 +187,14 @@ void runReport(Map run) {
       '    total: ${counters['total']}\n');
 
   if (result != kSuccessResult) {
-    print('Error: test failed');
-    // todo: download artifacts on failure too
-    exit(1);
+    print('Warning: run failed. Continuing...');
+    return false;
   }
+  return true;
 }
 
-/// Finds the ARN of a device.
-/// Returns device ARN  as [String].
-String findDeviceArn(Map sylphDevice) {
-  final jobDevices = deviceFarmCmd([
-    'list-devices',
-  ])['devices'];
-  Map jobDevice = jobDevices.firstWhere(
-      (device) => (isDeviceEqual(device, sylphDevice)),
-      orElse: () =>
-          throw 'Error: device does not exist: ${deviceDesc(sylphDevice)}');
-  return jobDevice['arn'];
-}
-
-/// Finds the ARNs of devices
-/// Returns device ARNs as a [List]
+/// Finds the ARNs of devices for a [List] of sylph devices.
+/// Returns device ARNs as a [List].
 List findDevicesArns(List sylphDevices) {
   final deviceArns = [];
   // get all devices
@@ -207,26 +212,10 @@ List findDevicesArns(List sylphDevices) {
   return deviceArns;
 }
 
-/// Converts a list of sylph devices [sylphDevices] to a list of rules.
-/// Used for building a device pool.
-/// Returns rules as [List].
-List devicesToRules(List sylphDevices) {
-  // convert devices to rules
-  final List rules = sylphDevices
-      .map((sylphDevice) => {
-            'attribute': 'ARN',
-            'operator': 'IN',
-            'value': '[\"' + findDeviceArn(sylphDevice) + '\"]'
-          })
-      .toList();
-  return rules;
-}
-
-/// Converts a list of sylph devices [sylphDevices] to a rule.
+/// Converts a [List] of sylph devices to a rule.
 /// Used for building a device pool.
 /// Returns rule as formatted [String].
 String devicesToRule(List sylphDevices) {
-  // convert devices to rule
   return '[{"attribute": "ARN", "operator": "IN","value": "[${formatArns(findDevicesArns(sylphDevices))}]"}]';
 }
 
@@ -250,34 +239,20 @@ String uploadFile(String projectArn, String filePath, String fileType) {
   cmd('curl', ['-T', filePath, uploadUrl]);
 
   // 3. Wait until file upload complete
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < kUploadTimeout; i++) {
     final upload = deviceFarmCmd(['get-upload', '--arn', uploadArn])['upload'];
     sleep(Duration(seconds: 1));
-    if (upload['status'] == 'SUCCEEDED')
-      break;
-    else if (i == 4) {
-      throw 'Error: file upload failed: file path = \'$filePath\'';
+    if (upload['status'] == kUploadSucceeded) {
+      return uploadArn;
     }
   }
-  return uploadArn;
+  throw 'Error: file upload failed: file path = \'$filePath\'';
 }
 
 /// Downloads artifacts for each job generated during a run.
 void downloadJobArtifacts(String runArn, String runArtifactDir) {
   // list jobs
   final List jobs = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
-//  // check only one job and on expected device then download artifacts
-//  if (jobs.length == 1) {
-//    final job = jobs.first;
-//    // confirm job is on expected device
-//    if (isJobOnDevice(job, jobDevice)) {
-//      downloadArtifacts(job['arn'], jobDownloadDir);
-//    } else {
-//      throw ('Error: job not on expected device: ${deviceDesc(jobDevice)}');
-//    }
-//  } else {
-//    throw ('Error: multiple jobs found where one expected: $jobs');
-//  }
 
   for (final job in jobs) {
     // get sylph device
@@ -295,6 +270,7 @@ void downloadJobArtifacts(String runArn, String runArtifactDir) {
 /// Downloads artifacts generated during a run.
 /// [arn] can be a run, job, suite, or test ARN.
 void downloadArtifacts(String arn, String artifactsDir) {
+  print('Downloading artifacts to $artifactsDir');
   // create directory
   clearDirectory(artifactsDir);
 
@@ -315,7 +291,6 @@ void downloadArtifacts(String arn, String artifactsDir) {
     // use last artifactID to make unique
     final fileName = '$name ${artifactIDs[3]}.$extension'.replaceAll(' ', '_');
     final filePath = '$artifactsDir/$fileName';
-    print(filePath);
     cmd('wget', ['-O', filePath, fileUrl]);
   }
 }
