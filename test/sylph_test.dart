@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:sylph/bundle.dart';
@@ -6,6 +5,15 @@ import 'package:sylph/sylph.dart';
 import 'package:sylph/utils.dart';
 import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
+
+const kTestProjectName = 'test artifacts download';
+const kTestProjectArn =
+    'arn:aws:devicefarm:us-west-2:122621792560:project:e1c97f71-f534-432b-9e86-3bd7529e327b';
+// successful run with multiple jobs
+const kSuccessfulRunArn =
+    'arn:aws:devicefarm:us-west-2:122621792560:run:e1c97f71-f534-432b-9e86-3bd7529e327b/50e59618-6925-45aa-87f6-c5184ef62407';
+const kFirstJobArn =
+    'arn:aws:devicefarm:us-west-2:122621792560:job:e1c97f71-f534-432b-9e86-3bd7529e327b/50e59618-6925-45aa-87f6-c5184ef62407/00000';
 
 void main() {
   test('parse yaml', () async {
@@ -134,17 +142,10 @@ void main() {
     expect(result, expected);
   });
 
-  test('monitor run progress until complete', () {
-    // failed run
-//    final runArn =
-//        'arn:aws:devicefarm:us-west-2:122621792560:run:18ccd74d-2cbc-4d61-a9ca-2fcf656d4d48/cc93dcee-d406-48a6-b8e6-5eaaeb290b11';
-    // successful run
-    final runArn =
-        'arn:aws:devicefarm:us-west-2:122621792560:job:25b6693b-ecdc-40b6-b736-29de562c18b9/db578606-ebc4-4c1e-a72e-a14b30cbe898/00000';
+  test('monitor successful run progress until complete', () {
     final timeout = 100;
-    Map result;
-
-    result = runStatus(runArn, timeout);
+    final poolName = 'dummy pool name';
+    final result = runStatus(kSuccessfulRunArn, timeout, poolName);
 
     // generate report
     runReport(result);
@@ -235,10 +236,8 @@ void main() {
     // download each artifact
     DateTime timestamp = genTimestamp();
     final downloadDir = '/tmp/tmp/artifacts xxx $timestamp';
-    final runArn =
-        'arn:aws:devicefarm:us-west-2:122621792560:run:fef6e39b-8ab0-44f4-b6ae-09115edbce36/42c84f3d-e061-4f23-ac7c-8d5d3a6b8f0f';
     // list artifacts
-    downloadArtifacts(runArn, downloadDir);
+    downloadArtifacts(kSuccessfulRunArn, downloadDir);
   });
 
   test('run device farm command', () {
@@ -261,9 +260,9 @@ void main() {
     // download each artifact
     final sylphRunTimestamp = genTimestamp();
     final sylphRunName = 'dummy sylph run $sylphRunTimestamp';
-    final runName = 'sylph run at 2019-06-23 23:44:16.214';
-    final projectName = 'test artifacts download';
-    final poolName = 'pool 1'; // only used in dir path
+    final runName = 'sylph run at 2019-06-23 23:44:16.214'; // multiple jobs
+    final projectName = kTestProjectName;
+    final poolName = 'dummy pool 1'; // only used in dir path
     final downloadDirPrefix = '/tmp/sylph artifacts';
 
     // list projects
@@ -274,8 +273,7 @@ void main() {
         (project) => project['name'] == projectName,
         orElse: () => null);
     final projectArn = project['arn'];
-    expect(projectArn,
-        'arn:aws:devicefarm:us-west-2:122621792560:project:e1c97f71-f534-432b-9e86-3bd7529e327b');
+    expect(projectArn, kTestProjectArn);
 
     // list runs
     final runs = deviceFarmCmd(['list-runs', '--arn', projectArn])['runs'];
@@ -284,16 +282,14 @@ void main() {
     final run = runs.firstWhere((run) => '${run['name']}' == runName,
         orElse: () => null);
     final runArn = run['arn'];
-    expect(runArn,
-        'arn:aws:devicefarm:us-west-2:122621792560:run:e1c97f71-f534-432b-9e86-3bd7529e327b/50e59618-6925-45aa-87f6-c5184ef62407');
+    expect(runArn, kSuccessfulRunArn);
 
     // list jobs
     final List jobs = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
     expect(jobs.length, 2);
 
     // get job (use first for this test)
-    expect(jobs.first['arn'],
-        'arn:aws:devicefarm:us-west-2:122621792560:job:e1c97f71-f534-432b-9e86-3bd7529e327b/50e59618-6925-45aa-87f6-c5184ef62407/00000');
+    expect(jobs.first['arn'], kFirstJobArn);
 
     // generate run download dir
     String runDownloadDir = generateRunArtifactsDir(
