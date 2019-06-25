@@ -8,6 +8,7 @@ import 'package:yaml/yaml.dart';
 enum DeviceType { ios, android }
 
 const kUploadTimeout = 5;
+const kUploadSucceeded = 'SUCCEEDED';
 const kCompletedRunStatus = 'COMPLETED';
 const kSuccessResult = 'PASSED';
 
@@ -113,23 +114,24 @@ String scheduleRun(
 }
 
 /// Tracks run status.
-/// Returns final run as [Map].
+/// Returns final run status as [Map].
 // todo: add per job status (test on each device in pool) to run status
 Map runStatus(String runArn, int sylphRunTimeout) {
   const timeoutIncrement = 2;
-  Map run;
+  Map runStatus;
   for (int i = 0; i < sylphRunTimeout; i += timeoutIncrement) {
-    run = deviceFarmCmd([
+    runStatus = deviceFarmCmd([
       'get-run',
       '--arn',
       runArn,
     ])['run'];
-    final runStatus = run['status'];
+    final runStatusFlag = runStatus['status'];
 
     // print run status
-    print('Run status: $runStatus (sylph run timeout: $i of $sylphRunTimeout)');
+    print(
+        'Run status: $runStatusFlag (sylph run timeout: $i of $sylphRunTimeout)');
 
-    if (runStatus == kCompletedRunStatus) return run;
+    if (runStatusFlag == kCompletedRunStatus) return runStatus;
 
     sleep(Duration(seconds: timeoutIncrement));
   }
@@ -138,7 +140,7 @@ Map runStatus(String runArn, int sylphRunTimeout) {
 }
 
 /// Runs run report.
-// todo: add per job report (test on each device in pool) to run report
+// todo: add per job report (test result on each device in pool) to run report
 void runReport(Map run) {
   // print intro
   print(
@@ -219,16 +221,14 @@ String uploadFile(String projectArn, String filePath, String fileType) {
   cmd('curl', ['-T', filePath, uploadUrl]);
 
   // 3. Wait until file upload complete
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < kUploadTimeout; i++) {
     final upload = deviceFarmCmd(['get-upload', '--arn', uploadArn])['upload'];
     sleep(Duration(seconds: 1));
-    if (upload['status'] == 'SUCCEEDED')
-      break;
-    else if (i == 4) {
-      throw 'Error: file upload failed: file path = \'$filePath\'';
+    if (upload['status'] == kUploadSucceeded) {
+      return uploadArn;
     }
   }
-  return uploadArn;
+  throw 'Error: file upload failed: file path = \'$filePath\'';
 }
 
 /// Downloads artifacts for each job generated during a run.
