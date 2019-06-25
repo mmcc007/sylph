@@ -116,7 +116,7 @@ String scheduleRun(
 /// Tracks run status.
 /// Returns final run status as [Map].
 // todo: add per job status (test on each device in pool) to run status
-Map runStatus(String runArn, int sylphRunTimeout) {
+Map runStatus(String runArn, int sylphRunTimeout, String poolName) {
   const timeoutIncrement = 2;
   Map runStatus;
   for (int i = 0; i < sylphRunTimeout; i += timeoutIncrement) {
@@ -129,7 +129,7 @@ Map runStatus(String runArn, int sylphRunTimeout) {
 
     // print run status
     print(
-        'Run status: $runStatusFlag (sylph run timeout: $i of $sylphRunTimeout)');
+        'Run status on device pool \'$poolName\`: $runStatusFlag (sylph run timeout: $i of $sylphRunTimeout)');
 
     if (runStatusFlag == kCompletedRunStatus) return runStatus;
 
