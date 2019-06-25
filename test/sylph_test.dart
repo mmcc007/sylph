@@ -314,7 +314,7 @@ void main() {
     final jobsInfo = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
     for (final jobInfo in jobsInfo) {
 //      print('jobInfo=$jobInfo');
-      print('\t\t${jobProgress(jobInfo)}');
+      print('\t\t${jobStatus(jobInfo)}');
     }
   });
 }
