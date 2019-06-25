@@ -83,7 +83,7 @@ void sylphRun(Map config, String projectArn, String sylphRunName,
   await bundleFlutterTests(config);
 
   for (var testSuite in config['test_suites']) {
-    print('Running \'${testSuite['test_suite']}\' test suite...');
+    print('\nRunning \'${testSuite['test_suite']}\' test suite...\n');
 
     // todo: update test spec with tests in test suite
     // (currently only allows one test)
@@ -97,7 +97,7 @@ void sylphRun(Map config, String projectArn, String sylphRunName,
     // Initialize device pools and run tests in each pool
     for (final poolName in testSuite['pool_names']) {
       print(
-          '\nStarting \'${testSuite['test_suite']}\' run \'$sylphRunName\' in project \'${config['project_name']}\' on pool \'$poolName\'...\n');
+          'Running test suite \'${testSuite['test_suite']}\'  in project \'${config['project_name']}\' on pool \'$poolName\'...');
       // lookup device pool info in config file
       Map devicePoolInfo = getDevicePoolInfo(config['device_pools'], poolName);
 
@@ -136,7 +136,8 @@ void sylphRun(Map config, String projectArn, String sylphRunName,
           testPackageArn,
           testSpecArn,
           runArtifactsDir,
-          testSuite['job_timeout']);
+          testSuite['job_timeout'],
+          poolName);
     }
   }
 }
@@ -176,14 +177,15 @@ void runTests(
     String testPackageArn,
     String testSpecArn,
     String artifactsDir,
-    int jobTimeout) {
+    int jobTimeout,
+    poolName) {
   // Schedule run
   print('Starting run \'$runName\' on AWS Device Farms...');
   String runArn = sylph.scheduleRun(runName, projectArn, appArn, devicePoolArn,
       testSpecArn, testPackageArn, jobTimeout);
 
   // Monitor run progress
-  final run = sylph.runStatus(runArn, sylphRunTimeout);
+  final run = sylph.runStatus(runArn, sylphRunTimeout, poolName);
 
   // Output run result
   sylph.runReport(run);
