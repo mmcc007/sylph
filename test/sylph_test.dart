@@ -288,7 +288,7 @@ void main() {
     final List jobs = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
     expect(jobs.length, 2);
 
-    // get job (use first for this test)
+    // confirm first job
     expect(jobs.first['arn'], kFirstJobArn);
 
     // generate run download dir
@@ -307,5 +307,14 @@ void main() {
     final devices = devicePoolInfo['devices'];
     final expected = {'model': 'Pixel', 'name': 'Google Pixel', 'os': '8.0.0'};
     expect(devices.first, expected);
+  });
+
+  test('generate job progress report for current run', () {
+    final runArn = kSuccessfulRunArn;
+    final jobsInfo = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
+    for (final jobInfo in jobsInfo) {
+//      print('jobInfo=$jobInfo');
+      print('\t\t${jobProgress(jobInfo)}');
+    }
   });
 }
