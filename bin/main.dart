@@ -75,19 +75,17 @@ main(List<String> arguments) async {
 /// For each device pool:
 /// 1. Initialize the device pool.
 /// 2. Build app for ios or android based on pool type.
-/// 3. Package and upload the build and tests.
+/// 3. Upload the build.
 /// 4. For each test in each testsuite.
-///    1. Run tests on device pool.
-///    2. Report and collect artifacts.
+///    1. Run tests on each device in device pool.
+///    2. Report and collect artifacts for each device.
 /// Returns [Future<bool>] for pass or fail.
 Future<bool> sylphRun(Map config, String projectArn, String sylphRunName,
     int sylphRunTimeout, DateTime sylphRunTimestamp) async {
   bool sylphRunSucceeded = true;
-  // sylph staging dir
-  final tmpDir = config['tmp_dir'];
 
   // Unpack resources used for building debug .ipa and to bundle tests
-  await unpackResources(tmpDir);
+  await unpackResources(config['tmp_dir']);
 
   // Bundle tests
   await bundleFlutterTests(config);
@@ -106,56 +104,59 @@ Future<bool> sylphRun(Map config, String projectArn, String sylphRunName,
 
     // Initialize device pools and run tests in each pool
     for (final poolName in testSuite['pool_names']) {
-      print(
-          'Running test suite \'${testSuite['test_suite']}\'  in project \'${config['project_name']}\' on pool \'$poolName\'...');
-      // lookup device pool info in config file
-      Map devicePoolInfo = getDevicePoolInfo(config['device_pools'], poolName);
-
-      // Setup device pool
-      String devicePoolArn = sylph.setupDevicePool(devicePoolInfo, projectArn);
-
-      // Build debug app for pool type and upload
-      final appArn = await buildUploadApp(
-          projectArn, devicePoolInfo['pool_type'], testSuite['main'], tmpDir);
-
-      // Upload test suite (in 2 parts)
-
-      // 1. Upload test package
-      final testBundlePath = '${config['tmp_dir']}/${kTestBundleName}';
-      print('Uploading tests: $testBundlePath ...');
-      String testPackageArn = sylph.uploadFile(
-          projectArn, testBundlePath, 'APPIUM_PYTHON_TEST_PACKAGE');
-
-      // 2. Upload custom test spec yaml
-      final testSpecPath = testSuite['testspec'];
-      print('Uploading test specification: $testSpecPath ...');
-      String testSpecArn =
-          sylph.uploadFile(projectArn, testSpecPath, 'APPIUM_PYTHON_TEST_SPEC');
-
-      // construct artifacts dir for device farm run
-      final runArtifactsDir = generateRunArtifactsDir(config['artifacts_dir'],
-          sylphRunName, config['project_name'], poolName);
-
-      // run tests and report
-      final runSucceeded = runTests(
-          sylphRunName,
-          sylphRunTimeout,
-          projectArn,
-          devicePoolArn,
-          appArn,
-          testPackageArn,
-          testSpecArn,
-          runArtifactsDir,
-          testSuite['job_timeout'],
-          poolName);
-
+      final runTestsSucceeded = await runSylphTests(testSuite, config, poolName,
+          projectArn, sylphRunName, sylphRunTimeout);
       // track sylph run success
-      if (sylphRunSucceeded & !runSucceeded) {
+      if (sylphRunSucceeded & !runTestsSucceeded) {
         sylphRunSucceeded = false;
       }
     }
   }
   return sylphRunSucceeded;
+}
+
+Future<bool> runSylphTests(Map testSuite, Map config, poolName,
+    String projectArn, String sylphRunName, int sylphRunTimeout) async {
+  print(
+      'Running test suite \'${testSuite['test_suite']}\'  in project \'${config['project_name']}\' on pool \'$poolName\'...');
+  // lookup device pool info in config file
+  Map devicePoolInfo = getDevicePoolInfo(config['device_pools'], poolName);
+
+  // Setup device pool
+  String devicePoolArn = sylph.setupDevicePool(devicePoolInfo, projectArn);
+
+  // Build debug app for pool type and upload
+  final appArn = await buildUploadApp(projectArn, devicePoolInfo['pool_type'],
+      testSuite['main'], config['tmp_dir']);
+
+  // Upload test suite (in 2 parts)
+
+  // 1. Upload test package
+  final testBundlePath = '${config['tmp_dir']}/${kTestBundleName}';
+  print('Uploading tests: $testBundlePath ...');
+  String testPackageArn = sylph.uploadFile(
+      projectArn, testBundlePath, 'APPIUM_PYTHON_TEST_PACKAGE');
+
+  // 2. Upload custom test spec yaml
+  final testSpecPath = testSuite['testspec'];
+  print('Uploading test specification: $testSpecPath ...');
+  String testSpecArn =
+      sylph.uploadFile(projectArn, testSpecPath, 'APPIUM_PYTHON_TEST_SPEC');
+
+  // run tests and report
+  return runTests(
+      sylphRunName,
+      sylphRunTimeout,
+      projectArn,
+      devicePoolArn,
+      appArn,
+      testPackageArn,
+      testSpecArn,
+      // construct artifacts dir path for device farm run
+      runArtifactsDirPath(config['artifacts_dir'], sylphRunName,
+          config['project_name'], poolName),
+      testSuite['job_timeout'],
+      poolName);
 }
 
 /// Builds and uploads debug app (.ipa or .apk) for current pool type.
