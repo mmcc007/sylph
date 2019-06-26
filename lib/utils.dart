@@ -98,16 +98,16 @@ String deviceDesc(Map device) {
   return 'name=${device['name']}, model=${device['model']}, os=${device['os']}';
 }
 
-/// generates a download directory for each Device Farm run's artifacts
-String generateRunArtifactsDir(String downloadDirPrefix, String sylphRunName,
+/// generates a download directory path for each Device Farm run's artifacts
+String runArtifactsDirPath(String downloadDirPrefix, String sylphRunName,
     String projectName, String poolName) {
   final downloadDir = '$downloadDirPrefix/' +
       '$sylphRunName/$projectName/$poolName'.replaceAll(' ', '_');
   return downloadDir;
 }
 
-/// generates a download directory for each Device Farm run job's artifacts
-String generateJobArtifactsDir(String runArtifactDir, Map sylphDevice) {
+/// generates a download directory path for each Device Farm run job's artifacts
+String jobArtifactsDirPath(String runArtifactDir, Map sylphDevice) {
   final downloadDir = '$runArtifactDir/' +
       '${sylphDevice['name']}-${sylphDevice['model']}-${sylphDevice['os']}'
           .replaceAll(' ', '_');
