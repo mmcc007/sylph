@@ -258,12 +258,8 @@ void downloadJobArtifacts(String runArn, String runArtifactDir) {
     // get sylph device
     final sylphDevice = getSylphDevice(job['device']);
 
-    // generate job artifacts dir
-    final jobArtifactsDir =
-        generateJobArtifactsDir(runArtifactDir, sylphDevice);
-
-    // download job artifacts
-    downloadArtifacts(job['arn'], jobArtifactsDir);
+    // generate job artifacts dir and download job artifacts
+    downloadArtifacts(job['arn'], jobArtifactsDirPath(runArtifactDir, sylphDevice));
   }
 }
 
