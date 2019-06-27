@@ -13,9 +13,11 @@ dependencies:
   yaml: ^2.1.15
   resource: ^2.1.5
   sprintf: ^4.0.2
+  isolate: ^2.0.2
+  collection: ^1.14.11
 
 dev_dependencies:
   test: ^1.0.0
-
+  fake_async: ^1.0.1
 executables:
   sylph: main
