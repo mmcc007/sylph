@@ -1,8 +1,19 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:sylph/sylph.dart';
 import 'dart:io';
+
+import 'package:collection/collection.dart';
+import 'package:yaml/yaml.dart';
+
+import 'device_farm.dart';
+
+/// Parses a named yaml file.
+/// Returns as [Map].
+Future<Map> parseYaml(String filePath) async {
+  final yaml = await File(filePath).readAsString(encoding: utf8);
+  return loadYaml(yaml) as Map;
+}
 
 /// Clears a named directory.
 /// Creates directory if none exists.
@@ -24,7 +35,8 @@ Future<void> writeFileImage(List<int> fileImage, String path) async {
 /// Returns stdout as [String].
 String cmd(String cmd, List<String> arguments,
     [String workingDir = '.', bool silent = true]) {
-//  print('cmd=\'$cmd ${arguments.join(" ")}\'');
+//  print(
+//      'cmd=\'$cmd ${arguments.join(" ")}\', workingDir=$workingDir, silent=$silent');
   final result = Process.runSync(cmd, arguments, workingDirectory: workingDir);
   if (!silent) stdout.write(result.stdout);
   if (result.exitCode != 0) {
@@ -65,10 +77,8 @@ Future<void> streamCmd(String cmd, List<String> arguments,
 
 /// Runs a device farm command.
 /// Returns as [Map].
-Map deviceFarmCmd(List<String> arguments,
-    [String workingDir = '.', bool silent = true]) {
-  return jsonDecode(
-      cmd('aws', ['devicefarm']..addAll(arguments), workingDir, silent));
+Map deviceFarmCmd(List<String> arguments, [String workingDir = '.']) {
+  return jsonDecode(cmd('aws', ['devicefarm']..addAll(arguments), workingDir));
 }
 
 /// Converts [DeviceType] to [String]
@@ -125,9 +135,8 @@ Map getSylphDevice(jobDevice) {
 
 /// Compares a jobDevice to a sylph device
 bool isDeviceEqual(Map jobDevice, Map sylphDevice) {
-  return jobDevice['name'] == sylphDevice['name'] &&
-      jobDevice['modelId'] == sylphDevice['model'] &&
-      jobDevice['os'] == sylphDevice['os'];
+  final mapEq = const MapEquality().equals;
+  return mapEq(getSylphDevice(jobDevice), sylphDevice);
 }
 
 /// Formats a list of ARNs for Device Farm API
