@@ -358,7 +358,7 @@ void main() {
         testSuite, config, poolName, projectArn, sylphRunName, sylphRunTimeout);
 
     // run
-    final result = await runJobs(runSylphTestsInIsolate, [jobArgs]);
+    final result = await runJobs(runSylphJobInIsolate, [jobArgs]);
     expect(result, [
       {'result': true}
     ]);
