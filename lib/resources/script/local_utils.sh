@@ -79,8 +79,8 @@ build_debug_ipa() {
     APP_COMMON_PATH="$IOS_BUILD_DIR/$APP_NAME"
     ARCHIVE_PATH="$APP_COMMON_PATH.xcarchive"
 
-    echo "Building debug .ipa for upload to Device Farm..."
-    flutter clean > /dev/null
+#    echo "Building debug .ipa for upload to Device Farm..."
+#    flutter clean > /dev/null
     flutter packages get > /dev/null # in case building from a different flutter repo
     echo "Running flutter build ios -t test_driver/main.dart --debug..."
     flutter build ios -t test_driver/main.dart --debug
