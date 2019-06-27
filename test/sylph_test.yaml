@@ -28,13 +28,19 @@ device_pools:
       - name: Google Pixel 2
         model: Google Pixel 2
         os: 8.0.0
+      - name: Samsung Galaxy E7
+        model: SM-E7000
+        os: 4.4.4
 
   - pool_name: ios pool 1
     pool_type: ios
     devices:
       - name: Apple iPhone X
         model: A1865
-        os: 12.0
+        os: '12.0'
+      - name: Apple iPhone X
+        model: A1865
+        os: '11.4'
 
 test_suites:
   - test_suite: my tests 1
