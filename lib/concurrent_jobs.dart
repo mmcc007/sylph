@@ -23,9 +23,9 @@ Future<List<Map>> runJobs(job, List jobArgs) {
   });
 }
 
-/// Runs [runSylphTests] in an isolate.
+/// Runs [runSylphJob] in an isolate.
 /// Method signature should match signature used in [runJobs].
-Future<Map> runSylphTestsInIsolate(Map args) async {
+Future<Map> runSylphJobInIsolate(Map args) async {
   // unpack args
   final testSuite = jsonDecode(args['test_suite']);
   final config = jsonDecode(args['config']);
@@ -35,13 +35,13 @@ Future<Map> runSylphTestsInIsolate(Map args) async {
   final sylphRunTimeout = args['sylph_run_timeout'];
 
   // run runSylphTests
-  final succeeded = await runSylphTests(
+  final succeeded = await runSylphJob(
       testSuite, config, poolName, projectArn, sylphRunName, sylphRunTimeout);
 
   return {'result': succeeded};
 }
 
-/// Pack [runSylphTests] args into [Map].
+/// Pack [runSylphJob] args into [Map].
 Map packArgs(Map testSuite, Map config, poolName, String projectArn,
     String sylphRunName, int sylphRunTimeout) {
   return {

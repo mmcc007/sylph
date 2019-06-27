@@ -51,7 +51,7 @@ Future<bool> sylphRun(Map config, String projectArn, String sylphRunName,
         jobArgs.add(packArgs(testSuite, config, poolName, projectArn,
             sylphRunName, sylphRunTimeout));
       } else {
-        runTestsSucceeded = await runSylphTests(testSuite, config, poolName,
+        runTestsSucceeded = await runSylphJob(testSuite, config, poolName,
             projectArn, sylphRunName, sylphRunTimeout);
         // track sylph run success
         if (sylphRunSucceeded & !runTestsSucceeded) {
@@ -63,7 +63,7 @@ Future<bool> sylphRun(Map config, String projectArn, String sylphRunName,
     // run concurrently
     if (config['concurrent_runs']) {
       print('Running tests concurrently on iOS and Android pools...');
-      final results = await runJobs(runSylphTestsInIsolate, jobArgs);
+      final results = await runJobs(runSylphJobInIsolate, jobArgs);
       print('results=$results');
       // process results
       for (final result in results) {
@@ -77,9 +77,9 @@ Future<bool> sylphRun(Map config, String projectArn, String sylphRunName,
   return sylphRunSucceeded;
 }
 
-/// Run sylph tests on a pool of devices.
-Future<bool> runSylphTests(Map testSuite, Map config, poolName,
-    String projectArn, String sylphRunName, int sylphRunTimeout) async {
+/// Run sylph tests on a pool of devices using a device farm run.
+Future<bool> runSylphJob(Map testSuite, Map config, poolName, String projectArn,
+    String sylphRunName, int sylphRunTimeout) async {
   print(
       'Running test suite \'${testSuite['test_suite']}\'  in project \'${config['project_name']}\' on pool \'$poolName\'...');
   // lookup device pool info in config file
