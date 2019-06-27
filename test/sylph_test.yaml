@@ -9,6 +9,10 @@ project_name: flutter tests
 default_job_timeout: 5 # minutes
 
 tmp_dir: /tmp/sylph
+# local timeout per device farm run
+sylph_timeout: 720 # seconds approx
+# run on ios and android pools concurrently (for faster results)
+concurrent_runs: false
 
 device_pools:
 
