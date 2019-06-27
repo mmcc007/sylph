@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:sylph/bundle.dart';
+import 'package:sylph/concurrent_jobs.dart';
 import 'package:sylph/sylph.dart';
-import 'package:sylph/utils.dart';
+import 'package:sylph/validator.dart';
 import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
 
@@ -102,10 +104,12 @@ void main() {
       'name': 'Apple iPhone X',
       'model': 'A1865',
       'os': '12.0'
+//      'os': '11.4'
     };
 
-    String result = findDevicesArns([sylphDevice]).first;
-    expect(result,
+    final result = findDevicesArns([sylphDevice]);
+    expect(result.length, 1);
+    expect(result.first,
         'arn:aws:devicefarm:us-west-2::device:D125AEEE8614463BAE106865CAF4470E');
   });
 
@@ -128,7 +132,7 @@ void main() {
     // 'test artifacts download'
     final projectArn =
         'arn:aws:devicefarm:us-west-2:122621792560:project:e1c97f71-f534-432b-9e86-3bd7529e327b';
-    final poolName = 'android pool 1';
+    final poolName = 'ios pool 1';
     final configFilePath = 'test/sylph_test.yaml';
 
     Map config = await parseYaml(configFilePath);
@@ -138,7 +142,7 @@ void main() {
     // check for existing pool
     final result = setupDevicePool(devicePoolInfo, projectArn);
     final expected =
-        'arn:aws:devicefarm:us-west-2:122621792560:devicepool:e1c97f71-f534-432b-9e86-3bd7529e327b/762d6c56-e189-43ca-aded-bf59c7e20904';
+        'arn:aws:devicefarm:us-west-2:122621792560:devicepool:e1c97f71-f534-432b-9e86-3bd7529e327b/ab9460cf-fd81-4848-9ae5-643da98937ae';
     expect(result, expected);
   });
 
@@ -292,7 +296,7 @@ void main() {
     expect(jobs.first['arn'], kFirstJobArn);
 
     // generate run download dir
-    String runDownloadDir = generateRunArtifactsDir(
+    String runDownloadDir = runArtifactsDirPath(
         downloadDirPrefix, sylphRunName, projectName, poolName);
 
     // download job artifacts
@@ -317,4 +321,74 @@ void main() {
       print('\t\t${jobStatus(jobInfo)}');
     }
   });
+
+  test('run jobs in parallel', () async {
+    final jobArgs = [
+      {'n': 10},
+      {'n': 20}
+    ];
+//    print('square=$square');
+    List results = await runJobs(square, jobArgs);
+    for (int i = 0; i < results.length; i++) {
+//      print("square job #$i: job(${jobArgs[i]}) = ${results[i]}");
+      expect(results[i], square(jobArgs[i]));
+    }
+
+    // try again with a future
+    results = await runJobs(squareFuture, jobArgs);
+    for (int i = 0; i < results.length; i++) {
+//      print("squareFuture job #$i: job(${jobArgs[i]}) = ${results[i]}");
+      expect(results[i], await squareFuture(jobArgs[i]));
+    }
+  });
+
+  test('run sylph tests on a device pool in isolate', () async {
+    final config = await parseYaml('test/sylph_test.yaml');
+
+    // pack job args
+    //Map testSuite, Map config, poolName,
+    //    String projectArn, String sylphRunName, int sylphRunTimeout
+    final timestamp = genTimestamp();
+    final testSuite = config['test_suites'].first;
+    final poolName = 'android pool 1';
+    final projectArn = kTestProjectArn;
+    final sylphRunName = 'dummy sylph run $timestamp';
+    final sylphRunTimeout = config['sylph_timeout'];
+    final jobArgs = packArgs(
+        testSuite, config, poolName, projectArn, sylphRunName, sylphRunTimeout);
+
+    // run
+    final result = await runJobs(runSylphTestsInIsolate, [jobArgs]);
+    expect(result, [
+      {'result': true}
+    ]);
+  });
+
+  test('are all sylph devices found', () async {
+    // get all sylph devices from sylph.yaml
+    final config = await parseYaml('test/sylph_test.yaml');
+//    final config = await parseYaml('example/sylph.yaml');
+    final allSylphDevicesFound = isValidSylphDevices(config);
+
+    expect(allSylphDevicesFound, true);
+  });
+}
+
+int sortSylphDevices(d1, d2) {
+  var r = d1["name"].compareTo(d2["name"]);
+  if (r != 0) return r;
+  return d1["model"].compareTo(d2["model"]);
+}
+
+// can be called locally or in an isolate. used in testing.
+Map square(Map args) {
+//  print('running square with args=$args, time=${DateTime.now()}');
+  int n = args['n'];
+  return {'result': n * n};
+}
+
+Future<Map> squareFuture(Map args) {
+//  print('running square future with args=$args, time=${DateTime.now()}');
+  int n = args['n'];
+  return Future.value({'result': n * n});
 }
