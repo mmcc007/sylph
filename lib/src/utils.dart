@@ -6,7 +6,6 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:yaml/yaml.dart';
 
-import 'device_farm.dart';
 
 /// Parses a named yaml file.
 /// Returns as [Map].
@@ -79,11 +78,6 @@ Future<void> streamCmd(String cmd, List<String> arguments,
 /// Returns as [Map].
 Map deviceFarmCmd(List<String> arguments, [String workingDir = '.']) {
   return jsonDecode(cmd('aws', ['devicefarm']..addAll(arguments), workingDir));
-}
-
-/// Converts [DeviceType] to [String]
-String deviceTypeStr(DeviceType deviceType) {
-  return DeviceType.ios.toString().split('.')[1];
 }
 
 /// Gets device pool from config file.

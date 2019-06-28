@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:isolate/isolate.dart';
-import 'package:sylph/sylph_run.dart';
+
+import 'sylph_run.dart';
 
 /// Runs any number of jobs concurrently in an isolate for each job.
 /// Number of concurrent jobs is recommended to not exceed number of cores in CPU.

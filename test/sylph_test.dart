@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:sylph/bundle.dart';
-import 'package:sylph/concurrent_jobs.dart';
-import 'package:sylph/sylph.dart';
-import 'package:sylph/validator.dart';
+
+import 'package:sylph/src/bundle.dart';
+import 'package:sylph/src/concurrent_jobs.dart';
+import 'package:sylph/src/device_farm.dart';
+import 'package:sylph/src/sylph_run.dart';
+import 'package:sylph/src/utils.dart';
+import 'package:sylph/src/validator.dart';
 import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
 

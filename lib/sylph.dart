@@ -1,2 +1,2 @@
-export 'device_farm.dart';
-export 'sylph_run.dart';
+export 'src/device_farm.dart';
+export 'src/sylph_run.dart';

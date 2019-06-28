@@ -1,7 +1,8 @@
 import 'dart:io';
-import 'package:sylph/utils.dart';
 import 'package:path/path.dart' as p;
 import 'package:sprintf/sprintf.dart';
+
+import 'utils.dart';
 
 enum DeviceType { ios, android }
 
@@ -283,4 +284,9 @@ void downloadArtifacts(String arn, String artifactsDir) {
     final filePath = '$artifactsDir/$fileName';
     cmd('wget', ['-O', filePath, fileUrl]);
   }
+}
+
+/// Converts [DeviceType] to [String]
+String deviceTypeStr(DeviceType deviceType) {
+  return DeviceType.ios.toString().split('.')[1];
 }
