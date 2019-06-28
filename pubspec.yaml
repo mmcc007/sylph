@@ -15,9 +15,9 @@ dependencies:
   sprintf: ^4.0.2
   isolate: ^2.0.2
   collection: ^1.14.11
+  duration: ^2.0.8
 
 dev_dependencies:
   test: ^1.0.0
-  fake_async: ^1.0.1
 executables:
   sylph: main

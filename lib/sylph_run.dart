@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:duration/duration.dart';
+
 import 'bundle.dart';
 import 'concurrent_jobs.dart';
 import 'device_farm.dart';
@@ -18,9 +20,18 @@ const kDebugIpaPath = 'build/ios/Debug-iphoneos/Debug_Runner.ipa';
 ///    1. Run tests on each device in device pool.
 ///    2. Report and collect artifacts for each device.
 /// Returns [Future<bool>] for pass or fail.
-Future<bool> sylphRun(Map config, String projectArn, String sylphRunName,
-    int sylphRunTimeout, DateTime sylphRunTimestamp) async {
+Future<bool> sylphRun(String configFilePath, String sylphRunName,
+    DateTime sylphRunTimestamp) async {
   bool sylphRunSucceeded = true;
+
+  // Parse config file
+  Map config = await parseYaml(configFilePath);
+
+  final sylphRunTimeout = config['sylph_timeout'];
+
+  // Setup project (if needed)
+  final projectArn =
+      setupProject(config['project_name'], config['default_job_timeout']);
 
   // Unpack resources used for building debug .ipa and to bundle tests
   await unpackResources(config['tmp_dir']);
@@ -176,4 +187,22 @@ bool _runTests(
   print('Downloading artifacts...');
   downloadJobArtifacts(runArn, artifactsDir);
   return runSucceeded;
+}
+
+/// Formats the sylph runtime, rounded to milliseconds.
+String sylphRuntimeFormatted(DateTime startTime, DateTime endTime) {
+  final duration = endTime.difference(startTime);
+  final durationFormatted = prettyDuration(duration,
+      tersity: DurationTersity.millisecond,
+      delimiter: ':',
+      spacer: '',
+      abbreviated: true);
+  return durationFormatted;
+}
+
+/// Generates timestamp as [DateTime] in milliseconds
+DateTime sylphTimestamp() {
+  final timestamp = DateTime.fromMillisecondsSinceEpoch(
+      DateTime.now().millisecondsSinceEpoch);
+  return timestamp;
 }
