@@ -6,7 +6,6 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:yaml/yaml.dart';
 
-
 /// Parses a named yaml file.
 /// Returns as [Map].
 Future<Map> parseYaml(String filePath) async {
