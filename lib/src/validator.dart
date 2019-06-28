@@ -2,7 +2,6 @@ import 'package:collection/collection.dart';
 
 import 'utils.dart';
 
-
 isValidSylphDevices(Map config) {
   final fixMemberOrder = (Map dev) =>
       {'name': dev['name'], 'model': dev['model'], 'os': dev['os']};

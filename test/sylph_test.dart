@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-
 import 'package:sylph/src/bundle.dart';
 import 'package:sylph/src/concurrent_jobs.dart';
 import 'package:sylph/src/device_farm.dart';
