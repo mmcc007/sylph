@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:resource/resource.dart';
-import 'package:sylph/utils.dart';
+
+import 'utils.dart';
 
 const kResourcesUri = 'package:sylph/resources';
 const kAppiumTemplateName = 'appium_bundle.zip';
