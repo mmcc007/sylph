@@ -96,13 +96,6 @@ Map getDevicePoolInfo(List devicePools, String poolName) {
 /// Converts [enum] value to [String].
 String enumToStr(dynamic _enum) => _enum.toString().split('.').last;
 
-/// Generates timestamp as [DateTime]
-DateTime genTimestamp() {
-  final timestamp = DateTime.fromMillisecondsSinceEpoch(
-      DateTime.now().millisecondsSinceEpoch);
-  return timestamp;
-}
-
 /// Generates device descriptor as [String]
 String deviceDesc(Map device) {
   return 'name=${device['name']}, model=${device['model']}, os=${device['os']}';
