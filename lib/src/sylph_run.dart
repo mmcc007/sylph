@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:duration/duration.dart';
+import 'package:sylph/src/validator.dart';
 
 import 'bundle.dart';
 import 'concurrent_jobs.dart';
@@ -26,6 +27,11 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
 
   // Parse config file
   Map config = await parseYaml(configFilePath);
+
+  // Validate config file
+  if (!isValidConfig(config)) {
+    stderr.writeln('Error: invalid config file.');
+  }
 
   final sylphRunTimeout = config['sylph_timeout'];
 
@@ -57,8 +63,8 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
     // Initialize device pools and run tests in each pool
     for (final poolName in testSuite['pool_names']) {
       bool runTestsSucceeded = false;
-      if (config['concurrent_runs']) {
-        // schedule each run
+      if (config['concurrent_runs'] ?? false) {
+        // gather job args
         jobArgs.add(packArgs(testSuite, config, poolName, projectArn,
             sylphRunName, sylphRunTimeout));
       } else {
@@ -72,7 +78,7 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
     }
 
     // run concurrently
-    if (config['concurrent_runs']) {
+    if (config['concurrent_runs'] ?? false) {
       print('Running tests concurrently on iOS and Android pools...');
       final results = await runJobs(runSylphJobInIsolate, jobArgs);
       print('results=$results');
