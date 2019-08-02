@@ -368,11 +368,15 @@ void main() {
 
   test('are all sylph devices found', () async {
     // get all sylph devices from sylph.yaml
-    final config = await parseYaml('test/sylph_test.yaml');
-//    final config = await parseYaml('example/sylph.yaml');
-    final allSylphDevicesFound = isValidSylphDevices(config);
-
+//    final config = await parseYaml('test/sylph_test.yaml');
+    final config = await parseYaml('example/sylph.yaml');
+    // for this test change directory
+    final origDir = Directory.current;
+    Directory.current = 'example';
+    final allSylphDevicesFound = isValidConfig(config);
     expect(allSylphDevicesFound, true);
+    // allow other tests to continue
+    Directory.current = origDir;
   });
 
   test('sylph duration', () {
