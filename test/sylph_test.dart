@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:sylph/bundle.dart';
-import 'package:sylph/concurrent_jobs.dart';
-import 'package:sylph/sylph.dart';
-import 'package:sylph/validator.dart';
+import 'package:sylph/src/bundle.dart';
+import 'package:sylph/src/concurrent_jobs.dart';
+import 'package:sylph/src/device_farm.dart';
+import 'package:sylph/src/sylph_run.dart';
+import 'package:sylph/src/utils.dart';
+import 'package:sylph/src/validator.dart';
 import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
 
@@ -238,7 +240,7 @@ void main() {
     // get artifacts by run, by test suite, by test, etc..
     // aws devicefarm list-artifacts --arn <run arn>
     // download each artifact
-    DateTime timestamp = genTimestamp();
+    DateTime timestamp = sylphTimestamp();
     final downloadDir = '/tmp/tmp/artifacts xxx $timestamp';
     // list artifacts
     downloadArtifacts(kSuccessfulRunArn, downloadDir);
@@ -262,7 +264,7 @@ void main() {
     // get artifacts by run, by test suite, by test, etc..
     // aws devicefarm list-artifacts --arn <run arn>
     // download each artifact
-    final sylphRunTimestamp = genTimestamp();
+    final sylphRunTimestamp = sylphTimestamp();
     final sylphRunName = 'dummy sylph run $sylphRunTimestamp';
     final runName = 'sylph run at 2019-06-23 23:44:16.214'; // multiple jobs
     final projectName = kTestProjectName;
@@ -348,7 +350,7 @@ void main() {
     // pack job args
     //Map testSuite, Map config, poolName,
     //    String projectArn, String sylphRunName, int sylphRunTimeout
-    final timestamp = genTimestamp();
+    final timestamp = sylphTimestamp();
     final testSuite = config['test_suites'].first;
     final poolName = 'android pool 1';
     final projectArn = kTestProjectArn;
@@ -366,11 +368,26 @@ void main() {
 
   test('are all sylph devices found', () async {
     // get all sylph devices from sylph.yaml
-    final config = await parseYaml('test/sylph_test.yaml');
-//    final config = await parseYaml('example/sylph.yaml');
-    final allSylphDevicesFound = isValidSylphDevices(config);
-
+//    final config = await parseYaml('test/sylph_test.yaml');
+    final config = await parseYaml('example/sylph.yaml');
+    // for this test change directory
+    final origDir = Directory.current;
+    Directory.current = 'example';
+    final allSylphDevicesFound = isValidConfig(config);
     expect(allSylphDevicesFound, true);
+    // allow other tests to continue
+    Directory.current = origDir;
+  });
+
+  test('sylph duration', () {
+    final runTime =
+        Duration(hours: 0, minutes: 15, seconds: 34, milliseconds: 123);
+    final endTime = DateTime.now().add(runTime);
+    final startTime = sylphTimestamp();
+
+    String durationFormatted = sylphRuntimeFormatted(startTime, endTime);
+    // rounds to milliseconds
+    expect(durationFormatted.contains(RegExp(r'15m:34s:12.ms')), true);
   });
 }
 

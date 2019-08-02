@@ -6,8 +6,6 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:yaml/yaml.dart';
 
-import 'device_farm.dart';
-
 /// Parses a named yaml file.
 /// Returns as [Map].
 Future<Map> parseYaml(String filePath) async {
@@ -81,11 +79,6 @@ Map deviceFarmCmd(List<String> arguments, [String workingDir = '.']) {
   return jsonDecode(cmd('aws', ['devicefarm']..addAll(arguments), workingDir));
 }
 
-/// Converts [DeviceType] to [String]
-String deviceTypeStr(DeviceType deviceType) {
-  return DeviceType.ios.toString().split('.')[1];
-}
-
 /// Gets device pool from config file.
 /// Returns as [Map].
 Map getDevicePoolInfo(List devicePools, String poolName) {
@@ -95,13 +88,6 @@ Map getDevicePoolInfo(List devicePools, String poolName) {
 
 /// Converts [enum] value to [String].
 String enumToStr(dynamic _enum) => _enum.toString().split('.').last;
-
-/// Generates timestamp as [DateTime]
-DateTime genTimestamp() {
-  final timestamp = DateTime.fromMillisecondsSinceEpoch(
-      DateTime.now().millisecondsSinceEpoch);
-  return timestamp;
-}
 
 /// Generates device descriptor as [String]
 String deviceDesc(Map device) {
