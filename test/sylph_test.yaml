@@ -44,32 +44,21 @@ device_pools:
 
 test_suites:
   - test_suite: my tests 1
-    app_path: /Users/jenkins/flutter_app
+    main: test_driver/main1.dart
     testspec: test_spec.yaml
     tests:
-      - lib/main.dart
+      - test_driver/main_test.dart
     pool_names:
       - android pool 1
-#      - ios pool 1
+      - ios pool 1
     job_timeout: 5 # minutes
 
-#  - test_suite: my tests 1
-#    app_path: /Users/jenkins/flutter_app
-#    testspec: test_spec1.yaml
-#    tests:
-#      - lib/main1.dart
-#      - lib/main2.dart
-#    device_pools:
-#      - android pool 1
-#      - ios pool 1
-#    job_timeout: 5 # minutes
-#
-#  - test_suite: my tests 2
-#    app_path: ~/flutter_app
-#    testspec: test_spec1.yaml
-#    tests:
-#      - lib/main2.dart
-#    device_pools:
-#      - android pool 1
-#      - ios pool 1
-#    job_timeout: 5 # minutes
+  - test_suite: my tests 2
+    main: test_driver/main2.dart
+    testspec: test_spec2.yaml
+    tests:
+      - test_driver/main2_test1.dart
+    pool_names:
+      - android pool 1
+      - ios pool 1
+    job_timeout: 5 # minutes
