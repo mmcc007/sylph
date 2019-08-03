@@ -1,0 +1,2 @@
+MAIN=test_driver/main.dart
+TESTS=(test_driver/main_test.dart)
