@@ -15,7 +15,7 @@ concurrent_runs: true
 
 # device farm config
 project_name: test concurrent runs
-default_job_timeout: 7 # minutes, set at project creation
+default_job_timeout: 10 # minutes, set at project creation
 
 device_pools:
 
@@ -50,11 +50,11 @@ test_suites:
 
   - test_suite: example tests 1
     main: test_driver/main.dart
-    testspec: test_driver/test_spec.yaml
     tests:
+      - test_driver/main_test.dart
       - test_driver/main_test.dart
     pool_names:
       - android pool 1
       - ios pool 1
 #      - iPhone 5c
-    job_timeout: 7 # minutes, set per job
+    job_timeout: 8 # minutes, set per job

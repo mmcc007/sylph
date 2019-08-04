@@ -45,9 +45,9 @@ device_pools:
 test_suites:
   - test_suite: my tests 1
     main: test_driver/main1.dart
-    testspec: test_spec.yaml
     tests:
-      - test_driver/main_test.dart
+      - test_driver/main1_test1.dart
+      - test_driver/main1_test2.dart
     pool_names:
       - android pool 1
       - ios pool 1
@@ -55,9 +55,9 @@ test_suites:
 
   - test_suite: my tests 2
     main: test_driver/main2.dart
-    testspec: test_spec2.yaml
     tests:
       - test_driver/main2_test1.dart
+      - test_driver/main2_test2.dart
     pool_names:
       - android pool 1
       - ios pool 1

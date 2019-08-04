@@ -1,0 +1,4 @@
+      # - bin/py.test tests/ --junit-xml $DEVICEFARM_LOG_DIR/junitreport.xml
+      - MAIN=test_driver/main1.dart
+      - TESTS='test_driver/main_test.dart'
+      - cd flutter_app

@@ -7,6 +7,7 @@ import 'utils.dart';
 
 const kResourcesUri = 'package:sylph/resources';
 const kAppiumTemplateName = 'appium_bundle.zip';
+const kAppiumTestSpecName = 'test_spec.yaml';
 const kTestBundleDir = 'test_bundle';
 const kTestBundleName = '$kTestBundleDir.zip';
 const kDefaultFlutterAppName = 'flutter_app';
@@ -30,14 +31,14 @@ Future<int> bundleFlutterTests(Map config) async {
   // create default app dir in test bundle
   cmd('mkdir', [defaultAppDir], '.', false);
 
-  // update .packages in case last build was on a different flutter repo
-  cmd('flutter', ['packages', 'get'], '.', true);
-
-  // clean build dir in case a build is present
-  cmd('flutter', ['clean'], '.', true);
-
   // Copy app dir to test bundle
   cmd('cp', ['-r', '.', defaultAppDir], '.', false);
+
+  // update .packages in case last build was on a different flutter repo
+  cmd('flutter', ['packages', 'get'], defaultAppDir, true);
+
+  // clean build dir in case a build is present
+  cmd('flutter', ['clean'], defaultAppDir, true);
 
   // Copy scripts to test bundle
   cmd('cp', ['-r', 'script', defaultAppDir], stagingDir, false);
@@ -74,11 +75,18 @@ Future<void> unpackResources(String tmpDir) async {
   await writeFileImage(await readResourceImage(kAppiumTemplateName),
       '$tmpDir/$kAppiumTemplateName');
 
+  // unpack Appium test spec
+  await unpackFile(kAppiumTestSpecName, tmpDir);
+
   // unpack scripts
   await unpackScripts(tmpDir);
 
   // unpack build to os map file
   await unpackFile(kBuildToOsMapFileName, tmpDir);
+
+  // unpack export options
+  // todo: configure exportOptions.plist for provisioning profile, team, etc...
+  await unpackFile('exportOptions.plist', 'ios');
 
   // unpack components used in a CI environment
   final envVars = Platform.environment;
@@ -93,9 +101,6 @@ Future<void> unpackResources(String tmpDir) async {
     // unpack dummy keys
     await unpackFile('dummy-ssh-keys/key', '.');
     await unpackFile('dummy-ssh-keys/key.pub', '.');
-
-    // unpack export options
-    await unpackFile('exportOptions.plist', 'ios');
   }
 }
 
