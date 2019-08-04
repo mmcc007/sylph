@@ -3,7 +3,7 @@
 # utils run locally
 
 set -e
-#set -x
+set -x
 
 main(){
   case $1 in
@@ -45,17 +45,17 @@ config_ci() {
 
   # setup ssh for fastlane match
   # set default identity file
-  cat << EOF > ~/.ssh/config
-Host *
-AddKeysToAgent yes
-UseKeychain yes
-IdentityFile $app_dir/dummy-ssh-keys/key
-EOF
-
-  # add MATCH_HOST public key to known hosts
-  ssh-keyscan -t ecdsa -p "$MATCH_PORT" "$MATCH_HOST" >> ~/.ssh/known_hosts
-  chmod 600 "$app_dir/dummy-ssh-keys/key"
-  chmod 700 "$app_dir/dummy-ssh-keys"
+#  cat << EOF > ~/.ssh/config
+#Host *
+#AddKeysToAgent yes
+#UseKeychain yes
+#IdentityFile $app_dir/dummy-ssh-keys/key
+#EOF
+#
+#  # add MATCH_HOST public key to known hosts
+#  ssh-keyscan -t ecdsa -p "$MATCH_PORT" "$MATCH_HOST" >> ~/.ssh/known_hosts
+#  chmod 600 "$app_dir/dummy-ssh-keys/key"
+#  chmod 700 "$app_dir/dummy-ssh-keys"
 
   # install fastlane
   gem install bundler:2.0.1 # the fastlane gem file requires bundler 2.0
