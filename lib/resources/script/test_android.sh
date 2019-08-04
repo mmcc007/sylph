@@ -16,6 +16,10 @@ main() {
         if [[ -z $2 ]]; then show_help; fi
         custom_test_runner "$2"
         ;;
+    --run-tests)
+        if [[ -z $2 ]]; then show_help; fi
+        run_tests "$2"
+        ;;
     --run-driver)
         if [[ -z $2 ]]; then show_help; fi
         run_no_build "$2"
@@ -31,7 +35,7 @@ main() {
 }
 
 show_help() {
-    printf "\n\nusage: %s [--help] [--run-test <test path>] [--run-driver <test main path>
+    printf "\n\nusage: %s [--help] [--run-test <test path>] [--run-driver <test main path>] [--run-tests <comma-delimited list of test paths>]
 
 Utility for running integration tests for pre-installed flutter app on android device.
 (app must be built in debug mode with 'enableFlutterDriverExtension()')
@@ -41,12 +45,34 @@ where:
         run test from dart using a custom setup (similar to --no-build)
         <test path>
             path of test to run, eg, test_driver/main_test.dart
+    --run-tests <array of test paths>
+        run tests from dart using a custom setup (similar to --no-build)
+        <comma-delimited list of test paths>
+            list of test paths (eg, 'test_driver/main_test1.dart,test_driver/main_test2.dart')
     --run-driver
         run test using driver --no-build
         <test main path>
             path to test main, eg, test_driver/main.dart
 " "$(basename "$0")"
     exit 1
+}
+
+#run_tests() {
+#  readarray -td, tests <<<"$1,"; unset 'tests[-1]'; declare -p tests;
+#  for test in "${tests[@]}"
+#  do
+##  echo "test=$test"
+#    custom_test_runner "$test"
+#  done
+#}
+
+run_tests() {
+  while IFS=',' read -ra tests; do
+    for test in "${tests[@]}"; do
+#      echo "test=$test"
+      custom_test_runner "$test"
+    done
+  done <<< "$1"
 }
 
 # note: assumes debug apk installed on device
@@ -104,18 +130,24 @@ getAppIdFromApk() {
   local apk_path="$1"
 
   # regular expression (required)
+  # shellcheck disable=SC2089
   local re="^\"L.*/MainActivity;"
   # sed substitute expression
+  # shellcheck disable=SC2089
   local se="s:^\"L\(.*\)/MainActivity;:\1:p"
   # tr expression
-  local te=' / .';
+  local te=" / .";
 
-  local app_id="$(unzip -p $apk_path classes.dex | strings | grep -Eo $re | sed -n -e $se | tr $te)"
+  local app_id
+  # shellcheck disable=SC2089
+  app_id="$(unzip -p "$apk_path" classes.dex | strings | grep -Eo "$re" | sed -n -e "$se" | tr $te)"
 
   echo "$app_id"
 }
 
 # note: requires android sdk be installed to get app identifier (eg, com.example.example)
+# not currently used
+#       (see https://github.com/flutter/flutter/issues/34909)
 run_no_build() {
   local test_main="$1"
 

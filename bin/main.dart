@@ -49,7 +49,7 @@ main(List<String> arguments) async {
   print(
       'Sylph run completed in ${sylphRuntimeFormatted(timestamp, DateTime.now())}.');
   if (sylphRunSucceeded) {
-    print('Sylph run \'$sylphRunName\' suceeded.');
+    print('Sylph run \'$sylphRunName\' succeeded.');
     exit(0);
   } else {
     print('Sylph run \'$sylphRunName\' failed.');

@@ -51,15 +51,6 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
   for (var testSuite in config['test_suites']) {
     print('\nRunning \'${testSuite['test_suite']}\' test suite...\n');
 
-    // todo: update test spec with tests in test suite
-    // (currently only allows one test)
-//    final List tests = testSuite['tests'];
-//    for (var test in tests) {
-//      final poolType = devicePoolInfo['pool_type'];
-//      print(
-//          'bundling test: $test on $poolType devices in device pool $poolName');
-//    }
-
     // Initialize device pools and run tests in each pool
     for (final poolName in testSuite['pool_names']) {
       bool runTestsSucceeded = false;
@@ -105,23 +96,26 @@ Future<bool> runSylphJob(Map testSuite, Map config, poolName, String projectArn,
   // Setup device pool
   String devicePoolArn = setupDevicePool(devicePoolInfo, projectArn);
 
-  // Build debug app for pool type and upload
-  final appArn = await _buildUploadApp(projectArn, devicePoolInfo['pool_type'],
-      testSuite['main'], config['tmp_dir']);
-
+  final tmpDir = config['tmp_dir'];
   // Upload test suite (in 2 parts)
 
   // 1. Upload test package
-  final testBundlePath = '${config['tmp_dir']}/${kTestBundleName}';
+  final testBundlePath = '$tmpDir/$kTestBundleName';
   print('Uploading tests: $testBundlePath ...');
   String testPackageArn =
       uploadFile(projectArn, testBundlePath, 'APPIUM_PYTHON_TEST_PACKAGE');
 
   // 2. Upload custom test spec yaml
-  final testSpecPath = testSuite['testspec'];
+  final testSpecPath = '$tmpDir/$kAppiumTestSpecName';
+  // Substitute MAIN and TESTS for actual debug main and tests from test suite.
+  setTestSpecEnv(testSuite, testSpecPath);
   print('Uploading test specification: $testSpecPath ...');
   String testSpecArn =
       uploadFile(projectArn, testSpecPath, 'APPIUM_PYTHON_TEST_SPEC');
+
+  // Build debug app for pool type and upload
+  final appArn = await _buildUploadApp(
+      projectArn, devicePoolInfo['pool_type'], testSuite['main'], tmpDir);
 
   // run tests and report
   return _runTests(
@@ -211,4 +205,34 @@ DateTime sylphTimestamp() {
   final timestamp = DateTime.fromMillisecondsSinceEpoch(
       DateTime.now().millisecondsSinceEpoch);
   return timestamp;
+}
+
+/// Set MAIN and TESTS env vars in test spec.
+void setTestSpecEnv(Map test_suite, String testSpecPath) {
+  const kMainEnvName = 'MAIN=';
+  const kTestsEnvName = 'TESTS=';
+  final mainEnvVal = test_suite['main'];
+  final testsEnvVal = test_suite['tests'].join(",");
+  final mainRegExp = RegExp('$kMainEnvName.*');
+//  final testsRegExp = RegExp(r'(.*TESTS\+=).*');
+  final testsRegExp = RegExp('$kTestsEnvName.*');
+  String testSpecStr = File(testSpecPath).readAsStringSync();
+  testSpecStr =
+      testSpecStr.replaceFirst(mainRegExp, '$kMainEnvName$mainEnvVal');
+
+//  // Device Farm does not accept a literal array declaration so must declare
+//  // each element of array.
+//
+//  // build replacement string
+//  String testsStr = '';
+//  final testsEnvName = testsRegExp.firstMatch(testSpecStr).group(1);
+//  for (final testPath in test_suite['tests']) {
+//    testsStr += '$testsEnvName$testPath\n';
+//  }
+//  testsStr = testsStr.substring(0, testsStr.length - 1); // remove last \n
+//
+//  testSpecStr = testSpecStr.replaceAll(testsRegExp, testsStr);
+  testSpecStr =
+      testSpecStr.replaceAll(testsRegExp, '$kTestsEnvName\'$testsEnvVal\'');
+  File(testSpecPath).writeAsStringSync(testSpecStr);
 }
