@@ -55,7 +55,7 @@ platform :ios do
 
     puts 'Retrieving signing certificates and profiles...'
     # Stop fastlane from echoing back PUBLISHING_MATCH_CERTIFICATE_REPO var.
-    suppress_output {
+    #suppress_output {
       # Retrieves all the necessary certs and provisioning profiles.
         #force_for_new_devices: true,
         #readonly: false
@@ -65,7 +65,7 @@ platform :ios do
         keychain_name: 'fastlane_tmp_keychain',
         readonly: true
       )
-    }
+    #}
     puts 'Certificates and profiles installed'
 
     disable_automatic_code_signing

@@ -54,7 +54,7 @@ test_suites:
       - test_driver/main_test.dart
       - test_driver/main_test.dart
     pool_names:
-      - android pool 1
+#      - android pool 1
       - ios pool 1
 #      - iPhone 5c
     job_timeout: 8 # minutes, set per job
