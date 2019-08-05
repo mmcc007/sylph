@@ -101,21 +101,20 @@ https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
 ## iOS builds
 Special handling for building iOS apps is required for running tests on remote real devices. In particular, provisioning profiles and certificates must be installed on the build machine. To install the dependencies needed to complete the iOS build, Fastlane's match is used. _Sylph_ will detect it is running in a CI environment (using the CI environment variable), and will install fastlane files that in turn will install the dependencies needed to build the iOS app using Fastlane's match. The iOS build can then complete as normal.
 
-The following environment variable is required my Match:
-
-
+The following environment variables are required by a CI build to build the iOS app:
 - PUBLISHING_MATCH_CERTIFICATE_REPO  
-This is the location of the private match repo. For example, https://matchusername:matchpassword@private.mycompany.com/private_repos/match  
-where  
-    - matchusername  
-    is the username used when setting-up match
-    - matchpassword  
-    is the password used when setting-up match
-    - private.mycompany.com/private_repos/match  
-    is the uri path to the match repo (if using git)
+This is the location of the private match repo. It expects an ssh-based url. For example, ssh://git@private.mycompany.com/private_repos/match.git  
+- MATCH_PASSWORD  
+This is the password that was used to encrypt the git repo's contents during match setup.
 
 For details on how to configure Match see:  
 https://docs.fastlane.tools/actions/match/
+
+The following are required by sylph in a CI environment to connect to the match host. The match host is running the ssh server that connects to the git server which serves the match repo. This configuration is required so that PUBLISHING_MATCH_CERTIFICATE_REPO will work via ssh:
+- MATCH_HOST  
+This is used to configure the CI's ssh client to find the match host. For example, private.mycompany.com.
+- MATCH_PORT  
+This is used to configure the CI's ssh client to find the match host's ssh port. For example, 22.
 
 ## AWS CLI Credentials for CI
 The following AWS CLI credentials are required:
@@ -125,12 +124,11 @@ The following AWS CLI credentials are required:
 For details on other credentials see:  
 https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
 
+Note: the Travis-CI build uses pre-configured AWS CLI values in [.aws/config](.aws/config)
 ## Example secrets for Travis-CI
 _Sylph_ runs on Travis-CI and expects the following environment variables:
 
 ![secret variables](art/travis_env_vars.png)
-
-
  
 # Live demo
 To see _Sylph_ in action in a CI environment, a  demo of the [example](example) app is available.  
