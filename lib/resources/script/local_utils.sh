@@ -12,7 +12,7 @@ main(){
         ;;
     --ci)
         if [[ -z $2 ]]; then show_help; fi
-        config_ci "$2" # dev only
+        config_ci "$2"
         ;;
     *)
         show_help
@@ -30,7 +30,7 @@ where:
         package a debug app as a .ipa
         (app must include 'enableFlutterDriverExtension()')
     --ci <staging dir>
-        configure a CI build environment // dev only
+        configure a CI build environment
     --help
         print this message
 " "$(basename "$0")"
@@ -39,7 +39,10 @@ where:
 
 # install certificate and provisioning profile using match
 # assumes resources unbundled from sylph
-# dev only
+# note: expects PUBLISHING_MATCH_CERTIFICATE_REPO in format
+# ssh://git@private.mycompany.com:1234/timecar/certificates.git
+# instead of
+# https://matchusername:matchpassword@private.mycompany.com/private_repos/match
 config_ci() {
   local app_dir=$1
 

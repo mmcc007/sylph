@@ -97,6 +97,11 @@ Future<bool> runSylphJob(Map testSuite, Map config, poolName, String projectArn,
   String devicePoolArn = setupDevicePool(devicePoolInfo, projectArn);
 
   final tmpDir = config['tmp_dir'];
+
+  // Build debug app for pool type and upload
+  final appArn = await _buildUploadApp(
+      projectArn, devicePoolInfo['pool_type'], testSuite['main'], tmpDir);
+
   // Upload test suite (in 2 parts)
 
   // 1. Upload test package
@@ -112,10 +117,6 @@ Future<bool> runSylphJob(Map testSuite, Map config, poolName, String projectArn,
   print('Uploading test specification: $testSpecPath ...');
   String testSpecArn =
       uploadFile(projectArn, testSpecPath, 'APPIUM_PYTHON_TEST_SPEC');
-
-  // Build debug app for pool type and upload
-  final appArn = await _buildUploadApp(
-      projectArn, devicePoolInfo['pool_type'], testSuite['main'], tmpDir);
 
   // run tests and report
   return _runTests(
