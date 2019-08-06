@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:sylph/sylph.dart';
 import 'package:args/args.dart';
 
-const usage = 'usage: sylph [--help] [--config <config file>]';
+const usage =
+    'usage: sylph [--help] [--config <config file>] [--devices <all|android|ios>]';
 const sampleUsage = 'sample usage: sylph';
 
 /// Uploads debug app and integration test to device farm and runs test.
@@ -11,6 +12,7 @@ main(List<String> arguments) async {
   ArgResults argResults;
 
   final configArg = 'config';
+  final devicesArg = 'devices';
   final helpArg = 'help';
   final ArgParser argParser = new ArgParser(allowTrailingOptions: false)
     ..addOption(configArg,
@@ -18,6 +20,11 @@ main(List<String> arguments) async {
         defaultsTo: 'sylph.yaml',
         help: 'Path to config file.',
         valueHelp: 'sylph.yaml')
+    ..addOption(devicesArg,
+        abbr: 'd',
+        help: 'List availabe devices.',
+        allowed: ['all', 'android', 'ios'],
+        valueHelp: 'all|android|ios')
     ..addFlag(helpArg,
         help: 'Display this help information.', negatable: false);
   try {
@@ -27,8 +34,32 @@ main(List<String> arguments) async {
   }
 
   // show help
-  if (argResults[helpArg]) {
+  if (argResults[helpArg] ||
+      (argResults.wasParsed(configArg) && argResults.wasParsed(configArg))) {
     _showUsage(argParser);
+    exit(0);
+  }
+
+  // show devices
+  final devicesArgVal = argResults[devicesArg];
+  if (devicesArgVal != null) {
+    switch (devicesArgVal) {
+      case 'all':
+        for (final sylphDevice in getSylphDevices()) {
+          print(sylphDevice);
+        }
+        break;
+      case 'android':
+        for (final sylphDevice in getDevices(DeviceType.android)) {
+          print(sylphDevice);
+        }
+        break;
+      case 'ios':
+        for (final sylphDevice in getDevices(DeviceType.ios)) {
+          print(sylphDevice);
+        }
+        break;
+    }
     exit(0);
   }
 

@@ -20,6 +20,44 @@ or, if not using the default config file:
 sylph -c <path to config file>
 ```
 
+General usage:
+```
+usage: sylph [--help] [--config <config file>] [--devices <all|android|ios>]
+
+sample usage: sylph
+
+-c, --config=<sylph.yaml>          Path to config file.
+                                   (defaults to "sylph.yaml")
+
+-d, --devices=<all|android|ios>    List availabe devices.
+                                   [all, android, ios]
+
+    --help                         Display this help information.
+```
+
+# Dependencies
+## AWS CLI
+Install AWS Command Line Interface (AWS CLI)
+```
+curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+unzip awscli-bundle.zip
+sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+``` 
+For alternative install options see:  
+https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html
+
+## AWS CLI Credentials
+Configure the AWS CLI credentials:
+```
+$ aws configure
+AWS Access Key ID [None]: AKIAIOSFODNN7EXAMPLE
+AWS Secret Access Key [None]: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+Default region name [None]: us-west-2
+Default output format [None]: json
+```
+For alternative configuration options see:  
+https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
+
 # Configuration
 All configuration information is passed to _Sylph_ using a configuration file. The default config file is called `sylph.yaml`:
 ```yaml
@@ -53,48 +91,30 @@ device_pools:
 test_suites:
 
   - test_suite: example tests 1
-    main: test_driver/main1.dart
+    main: test_driver/main.dart
     tests:
-      - test_driver/main1_test1.dart
-      - test_driver/main1_test2.dart
+      - test_driver/main_test1.dart
+      - test_driver/main_test2.dart
     device_pools:
       - android pool 1
       - ios pool 1
     job_timeout: 5 # minutes per each device run
-    
-  - test_suite: example tests 2
-    main: test_driver/main2.dart
-    tests:
-      - test_driver/main2_test1.dart
-      - test_driver/main2_test2.dart
-    pool_names:
-      - android pool 1
-      - ios pool 1
-    job_timeout: 5 # minutes per each device run
 ```
+Multiple test suites, consisting of multiple tests, can be run on each device in each device pool. The 'main' app must include a call to `enableFlutterDriverExtension()`. 
 
-# Dependencies
-## AWS CLI
-Install AWS Command Line Interface (AWS CLI)
-```
-curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
-unzip awscli-bundle.zip
-sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
-``` 
-For alternative install options see:  
-https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html
+Device pools can consist of multiple devices. Devices in a device pool must be of the same type, iOS or Android.
 
-## AWS CLI Credentials
-Configure the AWS CLI credentials:
+## Populating a device pool
+To add devices to a device pool, pick devices from the list provided by
 ```
-$ aws configure
-AWS Access Key ID [None]: AKIAIOSFODNN7EXAMPLE
-AWS Secret Access Key [None]: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-Default region name [None]: us-west-2
-Default output format [None]: json
+sylph -d android
+or
+sylph -d ios
 ```
-For alternative configuration options see:  
-https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
+and add to the appropriate pool type in sylph.yaml. The listed devices are devices currently available on Device Farm.
+
+## Configuration Validation
+The sylph.yaml is validated to confirm the devices are  available on Device Farm and tests are present before starting a run.
 
 # Configuring a CI Environment for _Sylph_
 
