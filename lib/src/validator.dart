@@ -1,14 +1,13 @@
 import 'dart:io';
 
-import 'package:collection/collection.dart';
+import 'package:version/version.dart';
 
+import 'devices.dart';
 import 'utils.dart';
 
 /// Check devices used in tests are valid and available.
 /// Also checks tests are present.
 bool isValidConfig(Map config) {
-  final fixMemberOrder = (Map dev) =>
-      {'name': dev['name'], 'model': dev['model'], 'os': dev['os']};
   // get pool names used in tests
   // and check tests are present
   List poolNames = [];
@@ -35,31 +34,28 @@ bool isValidConfig(Map config) {
     if (poolNames.contains(pool['pool_name'])) {
       // iterate the pool's devices
       for (final sylphDevice in pool['devices']) {
-        allSylphDevices.add(fixMemberOrder(sylphDevice));
+        allSylphDevices.add(getSylphDevice(sylphDevice, pool['pool_type']));
       }
     }
   }
 
   // get all job devices
-  final allJobDevices = deviceFarmCmd(['list-devices'])['devices'];
+  final allJobDevices = getDeviceFarmDevices();
 
   // find all matching sylph devices
   final matchingSylphDevices = [];
   final missingSylphDevices = [];
   for (final sylphDevice in allSylphDevices) {
-    Map jobDevice = allJobDevices.firstWhere(
-        (jobDevice) =>
-            MapEquality().equals(getSylphDevice(jobDevice), sylphDevice),
-        orElse: () => null);
+    final jobDevice = allJobDevices
+        .firstWhere((device) => device == sylphDevice, orElse: () => null);
     if (jobDevice != null) {
-      if (jobDevice['availability'] == 'BUSY') {
-        stderr.writeln(
-            'Error: device: \'name: ${jobDevice['name']}, model: ${jobDevice['model']}, os: ${jobDevice['os']}\' is busy.');
+      if (jobDevice.availability == 'BUSY') {
+        stderr.writeln('Error: device: \'$jobDevice\' is busy.');
         exit(1);
       }
-      matchingSylphDevices.add(getSylphDevice(jobDevice));
+      matchingSylphDevices.add(jobDevice);
     } else {
-      print('no match found for $sylphDevice.');
+      stderr.writeln('Error: No match found for $sylphDevice.');
       missingSylphDevices.add(sylphDevice);
     }
   }

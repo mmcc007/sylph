@@ -31,6 +31,7 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
   // Validate config file
   if (!isValidConfig(config)) {
     stderr.writeln('Error: invalid config file.');
+    exit(1);
   }
 
   final sylphRunTimeout = config['sylph_timeout'];

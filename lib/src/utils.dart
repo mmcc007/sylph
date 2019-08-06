@@ -3,8 +3,9 @@ import 'dart:convert';
 
 import 'dart:io';
 
-import 'package:collection/collection.dart';
 import 'package:yaml/yaml.dart';
+
+import 'devices.dart';
 
 /// Parses a named yaml file.
 /// Returns as [Map].
@@ -89,9 +90,10 @@ Map getDevicePoolInfo(List devicePools, String poolName) {
 /// Converts [enum] value to [String].
 String enumToStr(dynamic _enum) => _enum.toString().split('.').last;
 
-/// Generates device descriptor as [String]
-String deviceDesc(Map device) {
-  return 'name=${device['name']}, model=${device['model']}, os=${device['os']}';
+/// Converts [String] to [enum].
+T stringToEnum<T>(List<T> values, String value) {
+  return values.firstWhere((type) => enumToStr(type) == value,
+      orElse: () => null);
 }
 
 /// generates a download directory path for each Device Farm run's artifacts
@@ -103,26 +105,11 @@ String runArtifactsDirPath(String downloadDirPrefix, String sylphRunName,
 }
 
 /// generates a download directory path for each Device Farm run job's artifacts
-String jobArtifactsDirPath(String runArtifactDir, Map sylphDevice) {
+String jobArtifactsDirPath(String runArtifactDir, SylphDevice sylphDevice) {
   final downloadDir = '$runArtifactDir/' +
-      '${sylphDevice['name']}-${sylphDevice['model']}-${sylphDevice['os']}'
+      '${sylphDevice.name}-${sylphDevice.model}-${sylphDevice.os}'
           .replaceAll(' ', '_');
   return downloadDir;
-}
-
-/// Maps a job device to a sylph device
-Map getSylphDevice(jobDevice) {
-  return {
-    'name': jobDevice['name'],
-    'model': jobDevice['modelId'],
-    'os': jobDevice['os']
-  };
-}
-
-/// Compares a jobDevice to a sylph device
-bool isDeviceEqual(Map jobDevice, Map sylphDevice) {
-  final mapEq = const MapEquality().equals;
-  return mapEq(getSylphDevice(jobDevice), sylphDevice);
 }
 
 /// Formats a list of ARNs for Device Farm API

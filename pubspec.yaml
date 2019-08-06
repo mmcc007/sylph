@@ -14,7 +14,6 @@ dependencies:
   resource: ^2.1.5
   sprintf: ^4.0.2
   isolate: ^2.0.2
-  collection: ^1.14.11
   duration: ^2.0.8
   version: ^1.0.3
 
