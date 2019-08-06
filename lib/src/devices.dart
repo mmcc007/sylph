@@ -4,23 +4,26 @@ import 'utils.dart';
 
 enum DeviceType { ios, android }
 
-List<DeviceFarmDevice> getDevices(DeviceType deviceType) {
+/// Get device farm devices filtered by type.
+List<DeviceFarmDevice> getDeviceFarmDevicesByType(DeviceType deviceType) {
   return getDeviceFarmDevices()
       .where((device) => device.deviceType == deviceType)
       .toList();
 }
 
+/// Get current device farm devices using device farm API.
 List<DeviceFarmDevice> getDeviceFarmDevices() {
   final _deviceFarmDevices = deviceFarmCmd(['list-devices'])['devices'];
   final List<DeviceFarmDevice> deviceFarmDevices = [];
   for (final _deviceFarmDevice in _deviceFarmDevices) {
-    deviceFarmDevices.add(getDeviceFarmDevice(_deviceFarmDevice));
+    deviceFarmDevices.add(loadDeviceFarmDevice(_deviceFarmDevice));
   }
   deviceFarmDevices.sort();
   return deviceFarmDevices;
 }
 
-SylphDevice getDeviceFarmDevice(Map device) {
+/// Load a device farm device from a [Map] of device.
+DeviceFarmDevice loadDeviceFarmDevice(Map device) {
   return DeviceFarmDevice(
       device['name'],
       device['modelId'],
@@ -30,17 +33,20 @@ SylphDevice getDeviceFarmDevice(Map device) {
       device['arn']);
 }
 
+/// Get current sylph devices from [Map] of device pool info.
 List getSylphDevices(Map devicePoolInfo) {
   final _sylphDevices = devicePoolInfo['devices'];
   final sylphDevices = [];
   for (final _sylphDevice in _sylphDevices) {
-    sylphDevices.add(getSylphDevice(_sylphDevice, devicePoolInfo['pool_type']));
+    sylphDevices
+        .add(loadSylphDevice(_sylphDevice, devicePoolInfo['pool_type']));
   }
   sylphDevices.sort();
   return sylphDevices;
 }
 
-SylphDevice getSylphDevice(Map device, String poolType) {
+/// Load a sylph device from [Map] of device and pool type.
+SylphDevice loadSylphDevice(Map device, String poolType) {
   return SylphDevice(
       device['name'],
       device['model'],
@@ -48,8 +54,14 @@ SylphDevice getSylphDevice(Map device, String poolType) {
       stringToEnum(DeviceType.values, poolType));
 }
 
+/// Describe a sylph device that can be compared and sorted.
 class SylphDevice implements Comparable {
-  SylphDevice(this.name, this.model, this.os, this.deviceType);
+  SylphDevice(this.name, this.model, this.os, this.deviceType)
+      : assert(name != null),
+        assert(model != null),
+        assert(os != null),
+        assert(deviceType != null);
+
   final String name, model;
   final Version os;
   final DeviceType deviceType;
@@ -88,10 +100,13 @@ class SylphDevice implements Comparable {
       name.hashCode ^ model.hashCode ^ os.hashCode ^ deviceType.hashCode;
 }
 
+/// Describe a device farm device that can be compared and sorted.
 class DeviceFarmDevice extends SylphDevice {
   DeviceFarmDevice(String name, String modelId, Version os,
       DeviceType deviceType, this.availability, this.arn)
-      : super(name, modelId, os, deviceType);
+      : assert(availability != null),
+        assert(arn != null),
+        super(name, modelId, os, deviceType);
 
   final String availability, arn;
 
@@ -103,6 +118,7 @@ class DeviceFarmDevice extends SylphDevice {
   @override
   bool operator ==(other) {
     if (other is SylphDevice) {
+      // allow comparison with a sylph device.
       return super == (other);
     } else {
       return other is DeviceFarmDevice &&

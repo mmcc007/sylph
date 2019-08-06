@@ -105,7 +105,7 @@ void main() {
     }, skip: true);
 
     test('find device ARN', () {
-      final sylphDevice = getSylphDevice({
+      final sylphDevice = loadSylphDevice({
         'name': 'Apple iPhone X',
         'model': 'A1865',
         'os': '12.0'
@@ -120,13 +120,13 @@ void main() {
 
     test('convert devices to a rule', () {
       final List<SylphDevice> devices = [
-        getSylphDevice({
+        loadSylphDevice({
           'name': 'Apple iPhone X',
           'model': 'A1865',
           'os': '12.0'
 //      'os': '11.4'
         }, 'ios'),
-        getSylphDevice({
+        loadSylphDevice({
           'name': 'Google Pixel',
           'model': 'Pixel',
           'os': '8.0.0'
@@ -448,7 +448,7 @@ void main() {
 
     test('get android devices', () {
       final List<DeviceFarmDevice> androidDevices =
-          getDevices(DeviceType.android);
+          getDeviceFarmDevicesByType(DeviceType.android);
       expect(androidDevices.length > 10, isTrue);
       for (final androidDevice in androidDevices) {
         print('androidDevice=$androidDevice');
@@ -456,7 +456,8 @@ void main() {
     });
 
     test('get ios devices', () {
-      final List<DeviceFarmDevice> iOSDevices = getDevices(DeviceType.ios);
+      final List<DeviceFarmDevice> iOSDevices =
+          getDeviceFarmDevicesByType(DeviceType.ios);
       expect(iOSDevices.length > 10, isTrue);
       for (final iOSDevice in iOSDevices) {
         print('iOSDevice=$iOSDevice');

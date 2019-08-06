@@ -34,7 +34,7 @@ bool isValidConfig(Map config) {
     if (poolNames.contains(pool['pool_name'])) {
       // iterate the pool's devices
       for (final sylphDevice in pool['devices']) {
-        allSylphDevices.add(getSylphDevice(sylphDevice, pool['pool_type']));
+        allSylphDevices.add(loadSylphDevice(sylphDevice, pool['pool_type']));
       }
     }
   }

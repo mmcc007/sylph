@@ -50,12 +50,13 @@ main(List<String> arguments) async {
         }
         break;
       case 'android':
-        for (final sylphDevice in getDevices(DeviceType.android)) {
+        for (final sylphDevice
+            in getDeviceFarmDevicesByType(DeviceType.android)) {
           print(sylphDevice);
         }
         break;
       case 'ios':
-        for (final sylphDevice in getDevices(DeviceType.ios)) {
+        for (final sylphDevice in getDeviceFarmDevicesByType(DeviceType.ios)) {
           print(sylphDevice);
         }
         break;
