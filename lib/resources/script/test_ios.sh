@@ -84,32 +84,10 @@ dummy_symbols() {
   done < "$dummy_symbols_path"
 }
 
-#run_tests() {
-#  local debug_app_path=$1
-#  shift
-#  local tests=($@)
-#  for test in "${tests[@]}"
-#  do
-#    run_driver "$debug_app_path" "$test"
-#  done
-#}
-
-#run_tests() {
-#  local debug_app_path=$1
-#  readarray -t -d, tests <<<"$2,"; unset 'tests[-1]'; declare -p tests;
-#  for test in "${tests[@]}"
-#  do
-##  echo "test=$test"
-#    run_driver "$debug_app_path" "$test"
-#  done
-#}
-
-
 run_tests() {
  local debug_app_path=$1
  while IFS=',' read -ra tests; do
     for test in "${tests[@]}"; do
-#      echo "test=$test"
       run_driver "$debug_app_path" "$test"
     done
   done <<< "$2"
