@@ -45,7 +45,7 @@ main(List<String> arguments) async {
   if (devicesArgVal != null) {
     switch (devicesArgVal) {
       case 'all':
-        for (final sylphDevice in getSylphDevices()) {
+        for (final sylphDevice in getDeviceFarmDevices()) {
           print(sylphDevice);
         }
         break;

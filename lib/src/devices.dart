@@ -4,22 +4,48 @@ import 'utils.dart';
 
 enum DeviceType { ios, android }
 
-Iterable getDevices(DeviceType deviceType) {
-  return getSylphDevices().where((device) => device.deviceType == deviceType);
+List<DeviceFarmDevice> getDevices(DeviceType deviceType) {
+  return getDeviceFarmDevices()
+      .where((device) => device.deviceType == deviceType)
+      .toList();
 }
 
-List getSylphDevices() {
-  final devices = deviceFarmCmd(['list-devices'])['devices'];
+List<DeviceFarmDevice> getDeviceFarmDevices() {
+  final _deviceFarmDevices = deviceFarmCmd(['list-devices'])['devices'];
+  final List<DeviceFarmDevice> deviceFarmDevices = [];
+  for (final _deviceFarmDevice in _deviceFarmDevices) {
+    deviceFarmDevices.add(getDeviceFarmDevice(_deviceFarmDevice));
+  }
+  deviceFarmDevices.sort();
+  return deviceFarmDevices;
+}
+
+SylphDevice getDeviceFarmDevice(Map device) {
+  return DeviceFarmDevice(
+      device['name'],
+      device['modelId'],
+      Version.parse(device['os']),
+      device['platform'] == 'ANDROID' ? DeviceType.android : DeviceType.ios,
+      device['availability'],
+      device['arn']);
+}
+
+List getSylphDevices(Map devicePoolInfo) {
+  final _sylphDevices = devicePoolInfo['devices'];
   final sylphDevices = [];
-  for (final device in devices) {
-    sylphDevices.add(SylphDevice(
-        device['name'],
-        device['modelId'],
-        Version.parse(device['os']),
-        device['platform'] == 'ANDROID' ? DeviceType.android : DeviceType.ios));
+  for (final _sylphDevice in _sylphDevices) {
+    sylphDevices.add(getSylphDevice(_sylphDevice, devicePoolInfo['pool_type']));
   }
   sylphDevices.sort();
   return sylphDevices;
+}
+
+SylphDevice getSylphDevice(Map device, String poolType) {
+  return SylphDevice(
+      device['name'],
+      device['model'],
+      Version.parse(device['os'].toString()),
+      stringToEnum(DeviceType.values, poolType));
 }
 
 class SylphDevice implements Comparable {
@@ -47,4 +73,45 @@ class SylphDevice implements Comparable {
       }
     }
   }
+
+  @override
+  bool operator ==(other) {
+    return other is SylphDevice &&
+        other.name == name &&
+        other.model == model &&
+        other.os == os &&
+        other.deviceType == deviceType;
+  }
+
+  @override
+  int get hashCode =>
+      name.hashCode ^ model.hashCode ^ os.hashCode ^ deviceType.hashCode;
+}
+
+class DeviceFarmDevice extends SylphDevice {
+  DeviceFarmDevice(String name, String modelId, Version os,
+      DeviceType deviceType, this.availability, this.arn)
+      : super(name, modelId, os, deviceType);
+
+  final String availability, arn;
+
+  @override
+  String toString() {
+    return '${super.toString()}, availability: $availability';
+  }
+
+  @override
+  bool operator ==(other) {
+    if (other is SylphDevice) {
+      return super == (other);
+    } else {
+      return other is DeviceFarmDevice &&
+          super == (other) &&
+          other.availability == availability &&
+          other.arn == arn;
+    }
+  }
+
+  @override
+  int get hashCode => super.hashCode ^ availability.hashCode ^ arn.hashCode;
 }

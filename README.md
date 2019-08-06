@@ -61,44 +61,52 @@ https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
 # Configuration
 All configuration information is passed to _Sylph_ using a configuration file. The default config file is called `sylph.yaml`:
 ```yaml
-project_name: flutter tests
-default_job_timeout: 5 # minutes
+# Config file for Flutter tests on real device pools.
+# Auto-creates projects and device pools if needed.
+# Configures android and ios test runs.
+# Builds app, uploads and runs tests.
+# Then monitors tests, returns final pass/fail result and downloads artifacts.
+# Note: assumes the 'aws' command line utility is logged-in.
 
+# sylph config
 tmp_dir: /tmp/sylph
 artifacts_dir: /tmp/sylph_artifacts
-
 # local timeout per device farm run
 sylph_timeout: 720 # seconds approx
 # run on ios and android pools concurrently (for faster results)
 concurrent_runs: true
+
+# device farm config
+project_name: test concurrent runs
+default_job_timeout: 10 # minutes, set at project creation
 
 device_pools:
 
   - pool_name: android pool 1
     pool_type: android
     devices:
-      - name: Samsung Galaxy S9 (Unlocked)
-        model: SM-G960U1
-        os: '8.0.0'
+      - name: Google Pixel 2
+        model: Google Pixel 2
+        os: 8.0.0
 
   - pool_name: ios pool 1
     pool_type: ios
     devices:
       - name: Apple iPhone X
         model: A1865
-        os: '12.0'
+        os: 11.4
 
 test_suites:
 
   - test_suite: example tests 1
     main: test_driver/main.dart
     tests:
-      - test_driver/main_test1.dart
-      - test_driver/main_test2.dart
-    device_pools:
+      - test_driver/main_test.dart
+    pool_names:
       - android pool 1
       - ios pool 1
-    job_timeout: 5 # minutes per each device run
+    job_timeout: 8 # minutes, set per job
+
 ```
 Multiple test suites, consisting of multiple tests, can be run on each device in each device pool. The 'main' app must include a call to `enableFlutterDriverExtension()`. 
 

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:sprintf/sprintf.dart';
 
+import 'devices.dart';
 import 'utils.dart';
 
 const kUploadTimeout = 5;
@@ -38,7 +39,7 @@ String setupProject(String projectName, int jobTimeoutMinutes) {
 /// Returns the device pool ARN as [String].
 String setupDevicePool(Map devicePoolInfo, String projectArn) {
   final poolName = devicePoolInfo['pool_name'];
-  final devices = devicePoolInfo['devices'];
+  final devices = getSylphDevices(devicePoolInfo);
   // check for existing pool
   final pools = deviceFarmCmd([
     'list-device-pools',
@@ -183,22 +184,15 @@ bool runReport(Map run) {
 
 /// Finds the ARNs of devices for a [List] of sylph devices.
 /// Returns device ARNs as a [List].
-List findDevicesArns(List sylphDevices) {
+List findDevicesArns(List<SylphDevice> sylphDevices) {
   final deviceArns = [];
   // get all devices
-  final jobsDevices = deviceFarmCmd([
-    'list-devices',
-  ])['devices'];
+  final deviceFarmDevices = getDeviceFarmDevices();
   for (final sylphDevice in sylphDevices) {
-    Map jobDevice = jobsDevices.firstWhere((jobDevice) {
-//      JsonEncoder encoder = new JsonEncoder.withIndent('  ');
-//      print(
-//          'jobDevice=${encoder.convert(jobDevice)}\nsylphDevice=${encoder.convert(sylphDevice)}');
-      return isDeviceEqual(jobDevice, sylphDevice);
-    },
-        orElse: () =>
-            throw 'Error: device does not exist: ${deviceDesc(sylphDevice)}');
-    deviceArns.add(jobDevice['arn']);
+    final deviceFarmDevice = deviceFarmDevices.firstWhere(
+        (_deviceFarmDevice) => _deviceFarmDevice == sylphDevice,
+        orElse: () => throw 'Error: device does not exist: $sylphDevice');
+    deviceArns.add(deviceFarmDevice.arn);
   }
 
   return deviceArns;
@@ -207,7 +201,7 @@ List findDevicesArns(List sylphDevices) {
 /// Converts a [List] of sylph devices to a rule.
 /// Used for building a device pool.
 /// Returns rule as formatted [String].
-String devicesToRule(List sylphDevices) {
+String devicesToRule(List<SylphDevice> sylphDevices) {
   return '[{"attribute": "ARN", "operator": "IN","value": "[${formatArns(findDevicesArns(sylphDevices))}]"}]';
 }
 
@@ -247,12 +241,12 @@ void downloadJobArtifacts(String runArn, String runArtifactDir) {
   final List jobs = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
 
   for (final job in jobs) {
-    // get sylph device
-    final sylphDevice = getSylphDevice(job['device']);
+    // get job device
+    final jobDevice = getDeviceFarmDevice(job['device']);
 
     // generate job artifacts dir and download job artifacts
     downloadArtifacts(
-        job['arn'], jobArtifactsDirPath(runArtifactDir, sylphDevice));
+        job['arn'], jobArtifactsDirPath(runArtifactDir, jobDevice));
   }
 }
 

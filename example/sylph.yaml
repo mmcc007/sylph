@@ -37,14 +37,14 @@ device_pools:
     devices:
       - name: Apple iPhone X
         model: A1865
-        os: '11.4'
+        os: 11.4
 
   - pool_name: iPhone 5c
     pool_type: ios
     devices:
       - name: Apple iPhone 5c
         model: A1532
-        os: '10.1'
+        os: 10.1
 
 test_suites:
 
