@@ -57,19 +57,9 @@ where:
     exit 1
 }
 
-#run_tests() {
-#  readarray -td, tests <<<"$1,"; unset 'tests[-1]'; declare -p tests;
-#  for test in "${tests[@]}"
-#  do
-##  echo "test=$test"
-#    custom_test_runner "$test"
-#  done
-#}
-
 run_tests() {
   while IFS=',' read -ra tests; do
     for test in "${tests[@]}"; do
-#      echo "test=$test"
       custom_test_runner "$test"
     done
   done <<< "$1"
@@ -80,6 +70,7 @@ run_tests() {
 #       (see https://github.com/flutter/flutter/issues/34909)
 custom_test_runner() {
     local test_path=$1
+    local forwarded_port=4723 # re-use appium server port if on device farm host
 
     local app_id
     app_id=$(grep applicationId android/app/build.gradle | awk '{print $2}' | tr -d '"')
@@ -89,14 +80,13 @@ custom_test_runner() {
     flutter packages get # may be required when running in CI/CD
 
     adb version
-    adb start-server
 
     # stop app on device
     # (if already running locally or started incorrectly by CI/CD)
     adb shell am force-stop "$app_id"
 
-    # clear log (to avoid picking up any earlier observatory announcements on local re-runs)
-    [[ ! $USERNAME == 'device-farm' ]] && adb logcat -c
+    # clear log (to avoid picking up any earlier observatory announcements on re-runs)
+    adb logcat -c
 
     # start app on device
     adb shell am start -a android.intent.action.RUN -f 0x20000000 --ez enable-background-compilation true --ez enable-dart-profiling true --ez enable-checked-mode true --ez verify-entry-points true --ez start-paused true "$app_id/$app_id.MainActivity"
@@ -108,12 +98,19 @@ custom_test_runner() {
     obs_token=$(echo "$obs_port_str" | grep -Eo '\/.*\/$')
     echo Observatory on port "$obs_port"
 
+    # since only one local port seems to work on device farm, confirm that port has been released
+    # before re-using. This is so that multiple tests can be run on same device
+    port_forwarded=$(adb forward --list| grep ${forwarded_port}) || true
+    if [[ ! "$port_forwarded" == "" ]]; then
+      echo "unforwarding ${forwarded_port}"
+      adb forward --remove tcp:${forwarded_port}
+    fi
+
     # forward a local port to observatory port on device
-    forwarded_port=4723 # re-use appium server port for now
     if [[ ! "$USERNAME" == 'device-farm' ]]; then
       forwarded_port=$(adb forward tcp:0 tcp:"$obs_port")
     else
-      adb forward tcp:"$forwarded_port" tcp:"$obs_port"
+      adb forward tcp:"$forwarded_port" tcp:"$obs_port" # if running locally
     fi
     echo Local port "$forwarded_port" forwarded to observatory port "$obs_port"
 

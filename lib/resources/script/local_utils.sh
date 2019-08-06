@@ -40,9 +40,9 @@ where:
 # install certificate and provisioning profile using match
 # assumes resources unbundled from sylph
 # note: expects PUBLISHING_MATCH_CERTIFICATE_REPO in format
-# ssh://git@private.mycompany.com:1234/timecar/certificates.git
+# ssh://git@private.mycompany.com:1234/private_repos/match.git
 # instead of
-# https://matchusername:matchpassword@private.mycompany.com/private_repos/match
+# https://matchusername:matchpassword@private.mycompany.com/private_repos/match.git
 config_ci() {
   local app_dir=$1
 
@@ -57,6 +57,7 @@ EOF
 
   # add MATCH_HOST public key to known hosts
   ssh-keyscan -t ecdsa -p "$MATCH_PORT" "$MATCH_HOST" >> ~/.ssh/known_hosts
+  # note: for additional security ssh keys can be generated on CI build machine
   chmod 600 "$app_dir/dummy-ssh-keys/key"
   chmod 700 "$app_dir/dummy-ssh-keys"
 
