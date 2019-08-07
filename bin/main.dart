@@ -14,7 +14,7 @@ main(List<String> arguments) async {
   final configArg = 'config';
   final devicesArg = 'devices';
   final helpArg = 'help';
-  final ArgParser argParser = new ArgParser(allowTrailingOptions: false)
+  final ArgParser argParser = ArgParser(allowTrailingOptions: false)
     ..addOption(configArg,
         abbr: 'c',
         defaultsTo: 'sylph.yaml',
