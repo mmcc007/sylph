@@ -1,6 +1,6 @@
 name: sylph
 description: A utility for running Flutter integration tests on pools of real devices in cloud. Works with AWS Device Farms.
-version: 0.3.0
+version: 0.4.0
 homepage: https://github.com/mmcc007/sylph
 author: Maurice McCabe <mmcc007@gmail.com>
 
