@@ -217,24 +217,10 @@ void setTestSpecEnv(Map test_suite, String testSpecPath) {
   final mainEnvVal = test_suite['main'];
   final testsEnvVal = test_suite['tests'].join(",");
   final mainRegExp = RegExp('$kMainEnvName.*');
-//  final testsRegExp = RegExp(r'(.*TESTS\+=).*');
   final testsRegExp = RegExp('$kTestsEnvName.*');
   String testSpecStr = File(testSpecPath).readAsStringSync();
   testSpecStr =
       testSpecStr.replaceFirst(mainRegExp, '$kMainEnvName$mainEnvVal');
-
-//  // Device Farm does not accept a literal array declaration so must declare
-//  // each element of array.
-//
-//  // build replacement string
-//  String testsStr = '';
-//  final testsEnvName = testsRegExp.firstMatch(testSpecStr).group(1);
-//  for (final testPath in test_suite['tests']) {
-//    testsStr += '$testsEnvName$testPath\n';
-//  }
-//  testsStr = testsStr.substring(0, testsStr.length - 1); // remove last \n
-//
-//  testSpecStr = testSpecStr.replaceAll(testsRegExp, testsStr);
   testSpecStr =
       testSpecStr.replaceAll(testsRegExp, '$kTestsEnvName\'$testsEnvVal\'');
   File(testSpecPath).writeAsStringSync(testSpecStr);
