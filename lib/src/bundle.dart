@@ -17,12 +17,7 @@ const kBuildToOsMapFileName = 'build_to_os.txt';
 // env consts
 const kCIEnvVar = 'CI';
 const kExportOptionsPlistEnvVars = ['APP_IDENTIFIER', 'TEAM_ID'];
-const kAppfileEnvVars = [
-  'APP_IDENTIFIER',
-//  'APPLE_ID',
-//  'ITC_TEAM_ID',
-//  'TEAM_ID'
-]; // order dependent
+const kAppfileEnvVars = ['APP_IDENTIFIER'];
 const kCIBuildEnvVars = [
   'PUBLISHING_MATCH_CERTIFICATE_REPO',
   'MATCH_PASSWORD',

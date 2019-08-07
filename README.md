@@ -109,7 +109,7 @@ test_suites:
     pool_names:
       - android pool 1
       - ios pool 1
-    job_timeout: 8 # minutes, set per job
+    job_timeout: 15 # minutes, set per job, over-rides default job timeout above
 
 ```
 Multiple test suites, consisting of multiple tests, can be run on each device in each device pool. The 'main' app must include a call to `enableFlutterDriverExtension()`. 
