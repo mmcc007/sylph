@@ -7,9 +7,9 @@
         <string>development</string>
         <key>provisioningProfiles</key>
         <dict>
-            <key>com.orbsoft.counter</key>
-            <string>match Development com.orbsoft.counter</string>
-            <!--<string>match AppStore com.orbsoft.counter</string>-->
+            <key>$APP_IDENTIFIER</key>
+            <string>match Development $APP_IDENTIFIER</string>
+            <!--<string>match AppStore com.mycompany.myapp</string>-->
         </dict>
         <key>signingCertificate</key>
         <!--<string>iPhone Distribution</string>-->
@@ -19,7 +19,7 @@
         <key>stripSwiftSymbols</key>
         <true/>
         <key>teamID</key>
-        <string>ET2VMHJPVM</string>
+        <string>$TEAM_ID</string>
         <key>uploadSymbols</key>
         <false/>
     </dict>

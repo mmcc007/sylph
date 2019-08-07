@@ -105,7 +105,7 @@ void main() {
     }, skip: true);
 
     test('find device ARN', () {
-      final sylphDevice = getSylphDevice({
+      final sylphDevice = loadSylphDevice({
         'name': 'Apple iPhone X',
         'model': 'A1865',
         'os': '12.0'
@@ -120,13 +120,13 @@ void main() {
 
     test('convert devices to a rule', () {
       final List<SylphDevice> devices = [
-        getSylphDevice({
+        loadSylphDevice({
           'name': 'Apple iPhone X',
           'model': 'A1865',
           'os': '12.0'
 //      'os': '11.4'
         }, 'ios'),
-        getSylphDevice({
+        loadSylphDevice({
           'name': 'Google Pixel',
           'model': 'Pixel',
           'os': '8.0.0'
@@ -448,7 +448,7 @@ void main() {
 
     test('get android devices', () {
       final List<DeviceFarmDevice> androidDevices =
-          getDevices(DeviceType.android);
+          getDeviceFarmDevicesByType(DeviceType.android);
       expect(androidDevices.length > 10, isTrue);
       for (final androidDevice in androidDevices) {
         print('androidDevice=$androidDevice');
@@ -456,7 +456,8 @@ void main() {
     });
 
     test('get ios devices', () {
-      final List<DeviceFarmDevice> iOSDevices = getDevices(DeviceType.ios);
+      final List<DeviceFarmDevice> iOSDevices =
+          getDeviceFarmDevicesByType(DeviceType.ios);
       expect(iOSDevices.length > 10, isTrue);
       for (final iOSDevice in iOSDevices) {
         print('iOSDevice=$iOSDevice');
@@ -475,6 +476,53 @@ void main() {
       final sylphDevice = SylphDevice(name, model, os, deviceType);
       expect(deviceFarmDevice == sylphDevice, isTrue);
       expect(sylphDevice == deviceFarmDevice, isTrue);
+    });
+  });
+
+  group('unpack resources', () {
+    test('unpack a file', () async {
+      final srcPath = 'exportOptions.plist';
+      final dstDir = '/tmp/test_unpack_file';
+      await unpackFile(srcPath, dstDir);
+      final dstPath = '$dstDir/$srcPath';
+      expect(File(dstPath).existsSync(), isTrue,
+          reason: '$dstPath does not exist');
+    });
+
+    test('substitute env vars in string', () {
+      final env = Platform.environment;
+      final envVars = [
+        'APP_IDENTIFIER',
+        'APPLE_ID',
+        'ITC_TEAM_ID',
+        'TEAM_ID'
+      ]; // order dependent
+      final expected = () {
+        final envs = [];
+        for (final envVar in envVars) {
+          final envVal = env[envVar];
+          expect(envVal, isNotNull);
+          envs.add(envVal);
+        }
+        return envs.join(',');
+      };
+      String str = envVars.join(',');
+      for (final envVar in envVars) {
+        str = str.replaceAll(envVar, env[envVar]);
+      }
+      expect(str, expected());
+    });
+
+    test('unpack files with env vars', () async {
+      final envVars = ['APP_IDENTIFIER', 'APPLE_ID', 'ITC_TEAM_ID', 'TEAM_ID'];
+      final filePaths = ['fastlane/Appfile', 'exportOptions.plist'];
+      final dstDir = '/tmp/test_env_files';
+      for (final srcPath in filePaths) {
+        await unpackFile(srcPath, dstDir, envVars: envVars);
+        final dstPath = '$dstDir/$srcPath';
+        expect(File(dstPath).existsSync(), isTrue,
+            reason: '$dstPath not found');
+      }
     });
   });
 }

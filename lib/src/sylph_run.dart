@@ -30,7 +30,8 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
 
   // Validate config file
   if (!isValidConfig(config)) {
-    stderr.writeln('Error: invalid config file.');
+    stderr.writeln(
+        'Sylph run was terminated due to invalid config file or environment settings.');
     exit(1);
   }
 

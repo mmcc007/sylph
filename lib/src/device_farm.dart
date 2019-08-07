@@ -241,8 +241,8 @@ void downloadJobArtifacts(String runArn, String runArtifactDir) {
   final List jobs = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
 
   for (final job in jobs) {
-    // get job device
-    final jobDevice = getDeviceFarmDevice(job['device']);
+    // load job device
+    final jobDevice = loadDeviceFarmDevice(job['device']);
 
     // generate job artifacts dir and download job artifacts
     downloadArtifacts(

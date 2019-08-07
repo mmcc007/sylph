@@ -5,6 +5,7 @@ import 'package:resource/resource.dart';
 
 import 'utils.dart';
 
+// resource consts
 const kResourcesUri = 'package:sylph/resources';
 const kAppiumTemplateName = 'appium_bundle.zip';
 const kAppiumTestSpecName = 'test_spec.yaml';
@@ -12,6 +13,24 @@ const kTestBundleDir = 'test_bundle';
 const kTestBundleName = '$kTestBundleDir.zip';
 const kDefaultFlutterAppName = 'flutter_app';
 const kBuildToOsMapFileName = 'build_to_os.txt';
+
+// env consts
+const kCIEnvVar = 'CI';
+const kExportOptionsPlistEnvVars = ['APP_IDENTIFIER', 'TEAM_ID'];
+const kAppfileEnvVars = [
+  'APP_IDENTIFIER',
+//  'APPLE_ID',
+//  'ITC_TEAM_ID',
+//  'TEAM_ID'
+]; // order dependent
+const kCIBuildEnvVars = [
+  'PUBLISHING_MATCH_CERTIFICATE_REPO',
+  'MATCH_PASSWORD',
+  'MATCH_HOST',
+  'MATCH_PORT',
+  'AWS_ACCESS_KEY_ID',
+  'AWS_SECRET_ACCESS_KEY'
+];
 
 /// Bundles Flutter tests using appium template found in staging area.
 /// Resulting bundle is saved on disk in temporary location
@@ -85,15 +104,15 @@ Future<void> unpackResources(String tmpDir) async {
   await unpackFile(kBuildToOsMapFileName, tmpDir);
 
   // unpack export options
-  // todo: configure exportOptions.plist for provisioning profile, team, etc...
-  await unpackFile('exportOptions.plist', 'ios');
+  await unpackFile('exportOptions.plist', 'ios',
+      envVars: kExportOptionsPlistEnvVars);
 
   // unpack components used in a CI environment
   final envVars = Platform.environment;
-  if (envVars['CI'] == 'true') {
-    print('CI environment detected. Unpacking related resources');
+  if (envVars[kCIEnvVar] == 'true') {
+    print('CI environment detected. Unpacking related resources.');
     // unpack fastlane
-    await unpackFile('fastlane/Appfile', 'ios');
+    await unpackFile('fastlane/Appfile', 'ios', envVars: kAppfileEnvVars);
     await unpackFile('fastlane/Fastfile', 'ios');
     await unpackFile('GemFile', 'ios');
     await unpackFile('GemFile.lock', 'ios');
@@ -134,9 +153,18 @@ Future<void> unpackScript(String srcPath, String dstDir) async {
   cmd('chmod', ['u+x', '$dstDir/$srcPath']);
 }
 
-Future unpackFile(String srcPath, String dstDir) async {
+/// Unpack file from resources while optionally applying env vars.
+Future unpackFile(String srcPath, String dstDir, {List<String> envVars}) async {
   final resource = Resource('$kResourcesUri/$srcPath');
-  final String script = await resource.readAsString();
+  String resourceStr = await resource.readAsString();
+
+  if (envVars != null) {
+    final env = Platform.environment;
+    for (final envVar in envVars) {
+      resourceStr = resourceStr.replaceAll('\$$envVar', env[envVar]);
+    }
+  }
+
   final file = await File('$dstDir/$srcPath').create(recursive: true);
-  await file.writeAsString(script, flush: true);
+  await file.writeAsString(resourceStr, flush: true);
 }
