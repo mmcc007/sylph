@@ -1,3 +1,11 @@
+## 0.4.0
+- Fixed multiple tests not running on android devices. #31
+- Added feature to support configuring a device pool. #35  
+Enables looking-up devices from the command line.
+- Refactoring. #37
+- Added support for configurable iOS build. #30  
+Requires adding environment variables.
+
 ## 0.3.0
 - Removed dependency on forked flutter #13
 - Added support for running sylph jobs in parallel #14
