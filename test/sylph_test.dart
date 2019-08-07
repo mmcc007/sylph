@@ -513,16 +513,37 @@ void main() {
       expect(str, expected());
     });
 
-    test('unpack files with env vars', () async {
-      final envVars = ['APP_IDENTIFIER', 'APPLE_ID', 'ITC_TEAM_ID', 'TEAM_ID'];
+    test('unpack files with env vars and name/value pairs', () async {
+      final envVars = ['APPLE_ID', 'ITC_TEAM_ID', 'TEAM_ID'];
       final filePaths = ['fastlane/Appfile', 'exportOptions.plist'];
       final dstDir = '/tmp/test_env_files';
+
+      // change directory to app
+      final origDir = Directory.current;
+      Directory.current = 'example';
+      final nameVals = {kAppIdentifier: getAppIdentifier()};
+      // change back for tests to continue
+      Directory.current = origDir;
+
       for (final srcPath in filePaths) {
-        await unpackFile(srcPath, dstDir, envVars: envVars);
+        await unpackFile(srcPath, dstDir, envVars: envVars, nameVals: nameVals);
         final dstPath = '$dstDir/$srcPath';
         expect(File(dstPath).existsSync(), isTrue,
             reason: '$dstPath not found');
       }
+    });
+
+    test('find APP_IDENTIFIER', () {
+      final expected = 'com.orbsoft.counter';
+      // change directory to app
+      final origDir = Directory.current;
+      Directory.current = 'example';
+
+      String appIdentifier = getAppIdentifier();
+      expect(appIdentifier, expected);
+
+      // change back for tests to continue
+      Directory.current = origDir;
     });
   });
 }

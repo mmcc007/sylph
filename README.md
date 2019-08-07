@@ -61,6 +61,12 @@ Default output format [None]: json
 For alternative configuration options see:  
 https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
 
+## Test AWS CLI
+Confirm AWS CLI is installed and configured correctly by running an AWS command. For example, the following command should generate output:
+```
+aws devicefarm list-devices
+```
+
 # Configuration
 Configuration information is passed to _Sylph_ using a configuration file. The default config file is called `sylph.yaml`:
 ```yaml
@@ -117,13 +123,12 @@ Multiple test suites, consisting of multiple tests, can be run on each device in
 Device pools can consist of multiple devices. Devices in a device pool must be of the same type, iOS or Android.
 
 ## Building an iOS debug app
-To build a testable iOS app locally,     that can run on any real device in the cloud, the following environment variables must be present:
-- APP_IDENTIFIER  
-This is the bundle identifier of your iOS app. For example, com.mycompany.myapp.
+To build a testable iOS app locally, that can run on any real device in the cloud, the following environment variable must be present:
+
 - TEAM_ID  
 This is the Developer Portal Team ID. It is of the form 'ABCDEFGHIJ'.
 
-A check is made before the start of a run to confirm these environment variables are present.
+A check is made before the start of a run to confirm this environment variable is present.
 
 ## Populating a device pool
 To add devices to a device pool, pick devices from the list provided by
@@ -138,30 +143,7 @@ and add to the appropriate pool type in sylph.yaml. The listed devices are devic
 The sylph.yaml is validated to confirm the devices are  available on Device Farm and tests are present before starting a run. Presence of the required environment variables for the iOS build are also confirmed.
 
 # Configuring a CI Environment for _Sylph_
-
-## iOS builds
-Special handling for building iOS apps is required for running tests on remote real devices. In particular, provisioning profiles and certificates must be installed on the build machine. To install the dependencies needed to complete the iOS build, Fastlane's match is used. _Sylph_ will detect it is running in a CI environment (using the CI environment variable), and will install fastlane files that in turn will install the dependencies needed to build the iOS app using Fastlane's match. The iOS build can then complete as normal.
-
-The following environment variables are required by a CI build to build the iOS app:
-- PUBLISHING_MATCH_CERTIFICATE_REPO  
-This is the location of the private match repo. It expects an ssh-based url. For example, ssh://git@private.mycompany.com/private_repos/match.git  
-- MATCH_PASSWORD  
-This is the password that was used to encrypt the git repo's contents during match setup.
-
-For details on how to configure Match see:  
-https://docs.fastlane.tools/actions/match/
-
-The following are required by sylph in a CI environment to connect to the match host. The match host is running the ssh server that connects to the git server which serves the match repo. This configuration is required so that PUBLISHING_MATCH_CERTIFICATE_REPO will work via ssh:
-- MATCH_HOST  
-This is used to configure the CI's ssh client to find the match host. For example, private.mycompany.com.
-- MATCH_PORT  
-This is used to configure the CI's ssh client to find the match host's ssh port. For example, 22.
-
-The following environment variables are also required by _Sylph_ in a CI environment to configure the Fastlane Appfile and exportOptions.plist correctly:
-- APP_IDENTIFIER  
-This is the bundle identifier of your iOS app. For example, com.mycompany.myapp.
-- TEAM_ID  
-This is the Developer Portal Team ID. It is of the form 'ABCDEFGHIJ'.
+In addition to the command line, _Sylph_ also runs in a CI environment.
 
 ## AWS CLI Credentials for CI
 The following AWS CLI credentials are required:
@@ -171,11 +153,36 @@ The following AWS CLI credentials are required:
 For details on other credentials see:  
 https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
 
-Note: the Travis-CI build uses pre-configured AWS CLI values in [.aws/config](.aws/config)
+## iOS builds
+To build the iOS app, the provisioning profile and certificate must be installed on the CI build machine. To install these dependencies, Fastlane's match is used. _Sylph_ will detect it is running in a CI environment (using the 'CI' environment variable), and will install fastlane and fastlane scripts. The scripts  are used to install the dependencies using Fastlane's match. The iOS build can then complete as normal.
+
+The following environment variables are required by a CI build to use Fastlane match:
+- PUBLISHING_MATCH_CERTIFICATE_REPO  
+This is the location of the private match repo. It expects an ssh-based url. For example, ssh://git@private.mycompany.com/private_repos/match.git  
+- MATCH_PASSWORD  
+This is the password that was used to encrypt the git repo's contents during match setup.
+
+For details on how to setup Match see:  
+https://docs.fastlane.tools/actions/match/
+
+The following are required by sylph in a CI environment to connect to the match host. The match host is running a ssh server that connects to the git server which serves the match repo. This configuration is required so that PUBLISHING_MATCH_CERTIFICATE_REPO will work via ssh:
+- SSH_SERVER  
+This is used to configure the CI's ssh client to find the match host. For example, private.mycompany.com.
+- SSH_SERVER_PORT  
+This is used to configure the CI's ssh client to find the match host's ssh port. For example, 22.
+
+As from the command line, the following environment variable is also required by _Sylph_ in a CI environment:
+- TEAM_ID  
+This is the Developer Portal Team ID. It is of the form 'ABCDEFGHIJ'.
+
 ## Sample environment variables for Travis-CI
 For example, when _Sylph_ is run on Travis-CI the following environment variables are used:
 
 ![secret variables](art/travis_env_vars.png)
+
+See [.travis](.travis) for running _Sylph_ on Travis-CI.
+
+Note: the Travis-CI build uses pre-configured AWS CLI values in [.aws/config](.aws/config).
 
 # Upgrade
 To upgrade, simply re-issue the install command

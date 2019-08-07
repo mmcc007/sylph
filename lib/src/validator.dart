@@ -63,7 +63,6 @@ bool isValidConfig(Map config) {
   final env = Platform.environment;
   envFail = isEnvVarUndefined(kExportOptionsPlistEnvVars);
   if (env[kCIEnvVar] != null) {
-    envFail = isEnvVarUndefined(kAppfileEnvVars) || envFail;
     envFail = isEnvVarUndefined(kCIBuildEnvVars) || envFail;
   }
 

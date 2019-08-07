@@ -174,6 +174,7 @@ bundle_app(){
   echo "Ready to manually upload $test_bundle_zip (size $(ls -lah $test_bundle_zip | awk -F " " {'print $5'})"
 }
 
+# dev
 bundle_certs() {
 
   local local_key_chain_name='login.keychain'
@@ -221,8 +222,8 @@ extract_secure_env_vars(){
   echo "Creating $secure_env_script_dst ..."
 #set -o noglob
     cat << EOF >> $secure_env_script_dst
-export MATCH_HOST=$MATCH_HOST
-export MATCH_PORT=$MATCH_PORT
+export SSH_SERVER=$SSH_SERVER
+export SSH_SERVER_PORT=$SSH_SERVER_PORT
 export MATCH_PASSWORD='${MATCH_PASSWORD}'
 export PUBLISHING_MATCH_CERTIFICATE_REPO=$PUBLISHING_MATCH_CERTIFICATE_REPO
 export FASTLANE_PASSWORD='$FASTLANE_PASSWORD'

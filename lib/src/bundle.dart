@@ -16,16 +16,18 @@ const kBuildToOsMapFileName = 'build_to_os.txt';
 
 // env consts
 const kCIEnvVar = 'CI';
-const kExportOptionsPlistEnvVars = ['APP_IDENTIFIER', 'TEAM_ID'];
-const kAppfileEnvVars = ['APP_IDENTIFIER'];
+const kExportOptionsPlistEnvVars = ['TEAM_ID'];
 const kCIBuildEnvVars = [
   'PUBLISHING_MATCH_CERTIFICATE_REPO',
   'MATCH_PASSWORD',
-  'MATCH_HOST',
-  'MATCH_PORT',
+  'SSH_SERVER',
+  'SSH_SERVER_PORT',
   'AWS_ACCESS_KEY_ID',
   'AWS_SECRET_ACCESS_KEY'
 ];
+
+// substitute names
+const kAppIdentifier = 'APP_IDENTIFIER';
 
 /// Bundles Flutter tests using appium template found in staging area.
 /// Resulting bundle is saved on disk in temporary location
@@ -98,16 +100,18 @@ Future<void> unpackResources(String tmpDir) async {
   // unpack build to os map file
   await unpackFile(kBuildToOsMapFileName, tmpDir);
 
+  final nameVals = {kAppIdentifier: getAppIdentifier()};
+
   // unpack export options
   await unpackFile('exportOptions.plist', 'ios',
-      envVars: kExportOptionsPlistEnvVars);
+      envVars: kExportOptionsPlistEnvVars, nameVals: nameVals);
 
   // unpack components used in a CI environment
   final envVars = Platform.environment;
   if (envVars[kCIEnvVar] == 'true') {
     print('CI environment detected. Unpacking related resources.');
     // unpack fastlane
-    await unpackFile('fastlane/Appfile', 'ios', envVars: kAppfileEnvVars);
+    await unpackFile('fastlane/Appfile', 'ios', nameVals: nameVals);
     await unpackFile('fastlane/Fastfile', 'ios');
     await unpackFile('GemFile', 'ios');
     await unpackFile('GemFile.lock', 'ios');
@@ -148,11 +152,14 @@ Future<void> unpackScript(String srcPath, String dstDir) async {
   cmd('chmod', ['u+x', '$dstDir/$srcPath']);
 }
 
-/// Unpack file from resources while optionally applying env vars.
-Future unpackFile(String srcPath, String dstDir, {List<String> envVars}) async {
+/// Unpack file from resources while optionally applying env vars
+/// and/or name/value pairs.
+Future unpackFile(String srcPath, String dstDir,
+    {List<String> envVars, Map nameVals}) async {
   final resource = Resource('$kResourcesUri/$srcPath');
   String resourceStr = await resource.readAsString();
 
+  // substitute env vars
   if (envVars != null) {
     final env = Platform.environment;
     for (final envVar in envVars) {
@@ -160,6 +167,22 @@ Future unpackFile(String srcPath, String dstDir, {List<String> envVars}) async {
     }
   }
 
+  // substitute name/vals
+  if (nameVals != null) {
+    for (final name in nameVals.keys) {
+      resourceStr = resourceStr.replaceAll('\$$name', nameVals[name]);
+    }
+  }
+
   final file = await File('$dstDir/$srcPath').create(recursive: true);
   await file.writeAsString(resourceStr, flush: true);
+}
+
+/// Gets the first app identifier found.
+String getAppIdentifier() {
+  const kIosConfigPath = 'ios/Runner.xcodeproj/project.pbxproj';
+  final regExp = 'PRODUCT_BUNDLE_IDENTIFIER = (.*);';
+  final iOSConfigStr = File(kIosConfigPath).readAsStringSync();
+  final appIdentifier = RegExp(regExp).firstMatch(iOSConfigStr)[1];
+  return appIdentifier;
 }

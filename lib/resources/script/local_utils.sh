@@ -55,8 +55,8 @@ UseKeychain yes
 IdentityFile $app_dir/dummy-ssh-keys/key
 EOF
 
-  # add MATCH_HOST public key to known hosts
-  ssh-keyscan -t ecdsa -p "$MATCH_PORT" "$MATCH_HOST" >> ~/.ssh/known_hosts
+  # add SSH_SERVER public key to known hosts
+  ssh-keyscan -t ecdsa -p "$SSH_SERVER_PORT" "$SSH_SERVER" >> ~/.ssh/known_hosts
   # note: for additional security ssh keys can be generated on CI build machine
   chmod 600 "$app_dir/dummy-ssh-keys/key"
   chmod 700 "$app_dir/dummy-ssh-keys"
