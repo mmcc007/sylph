@@ -1,8 +1,11 @@
 [![pub package](https://img.shields.io/pub/v/sylph.svg)](https://pub.dartlang.org/packages/sylph) 
 [![Build Status](https://travis-ci.com/mmcc007/sylph.svg?branch=master)](https://travis-ci.com/mmcc007/sylph)
 
+<img src="art/sylph_logo.png" width="30%" title="Sylph" alt="Sylph">
+
 _A sylph is a mythological invisible being of the air._
 [Wikipedia](https://en.wikipedia.org/wiki/Sylph)
+
 # _Sylph_
 _Sylph_ is a command line utility for running Flutter integration and end-to-end tests on pools of real iOS and Android devices in the cloud. _Sylph_ runs on a developer mac or in a CI environment.
 
@@ -59,7 +62,7 @@ For alternative configuration options see:
 https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
 
 # Configuration
-All configuration information is passed to _Sylph_ using a configuration file. The default config file is called `sylph.yaml`:
+Configuration information is passed to _Sylph_ using a configuration file. The default config file is called `sylph.yaml`:
 ```yaml
 # Config file for Flutter tests on real device pools.
 # Auto-creates projects and device pools if needed.
@@ -67,6 +70,7 @@ All configuration information is passed to _Sylph_ using a configuration file. T
 # Builds app, uploads and runs tests.
 # Then monitors tests, returns final pass/fail result and downloads artifacts.
 # Note: assumes the 'aws' command line utility is logged-in.
+# Note: to build the debug iOS app, certain environment variables are required.
 
 # sylph config
 tmp_dir: /tmp/sylph
@@ -112,6 +116,15 @@ Multiple test suites, consisting of multiple tests, can be run on each device in
 
 Device pools can consist of multiple devices. Devices in a device pool must be of the same type, iOS or Android.
 
+## Building an iOS debug app
+To build a testable iOS app locally,     that can run on any real device in the cloud, the following environment variables must be present:
+- APP_IDENTIFIER  
+This is the bundle identifier of your iOS app. For example, com.mycompany.myapp.
+- TEAM_ID  
+This is the Developer Portal Team ID. It is of the form 'ABCDEFGHIJ'.
+
+A check is made before the start of a run to confirm these environment variables are present.
+
 ## Populating a device pool
 To add devices to a device pool, pick devices from the list provided by
 ```
@@ -122,7 +135,7 @@ sylph -d ios
 and add to the appropriate pool type in sylph.yaml. The listed devices are devices currently available on Device Farm.
 
 ## Configuration Validation
-The sylph.yaml is validated to confirm the devices are  available on Device Farm and tests are present before starting a run.
+The sylph.yaml is validated to confirm the devices are  available on Device Farm and tests are present before starting a run. Presence of the required environment variables for the iOS build are also confirmed.
 
 # Configuring a CI Environment for _Sylph_
 
@@ -144,6 +157,12 @@ This is used to configure the CI's ssh client to find the match host. For exampl
 - MATCH_PORT  
 This is used to configure the CI's ssh client to find the match host's ssh port. For example, 22.
 
+The following environment variables are also required by _Sylph_ in a CI environment to configure the Fastlane Appfile and exportOptions.plist correctly:
+- APP_IDENTIFIER  
+This is the bundle identifier of your iOS app. For example, com.mycompany.myapp.
+- TEAM_ID  
+This is the Developer Portal Team ID. It is of the form 'ABCDEFGHIJ'.
+
 ## AWS CLI Credentials for CI
 The following AWS CLI credentials are required:
 - AWS_ACCESS_KEY_ID
@@ -153,11 +172,20 @@ For details on other credentials see:
 https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
 
 Note: the Travis-CI build uses pre-configured AWS CLI values in [.aws/config](.aws/config)
-## Example secrets for Travis-CI
-_Sylph_ runs on Travis-CI and expects the following environment variables:
+## Sample environment variables for Travis-CI
+For example, when _Sylph_ is run on Travis-CI the following environment variables are used:
 
 ![secret variables](art/travis_env_vars.png)
- 
+
+# Upgrade
+To upgrade, simply re-issue the install command
+````bash
+$ pub global activate sylph
+````
+To check the version of _Sylph_ currently installed:
+```
+pub global list
+```
 # Live demo
 To see _Sylph_ in action in a CI environment, a  demo of the [example](example) app is available.  
 

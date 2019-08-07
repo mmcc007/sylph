@@ -478,6 +478,53 @@ void main() {
       expect(sylphDevice == deviceFarmDevice, isTrue);
     });
   });
+
+  group('unpack resources', () {
+    test('unpack a file', () async {
+      final srcPath = 'exportOptions.plist';
+      final dstDir = '/tmp/test_unpack_file';
+      await unpackFile(srcPath, dstDir);
+      final dstPath = '$dstDir/$srcPath';
+      expect(File(dstPath).existsSync(), isTrue,
+          reason: '$dstPath does not exist');
+    });
+
+    test('substitute env vars in string', () {
+      final env = Platform.environment;
+      final envVars = [
+        'APP_IDENTIFIER',
+        'APPLE_ID',
+        'ITC_TEAM_ID',
+        'TEAM_ID'
+      ]; // order dependent
+      final expected = () {
+        final envs = [];
+        for (final envVar in envVars) {
+          final envVal = env[envVar];
+          expect(envVal, isNotNull);
+          envs.add(envVal);
+        }
+        return envs.join(',');
+      };
+      String str = envVars.join(',');
+      for (final envVar in envVars) {
+        str = str.replaceAll(envVar, env[envVar]);
+      }
+      expect(str, expected());
+    });
+
+    test('unpack files with env vars', () async {
+      final envVars = ['APP_IDENTIFIER', 'APPLE_ID', 'ITC_TEAM_ID', 'TEAM_ID'];
+      final filePaths = ['fastlane/Appfile', 'exportOptions.plist'];
+      final dstDir = '/tmp/test_env_files';
+      for (final srcPath in filePaths) {
+        await unpackFile(srcPath, dstDir, envVars: envVars);
+        final dstPath = '$dstDir/$srcPath';
+        expect(File(dstPath).existsSync(), isTrue,
+            reason: '$dstPath not found');
+      }
+    });
+  });
 }
 
 // can be called locally or in an isolate. used in testing.

@@ -1,9 +1,7 @@
 import 'dart:io';
 
-import 'package:version/version.dart';
-
+import 'bundle.dart';
 import 'devices.dart';
-import 'utils.dart';
 
 /// Check devices used in tests are valid and available.
 /// Also checks tests are present.
@@ -60,5 +58,27 @@ bool isValidConfig(Map config) {
     }
   }
 
-  return missingSylphDevices.length == 0;
+  // check environment vars are present
+  bool envFail = false;
+  final env = Platform.environment;
+  envFail = isEnvVarUndefined(kExportOptionsPlistEnvVars);
+  if (env[kCIEnvVar] != null) {
+    envFail = isEnvVarUndefined(kAppfileEnvVars) || envFail;
+    envFail = isEnvVarUndefined(kCIBuildEnvVars) || envFail;
+  }
+
+  return missingSylphDevices.isEmpty && !envFail;
+}
+
+/// Check the list of environment variables for undefined.
+bool isEnvVarUndefined(List envVars) {
+  bool envFail = false;
+  final env = Platform.environment;
+  for (final envVar in envVars) {
+    if (env[envVar] == null) {
+      stderr.writeln('Error: $envVar environmental variable is not defined.');
+      envFail = true;
+    }
+  }
+  return envFail;
 }
