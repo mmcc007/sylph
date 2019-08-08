@@ -128,6 +128,8 @@ To build a testable iOS app locally, that can run on any real device in the clou
 - TEAM_ID  
 This is the Developer Portal Team ID. It is of the form 'ABCDEFGHIJ'.
 
+Note: if not running on an iOS pool this environment variable is not required.
+
 A check is made before the start of a run to confirm this environment variable is present.
 
 ## Populating a device pool
@@ -174,6 +176,8 @@ This is used to configure the CI's ssh client to find the match host's ssh port.
 As from the command line, the following environment variable is also required by _Sylph_ in a CI environment:
 - TEAM_ID  
 This is the Developer Portal Team ID. It is of the form 'ABCDEFGHIJ'.
+
+Note: if not running on an iOS pool these environment variables are not required.
 
 ## Sample environment variables for Travis-CI
 For example, when _Sylph_ is run on Travis-CI the following environment variables are used:

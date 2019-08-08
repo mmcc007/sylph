@@ -7,6 +7,7 @@ import 'package:sylph/src/validator.dart';
 import 'bundle.dart';
 import 'concurrent_jobs.dart';
 import 'device_farm.dart';
+import 'devices.dart';
 import 'utils.dart';
 
 const kDebugApkPath = 'build/app/outputs/apk/debug/app-debug.apk';
@@ -28,8 +29,12 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
   // Parse config file
   Map config = await parseYaml(configFilePath);
 
+  // Check if running on iOS and/or android pools
+  final isIosPoolTypeActive = isPoolTypeActive(config, DeviceType.ios);
+  final isAndroidPoolTypeActive = isPoolTypeActive(config, DeviceType.android);
+
   // Validate config file
-  if (!isValidConfig(config)) {
+  if (!isValidConfig(config, isIosPoolTypeActive)) {
     stderr.writeln(
         'Sylph run was terminated due to invalid config file or environment settings.');
     exit(1);
@@ -42,7 +47,7 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
       setupProject(config['project_name'], config['default_job_timeout']);
 
   // Unpack resources used for building debug .ipa and to bundle tests
-  await unpackResources(config['tmp_dir']);
+  await unpackResources(config['tmp_dir'], isIosPoolTypeActive);
 
   // Bundle tests
   await bundleFlutterTests(config);
@@ -50,13 +55,14 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
   // gather job args
   final jobArgs = [];
 
+  bool isConcurrentRun() => config['concurrent_runs'] ?? false;
   for (var testSuite in config['test_suites']) {
     print('\nRunning \'${testSuite['test_suite']}\' test suite...\n');
 
     // Initialize device pools and run tests in each pool
     for (final poolName in testSuite['pool_names']) {
       bool runTestsSucceeded = false;
-      if (config['concurrent_runs'] ?? false) {
+      if (isConcurrentRun()) {
         // gather job args
         jobArgs.add(packArgs(testSuite, config, poolName, projectArn,
             sylphRunName, sylphRunTimeout));
@@ -71,8 +77,16 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
     }
 
     // run concurrently
-    if (config['concurrent_runs'] ?? false) {
-      print('Running tests concurrently on iOS and Android pools...');
+    if (isConcurrentRun()) {
+      if (isIosPoolTypeActive && isAndroidPoolTypeActive) {
+        print('Running tests concurrently on iOS and Android pools...');
+      } else {
+        if (isIosPoolTypeActive && !isAndroidPoolTypeActive) {
+          print('Running tests concurrently on iOS pools...');
+        } else if (!isIosPoolTypeActive && isAndroidPoolTypeActive) {
+          print('Running tests concurrently on Android pools...');
+        }
+      }
       final results = await runJobs(runSylphJobInIsolate, jobArgs);
       print('results=$results');
       // process results

@@ -177,7 +177,7 @@ void main() {
       // change directory to app
       final origDir = Directory.current;
       Directory.current = 'example';
-      await unpackResources(config['tmp_dir']);
+      await unpackResources(config['tmp_dir'], true);
       final bundleSize = await bundleFlutterTests(config);
       expect(bundleSize, 5);
       // change back for tests to continue
@@ -400,7 +400,7 @@ void main() {
       // for this test change directory
       final origDir = Directory.current;
       Directory.current = 'example';
-      final allSylphDevicesFound = isValidConfig(config);
+      final allSylphDevicesFound = isValidConfig(config, true);
       expect(allSylphDevicesFound, true);
       // allow other tests to continue
       Directory.current = origDir;
@@ -544,6 +544,43 @@ void main() {
 
       // change back for tests to continue
       Directory.current = origDir;
+    });
+  });
+
+  group('android only runs', () {
+    test('is pool type active', () async {
+      final configPath = 'test/sylph_test.yaml';
+      final config = await parseYaml(configPath);
+      final androidPoolType = DeviceType.android;
+
+      bool isAndroidActive = isPoolTypeActive(config, androidPoolType);
+
+      expect(isAndroidActive, isTrue);
+    });
+
+    test('check for valid pool types', () {
+      final goodConfigStr = '''
+      device_pools:
+        - pool_name: android pool 1
+          pool_type: android
+        - pool_name: ios pool 1
+          pool_type: ios
+        - pool_name: ios pool 2
+          pool_type: ios
+      ''';
+      Map config = loadYaml(goodConfigStr);
+      expect(isValidPoolTypes(config['device_pools']), isTrue);
+      final badConfigStr = '''
+      device_pools:
+        - pool_name: android pool 1
+          pool_type: android
+        - pool_name: ios pool 1
+          pool_type: iosx
+        - pool_name: ios pool 2
+          pool_type: ios
+      ''';
+      config = loadYaml(badConfigStr);
+      expect(isValidPoolTypes(config['device_pools']), isFalse);
     });
   });
 }

@@ -2,10 +2,11 @@ import 'dart:io';
 
 import 'bundle.dart';
 import 'devices.dart';
+import 'utils.dart';
 
 /// Check devices used in tests are valid and available.
-/// Also checks tests are present.
-bool isValidConfig(Map config) {
+/// Also checks tests are present and env vars are set.
+bool isValidConfig(Map config, bool isIosPoolTypeActive) {
   // get pool names used in tests
   // and check tests are present
   List poolNames = [];
@@ -58,15 +59,21 @@ bool isValidConfig(Map config) {
     }
   }
 
-  // check environment vars are present
-  bool envFail = false;
-  final env = Platform.environment;
-  envFail = isEnvVarUndefined(kExportOptionsPlistEnvVars);
-  if (env[kCIEnvVar] != null) {
-    envFail = isEnvVarUndefined(kCIBuildEnvVars) || envFail;
-  }
+  // check for valid pool types
+  final isPoolTypesValid = isValidPoolTypes(config['device_pools']);
 
-  return missingSylphDevices.isEmpty && !envFail;
+  // check environment vars are present
+  bool isEnvFail = false;
+  if (isIosPoolTypeActive) {
+    isEnvFail = isEnvVarUndefined(kExportOptionsPlistEnvVars);
+    // if running in CI
+    final envVars = Platform.environment;
+    if (envVars[kCIEnvVar] != null) {
+      isEnvFail = isEnvVarUndefined(kIosCIBuildEnvVars) || isEnvFail;
+      isEnvFail = isEnvVarUndefined(kAWSCredentialsEnvVars) || isEnvFail;
+    }
+  }
+  return missingSylphDevices.isEmpty && !isEnvFail && isPoolTypesValid;
 }
 
 /// Check the list of environment variables for undefined.
@@ -80,4 +87,20 @@ bool isEnvVarUndefined(List envVars) {
     }
   }
   return envFail;
+}
+
+/// Check that pool types in [devicePools] are valid.
+bool isValidPoolTypes(devicePools) {
+  bool isInValidPoolType = false;
+  for (final devicePool in devicePools) {
+    final poolType = devicePool['pool_type'];
+    try {
+      stringToEnum(DeviceType.values, poolType);
+    } catch (e) {
+      stderr.writeln(
+          'Error: \'${devicePool['pool_name']}\' has an invalid pool type: \'$poolType\'.');
+      isInValidPoolType = isInValidPoolType || true;
+    }
+  }
+  return !isInValidPoolType;
 }
