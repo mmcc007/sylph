@@ -93,7 +93,8 @@ String enumToStr(dynamic _enum) => _enum.toString().split('.').last;
 /// Converts [String] to [enum].
 T stringToEnum<T>(List<T> values, String value) {
   return values.firstWhere((type) => enumToStr(type) == value,
-      orElse: () => null);
+      orElse: () =>
+          throw 'Fatal: \'$value\' not found in ${values.toString()}');
 }
 
 /// generates a download directory path for each Device Farm run's artifacts
