@@ -438,7 +438,39 @@ void main() {
   });
 
   group('devices', () {
-    test('get all devices', () {
+    test('test for equality between device classes', () {
+      final name = 'name';
+      final model = 'model';
+      final os = Version.parse('1.2.3');
+      final deviceType = DeviceType.android;
+      final sylphDevice = SylphDevice(name, model, os, deviceType);
+      final availability = 'availability';
+      final arn = 'arn';
+      final deviceFarmDevice =
+          DeviceFarmDevice(name, model, os, deviceType, availability, arn);
+      expect(deviceFarmDevice == sylphDevice, isTrue);
+      expect(sylphDevice == deviceFarmDevice, isTrue);
+    });
+
+    test('get sylph devices from config file', () async {
+      final configPath = 'test/sylph_test.yaml';
+      final config = await parseYaml(configPath);
+      final poolName = 'android pool 1';
+      final devicePoolInfo =
+          getDevicePoolInfo(config['device_pools'], poolName);
+      final expectFirstDeviceName = devicePoolInfo['devices'][0]['name'];
+      final expectDeviceCount = devicePoolInfo.length;
+      final sylphDevices = getSylphDevices(devicePoolInfo);
+      expect(sylphDevices[0].name, expectFirstDeviceName);
+      expect(sylphDevices.length, expectDeviceCount);
+    });
+
+    test('get device farm devices from device farm api', () async {
+      final deviceFarmDevices = getDeviceFarmDevices();
+      expect(deviceFarmDevices.length, greaterThan(10));
+    });
+
+    test('get all device farm devices', () {
       final List<DeviceFarmDevice> deviceFarmDevices = getDeviceFarmDevices();
       expect(deviceFarmDevices.length > 10, isTrue);
       for (final deviceFarmDevice in deviceFarmDevices) {
@@ -446,7 +478,7 @@ void main() {
       }
     });
 
-    test('get android devices', () {
+    test('get device farm android devices', () {
       final List<DeviceFarmDevice> androidDevices =
           getDeviceFarmDevicesByType(DeviceType.android);
       expect(androidDevices.length > 10, isTrue);
@@ -455,27 +487,13 @@ void main() {
       }
     });
 
-    test('get ios devices', () {
+    test('get device farm ios devices', () {
       final List<DeviceFarmDevice> iOSDevices =
           getDeviceFarmDevicesByType(DeviceType.ios);
       expect(iOSDevices.length > 10, isTrue);
       for (final iOSDevice in iOSDevices) {
         print('iOSDevice=$iOSDevice');
       }
-    });
-
-    test('device equality', () {
-      final name = 'name';
-      final model = 'model';
-      final os = Version.parse('1.2.3');
-      final deviceType = DeviceType.android;
-      final availability = 'availability';
-      final arn = 'arn';
-      final deviceFarmDevice =
-          DeviceFarmDevice(name, model, os, deviceType, availability, arn);
-      final sylphDevice = SylphDevice(name, model, os, deviceType);
-      expect(deviceFarmDevice == sylphDevice, isTrue);
-      expect(sylphDevice == deviceFarmDevice, isTrue);
     });
   });
 

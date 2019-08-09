@@ -128,9 +128,9 @@ To build a testable iOS app locally, that can run on any real device in the clou
 - TEAM_ID  
 This is the Developer Portal Team ID. It is of the form 'ABCDEFGHIJ'.
 
-Note: if not running on an iOS pool this environment variable is not required.
-
 A check is made before the start of a run to confirm this environment variable is present.
+
+Note: if not running on an iOS pool this environment variable is not required.
 
 ## Populating a device pool
 To add devices to a device pool, pick devices from the list provided by
@@ -142,13 +142,15 @@ sylph -d ios
 and add to the appropriate pool type in sylph.yaml. The listed devices are devices currently available on Device Farm.
 
 ## Configuration Validation
-The sylph.yaml is validated to confirm the devices are  available on Device Farm and tests are present before starting a run. Presence of the required environment variables for the iOS build are also confirmed.
+The sylph.yaml is validated to confirm the devices are  available on Device Farm and tests are present before starting a run. 
+
+If running on an iOS pool, the iOS-related environment variables must be defined. 
 
 # Configuring a CI Environment for _Sylph_
-In addition to the command line, _Sylph_ also runs in a CI environment.
+In addition to running from the command line, _Sylph_ also runs in a CI environment.
 
 ## AWS CLI Credentials for CI
-The following AWS CLI credentials are required:
+The following AWS CLI credentials are required in a CI environment:
 - AWS_ACCESS_KEY_ID
 - AWS_SECRET_ACCESS_KEY
 
@@ -173,18 +175,18 @@ This is used to configure the CI's ssh client to find the match host. For exampl
 - SSH_SERVER_PORT  
 This is used to configure the CI's ssh client to find the match host's ssh port. For example, 22.
 
-As from the command line, the following environment variable is also required by _Sylph_ in a CI environment:
+As with running from the command line, the following environment variable is also required by _Sylph_ in a CI environment:
 - TEAM_ID  
 This is the Developer Portal Team ID. It is of the form 'ABCDEFGHIJ'.
 
-Note: if not running on an iOS pool these environment variables are not required.
+Note: if not running on an iOS pool all iOS-related environment variables are not required.
 
 ## Sample environment variables for Travis-CI
 For example, when _Sylph_ is run on Travis-CI the following environment variables are used:
 
 ![secret variables](art/travis_env_vars.png)
 
-See [.travis](.travis) for running _Sylph_ on Travis-CI.
+See [.travis.yml](.travis.yml) for running _Sylph_ on Travis-CI.
 
 Note: the Travis-CI build uses pre-configured AWS CLI values in [.aws/config](.aws/config).
 

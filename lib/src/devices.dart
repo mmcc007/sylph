@@ -14,7 +14,7 @@ List<DeviceFarmDevice> getDeviceFarmDevicesByType(DeviceType deviceType) {
 /// Get current device farm devices using device farm API.
 List<DeviceFarmDevice> getDeviceFarmDevices() {
   final _deviceFarmDevices = deviceFarmCmd(['list-devices'])['devices'];
-  final List<DeviceFarmDevice> deviceFarmDevices = [];
+  final deviceFarmDevices = <DeviceFarmDevice>[];
   for (final _deviceFarmDevice in _deviceFarmDevices) {
     deviceFarmDevices.add(loadDeviceFarmDevice(_deviceFarmDevice));
   }
@@ -34,9 +34,9 @@ DeviceFarmDevice loadDeviceFarmDevice(Map device) {
 }
 
 /// Get current sylph devices from [Map] of device pool info.
-List getSylphDevices(Map devicePoolInfo) {
+List<SylphDevice> getSylphDevices(Map devicePoolInfo) {
   final _sylphDevices = devicePoolInfo['devices'];
-  final sylphDevices = [];
+  final sylphDevices = <SylphDevice>[];
   for (final _sylphDevice in _sylphDevices) {
     sylphDevices
         .add(loadSylphDevice(_sylphDevice, devicePoolInfo['pool_type']));
