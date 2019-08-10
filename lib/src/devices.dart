@@ -30,7 +30,7 @@ DeviceFarmDevice loadDeviceFarmDevice(Map device) {
       Version.parse(device['os']),
       device['platform'] == 'ANDROID' ? DeviceType.android : DeviceType.ios,
       device['formFactor'] == 'PHONE' ? FormFactor.phone : FormFactor.tablet,
-      device['availability'],
+      device['availability'] ?? '',
       device['arn']);
 }
 
