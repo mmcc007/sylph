@@ -45,20 +45,13 @@ main(List<String> arguments) async {
   if (devicesArgVal != null) {
     switch (devicesArgVal) {
       case 'all':
-        for (final sylphDevice in getDeviceFarmDevices()) {
-          print(sylphDevice);
-        }
+        printDeviceFarmDevices(getDeviceFarmDevices());
         break;
       case 'android':
-        for (final sylphDevice
-            in getDeviceFarmDevicesByType(DeviceType.android)) {
-          print(sylphDevice);
-        }
+        printDeviceFarmDevices(getDeviceFarmDevicesByType(DeviceType.android));
         break;
       case 'ios':
-        for (final sylphDevice in getDeviceFarmDevicesByType(DeviceType.ios)) {
-          print(sylphDevice);
-        }
+        printDeviceFarmDevices(getDeviceFarmDevicesByType(DeviceType.ios));
         break;
     }
     exit(0);
@@ -87,6 +80,13 @@ main(List<String> arguments) async {
     print('Sylph run \'$sylphRunName\' failed.');
     exit(1);
   }
+}
+
+void printDeviceFarmDevices(List<DeviceFarmDevice> deviceFarmDevices) {
+  for (final deviceFarmDevice in deviceFarmDevices) {
+    print(deviceFarmDevice);
+  }
+  print('${deviceFarmDevices.length} devices');
 }
 
 void _handleError(ArgParser argParser, String msg) {
