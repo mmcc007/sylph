@@ -11,7 +11,7 @@ main() {
         runReport
         ;;
     *)
-        runCodeCoverage
+        runTests
         ;;
   esac
 }
@@ -30,15 +30,50 @@ where:
     --help
         print this message
 
-requires test_coverage package
-(install with 'pub global activate test_coverage')
+requires coverage package
+(install with 'pub global activate coverage')
 " "$(basename "$0")"
     exit 1
 }
 
-# run tests
-runCodeCoverage () {
-  test_coverage --no-badge
+# run tests with code coverage
+runTests () {
+#  test_coverage --no-badge
+      pub get
+#       pub global run coverage:collect_coverage --port=8111 -o coverage.json --resume-isolates --wait-paused &
+#      dart --pause-isolates-on-exit --enable-vm-service=8111 "test/coverage_test.dart"
+#      pub global run coverage:format_coverage --packages=.packages -i coverage.json --report-on lib --lcov --out lcov.info
+
+  local coverage_dir="coverage"
+  # clear coverage directory
+  rm -rf "$coverage_dir"
+  mkdir "$coverage_dir"
+
+  OBS_PORT=9292
+  echo "Collecting coverage on port $OBS_PORT..."
+
+  # Run the coverage collector to generate the JSON coverage report.
+  echo "Listening for coverage report..."
+  pub global run coverage:collect_coverage \
+    --port=$OBS_PORT \
+    --out="$coverage_dir"/coverage.json \
+    --wait-paused \
+    --resume-isolates &
+
+  # Start tests in one VM.
+  echo "Running tests with code coverage..."
+  dart --disable-service-auth-codes \
+    --enable-vm-service=$OBS_PORT \
+    --pause-isolates-on-exit \
+    test/coverage_test.dart
+
+  echo "Generating LCOV report..."
+  pub global run coverage:format_coverage \
+    --lcov \
+    --in="$coverage_dir"/coverage.json \
+    --out="$coverage_dir"/lcov.info \
+    --packages=.packages \
+    --report-on=lib
 }
 
 runReport() {

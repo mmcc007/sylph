@@ -8,10 +8,10 @@ jobs:
       language: dart
       dart: stable
       install:
-        - pub global activate test_coverage
+        - pub global activate coverage
         - export AWS_DEFAULT_REGION='us-west-2'
       script:
-        - test_coverage
+        - script/code_coverage.sh
       after_success: bash <(curl -s https://codecov.io/bash) -f coverage/lcov.info
 
     - stage: Run Sylph
