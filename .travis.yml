@@ -7,7 +7,7 @@ jobs:
       env: Run Tests
       language: dart
       dart:
-        - "2.3.0"
+        - 2.3.0
       install:
         - pub global activate test_coverage
       script:
