@@ -29,6 +29,7 @@ DeviceFarmDevice loadDeviceFarmDevice(Map device) {
       device['modelId'],
       Version.parse(device['os']),
       device['platform'] == 'ANDROID' ? DeviceType.android : DeviceType.ios,
+      device['formFactor'] == 'PHONE' ? FormFactor.phone : FormFactor.tablet,
       device['availability'],
       device['arn']);
 }
@@ -54,6 +55,8 @@ SylphDevice loadSylphDevice(Map device, String poolType) {
       stringToEnum(DeviceType.values, poolType));
 }
 
+const kOrderEqual = 0;
+
 /// Describe a sylph device that can be compared and sorted.
 class SylphDevice implements Comparable {
   SylphDevice(this.name, this.model, this.os, this.deviceType)
@@ -74,14 +77,20 @@ class SylphDevice implements Comparable {
   @override
   int compareTo(other) {
     final nameCompare = name.compareTo(other.name);
-    if (nameCompare != 0) {
+    if (nameCompare != kOrderEqual) {
       return nameCompare;
     } else {
       final modelCompare = model.compareTo(other.model);
-      if (modelCompare != 0) {
+      if (modelCompare != kOrderEqual) {
         return modelCompare;
       } else {
-        return os == other.os ? 0 : os > other.os ? 1 : -1;
+        // Version does not implement compareTo
+        final osCompare = os == other.os ? kOrderEqual : os > other.os ? 1 : -1;
+        if (osCompare != kOrderEqual) {
+          return osCompare;
+        } else {
+          return enumToStr(deviceType).compareTo(enumToStr(other.deviceType));
+        }
       }
     }
   }
@@ -100,34 +109,65 @@ class SylphDevice implements Comparable {
       name.hashCode ^ model.hashCode ^ os.hashCode ^ deviceType.hashCode;
 }
 
+enum FormFactor { phone, tablet }
+
 /// Describe a device farm device that can be compared and sorted.
+/// Also can be compared with a [SylphDevice].
 class DeviceFarmDevice extends SylphDevice {
   DeviceFarmDevice(String name, String modelId, Version os,
-      DeviceType deviceType, this.availability, this.arn)
-      : assert(availability != null),
+      DeviceType deviceType, this.formFactor, this.availability, this.arn)
+      : assert(formFactor != null),
+        assert(availability != null),
         assert(arn != null),
         super(name, modelId, os, deviceType);
 
+  final FormFactor formFactor;
   final String availability, arn;
 
   @override
   String toString() {
-    return '${super.toString()}, availability: $availability';
+    // do not show arn for now
+    return '${super.toString()}, formFactor:${enumToStr(formFactor)}, availability:$availability';
   }
 
   @override
-  bool operator ==(other) {
-    if (other is SylphDevice) {
-      // allow comparison with a sylph device.
-      return super == (other);
+  int compareTo(other) {
+    final formFactorCompare =
+        enumToStr(formFactor).compareTo(enumToStr(other.formFactor));
+    if (formFactorCompare != kOrderEqual) {
+      return formFactorCompare;
     } else {
-      return other is DeviceFarmDevice &&
-          super == (other) &&
-          other.availability == availability &&
-          other.arn == arn;
+      final sylphCompare = super.compareTo(other);
+      if (sylphCompare != kOrderEqual) {
+        return sylphCompare;
+      } else {
+        return kOrderEqual;
+      }
     }
   }
 
   @override
-  int get hashCode => super.hashCode ^ availability.hashCode ^ arn.hashCode;
+  bool operator ==(other) {
+    if (other is DeviceFarmDevice) {
+      return super == other &&
+          other.formFactor == formFactor &&
+          other.availability == availability &&
+          other.arn == arn;
+    } else {
+      if (other is SylphDevice) {
+        // allow comparison with a sylph device
+        return super == other;
+      } else {
+        // any other type
+        return false;
+      }
+    }
+  }
+
+  @override
+  int get hashCode =>
+      super.hashCode ^
+      formFactor.hashCode ^
+      availability.hashCode ^
+      arn.hashCode;
 }
