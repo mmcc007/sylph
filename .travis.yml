@@ -9,6 +9,7 @@ jobs:
       dart: stable
       install:
         - pub global activate test_coverage
+        - export AWS_DEFAULT_REGION='us-west-2'
       script:
         - test_coverage
       after_success: bash <(curl -s https://codecov.io/bash) -f coverage/lcov.info
