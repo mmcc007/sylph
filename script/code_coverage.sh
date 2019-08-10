@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+set -e
+set -x
+
 main() {
   if ! [[ -d .git ]]; then printError "Error: not in root of repo\n"; show_help; fi
 
@@ -44,6 +47,7 @@ runTests () {
 #      dart --pause-isolates-on-exit --enable-vm-service=8111 "test/coverage_test.dart"
 #      pub global run coverage:format_coverage --packages=.packages -i coverage.json --report-on lib --lcov --out lcov.info
 
+  local test_path="test/sylph_test.dart"
   local coverage_dir="coverage"
   # clear coverage directory
   rm -rf "$coverage_dir"
@@ -65,7 +69,7 @@ runTests () {
   dart --disable-service-auth-codes \
     --enable-vm-service=$OBS_PORT \
     --pause-isolates-on-exit \
-    test/coverage_test.dart
+    "$test_path"
 
   echo "Generating LCOV report..."
   pub global run coverage:format_coverage \
