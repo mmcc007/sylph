@@ -171,6 +171,7 @@ void main() {
     });
 
     test('bundle flutter test', () async {
+      // note: requires certain env vars to be defined
       final filePath = 'test/sylph_test.yaml';
 //    final filePath = 'example/sylph.yaml';
       final config = await parseYaml(filePath);
@@ -524,14 +525,14 @@ void main() {
         final model = 'model';
         final os = Version.parse('1.2.3');
         final deviceType = DeviceType.android;
-        final formFactor = FormFactor.phone;
+        final formFactor1 = FormFactor.phone;
+        final formFactor2 = FormFactor.tablet;
         final availability = 'availability';
-        final arn1 = 'arn1';
-        final arn2 = 'arn2';
+        final arn = 'arn';
         final dfDev1 = DeviceFarmDevice(
-            name, model, os, deviceType, formFactor, availability, arn1);
+            name, model, os, deviceType, formFactor1, availability, arn);
         final dfDevice2 = DeviceFarmDevice(
-            name, model, os, deviceType, formFactor, availability, arn2);
+            name, model, os, deviceType, formFactor2, availability, arn);
         expect(dfDev1.compareTo(dfDevice2), kOrderedBefore);
       });
     });
