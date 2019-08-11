@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
-set -x
+#set -x
 
 main() {
   if ! [[ -d .git ]]; then printError "Error: not in root of repo\n"; show_help; fi
@@ -41,13 +41,6 @@ requires coverage package
 
 # run tests with code coverage
 runTests () {
-#  test_coverage --no-badge
-  echo "Initialize sylph package..."
-  pub get
-#       pub global run coverage:collect_coverage --port=8111 -o coverage.json --resume-isolates --wait-paused &
-#      dart --pause-isolates-on-exit --enable-vm-service=8111 "test/coverage_test.dart"
-#      pub global run coverage:format_coverage --packages=.packages -i coverage.json --report-on lib --lcov --out lcov.info
-
   local test_path="test/sylph_test.dart"
   local coverage_dir="coverage"
   # clear coverage directory
@@ -55,10 +48,9 @@ runTests () {
   mkdir "$coverage_dir"
 
   OBS_PORT=9292
-  echo "Collecting coverage on port $OBS_PORT..."
 
   # Run the coverage collector to generate the JSON coverage report.
-  echo "Listening for coverage report..."
+  echo "Listening for coverage report on port $OBS_PORT..."
   pub global run coverage:collect_coverage \
     --port=$OBS_PORT \
     --out="$coverage_dir"/coverage.json \
