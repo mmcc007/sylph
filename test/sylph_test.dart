@@ -600,12 +600,7 @@ void main() {
 
     test('substitute env vars in string', () {
       final env = Platform.environment;
-      final envVars = [
-        'APP_IDENTIFIER',
-        'APPLE_ID',
-        'ITC_TEAM_ID',
-        'TEAM_ID'
-      ]; // order dependent
+      final envVars = ['TEAM_ID'];
       final expected = () {
         final envs = [];
         for (final envVar in envVars) {
@@ -623,11 +618,11 @@ void main() {
     });
 
     test('unpack files with env vars and name/value pairs', () async {
-      final envVars = ['APPLE_ID', 'ITC_TEAM_ID', 'TEAM_ID'];
+      final envVars = ['TEAM_ID'];
       final filePaths = ['fastlane/Appfile', 'exportOptions.plist'];
       final dstDir = '/tmp/test_env_files';
 
-      // change directory to app
+      // change directory to app to get to ios dir
       final origDir = Directory.current;
       Directory.current = 'example';
       final nameVals = {kAppIdentifier: getAppIdentifier()};
