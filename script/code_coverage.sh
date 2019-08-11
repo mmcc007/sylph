@@ -42,7 +42,8 @@ requires coverage package
 # run tests with code coverage
 runTests () {
 #  test_coverage --no-badge
-      pub get
+  echo "Initialize sylph package..."
+  pub get
 #       pub global run coverage:collect_coverage --port=8111 -o coverage.json --resume-isolates --wait-paused &
 #      dart --pause-isolates-on-exit --enable-vm-service=8111 "test/coverage_test.dart"
 #      pub global run coverage:format_coverage --packages=.packages -i coverage.json --report-on lib --lcov --out lcov.info
