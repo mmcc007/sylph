@@ -1,5 +1,5 @@
 os: osx
-language: dart
+language: generic
 
 jobs:
   include:
@@ -28,12 +28,6 @@ jobs:
       # only build on tag releases
       if: tag IS present
       before_install:
-
-      # install correct version of java on osx to run sdkmanager
-#      - java -version
-#      - export HOMEBREW_NO_AUTO_UPDATE=1
-#      - brew cask uninstall java; brew tap caskroom/versions; brew cask install java8;
-#      - java -version
 
         # Add missing java module used by sdkmanager, etc...
       - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
@@ -70,7 +64,7 @@ jobs:
 
       # install pre-compiled flutter
       - FLUTTER_CHANNEL=stable
-      - FLUTTER_VERSION=1.2.1-${FLUTTER_CHANNEL}
+      - FLUTTER_VERSION=1.7.8+hotfix.4-${FLUTTER_CHANNEL}
       - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
       - export PATH="$PATH":"$HOME/.pub-cache/bin"
       - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
