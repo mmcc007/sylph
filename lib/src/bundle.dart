@@ -55,10 +55,11 @@ Future<int> bundleFlutterTests(Map config) async {
   cmd('cp', ['-r', '.', defaultAppDir], '.', false);
 
   // update .packages in case last build was on a different flutter repo
-  cmd('flutter', ['packages', 'get'], defaultAppDir, true);
+//  cmd('flutter', ['packages', 'get'], defaultAppDir, true);
 
   // clean build dir in case a build is present
-  cmd('flutter', ['clean'], defaultAppDir, true);
+//  cmd('flutter', ['clean'], defaultAppDir, true);
+  cmd('rm', ['-rf', 'build'], defaultAppDir, true);
 
   // Copy scripts to test bundle
   cmd('cp', ['-r', 'script', defaultAppDir], stagingDir, false);
