@@ -171,6 +171,7 @@ void main() {
     });
 
     test('bundle flutter test', () async {
+      // note: requires certain env vars to be defined
       final filePath = 'test/sylph_test.yaml';
 //    final filePath = 'example/sylph.yaml';
       final config = await parseYaml(filePath);
@@ -524,14 +525,14 @@ void main() {
         final model = 'model';
         final os = Version.parse('1.2.3');
         final deviceType = DeviceType.android;
-        final formFactor = FormFactor.phone;
+        final formFactor1 = FormFactor.phone;
+        final formFactor2 = FormFactor.tablet;
         final availability = 'availability';
-        final arn1 = 'arn1';
-        final arn2 = 'arn2';
+        final arn = 'arn';
         final dfDev1 = DeviceFarmDevice(
-            name, model, os, deviceType, formFactor, availability, arn1);
+            name, model, os, deviceType, formFactor1, availability, arn);
         final dfDevice2 = DeviceFarmDevice(
-            name, model, os, deviceType, formFactor, availability, arn2);
+            name, model, os, deviceType, formFactor2, availability, arn);
         expect(dfDev1.compareTo(dfDevice2), kOrderedBefore);
       });
     });
@@ -599,12 +600,7 @@ void main() {
 
     test('substitute env vars in string', () {
       final env = Platform.environment;
-      final envVars = [
-        'APP_IDENTIFIER',
-        'APPLE_ID',
-        'ITC_TEAM_ID',
-        'TEAM_ID'
-      ]; // order dependent
+      final envVars = ['TEAM_ID'];
       final expected = () {
         final envs = [];
         for (final envVar in envVars) {
@@ -622,11 +618,11 @@ void main() {
     });
 
     test('unpack files with env vars and name/value pairs', () async {
-      final envVars = ['APPLE_ID', 'ITC_TEAM_ID', 'TEAM_ID'];
+      final envVars = ['TEAM_ID'];
       final filePaths = ['fastlane/Appfile', 'exportOptions.plist'];
       final dstDir = '/tmp/test_env_files';
 
-      // change directory to app
+      // change directory to app to get to ios dir
       final origDir = Directory.current;
       Directory.current = 'example';
       final nameVals = {kAppIdentifier: getAppIdentifier()};

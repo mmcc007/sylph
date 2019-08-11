@@ -1,5 +1,6 @@
 [![pub package](https://img.shields.io/pub/v/sylph.svg)](https://pub.dartlang.org/packages/sylph) 
 [![Build Status](https://travis-ci.com/mmcc007/sylph.svg?branch=master)](https://travis-ci.com/mmcc007/sylph)
+[![codecov](https://codecov.io/gh/mmcc007/sylph/branch/master/graph/badge.svg)](https://codecov.io/gh/mmcc007/sylph)
 
 <img src="art/sylph_logo.png" width="30%" title="Sylph" alt="Sylph">
 

@@ -14,9 +14,7 @@ doc/api/
 .idea
 
 # Project
-test/sort_test.dart
-
-example.old/
-test_bundle.zip
-test_bundle/
 **/**/.DS_Store
+
+# code coverage
+coverage/

@@ -1,13 +1,32 @@
 os: osx
-language: generic
-
-# only build on tag releases
-#if: tag IS present
+language: dart
 
 jobs:
   include:
-    - stage: Run Sylph on AWS Device Farms
+    - stage: Run tests
+      env: Run Tests
+      language: dart
+      dart: stable
+      install:
+        # install aws
+        - curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+        - unzip awscli-bundle.zip
+        - sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+        - aws --version
+        - cp -r .aws ~
+        # install coverage tool
+        - pub global activate coverage
+#        - export AWS_DEFAULT_REGION='us-west-2'
+        # install sylph
+        - pub global activate --source path .
+      script:
+        - script/code_coverage.sh
+      after_success: bash <(curl -s https://codecov.io/bash) -f coverage/lcov.info
+
+    - stage: Run Sylph
       env: Run Sylph on AWS Device Farms
+      # only build on tag releases
+      if: tag IS present
       before_install:
 
       # install correct version of java on osx to run sdkmanager
