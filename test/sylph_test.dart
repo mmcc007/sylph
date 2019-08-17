@@ -1,16 +1,20 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:sylph/src/bundle.dart';
 import 'package:sylph/src/concurrent_jobs.dart';
 import 'package:sylph/src/device_farm.dart';
 import 'package:sylph/src/devices.dart';
+import 'package:sylph/src/local_packages.dart';
 import 'package:sylph/src/sylph_run.dart';
 import 'package:sylph/src/utils.dart';
 import 'package:sylph/src/validator.dart';
 import 'package:test/test.dart';
 import 'package:version/version.dart';
 import 'package:yaml/yaml.dart';
+import 'package:path/path.dart' as path;
+import 'package:yamlicious/yamlicious.dart';
 
 const kTestProjectName = 'test concurrent runs';
 const kTestProjectArn =
@@ -353,6 +357,19 @@ void main() {
     });
 
     test('run jobs in parallel', () async {
+      // can be called locally or in an isolate. used in testing.
+      Map square(Map args) {
+        //  print('running square with args=$args, time=${DateTime.now()}');
+        int n = args['n'];
+        return {'result': n * n};
+      }
+
+      Future<Map> squareFuture(Map args) {
+        //  print('running square future with args=$args, time=${DateTime.now()}');
+        int n = args['n'];
+        return Future.value({'result': n * n});
+      }
+
       final jobArgs = [
         {'n': 10},
         {'n': 20}
@@ -687,17 +704,78 @@ void main() {
       expect(isValidPoolTypes(config['device_pools']), isFalse);
     });
   });
-}
 
-// can be called locally or in an isolate. used in testing.
-Map square(Map args) {
-//  print('running square with args=$args, time=${DateTime.now()}');
-  int n = args['n'];
-  return {'result': n * n};
-}
+  group('local package manager', () {
+    final srcDir = 'test/resources/test_local_pkgs/apps';
+    final dstDir = '/tmp/test_local_pkgs';
+    final appName = 'app';
+    final appSrcDir = '$srcDir/$appName';
+    final appDstDir = '$dstDir/$appName';
+    LocalPackageManager localPackageManager;
 
-Future<Map> squareFuture(Map args) {
-//  print('running square future with args=$args, time=${DateTime.now()}');
-  int n = args['n'];
-  return Future.value({'result': n * n});
+    setUp(() {
+      clearDirectory(dstDir);
+      LocalPackageManager.copy(appSrcDir, dstDir, force: true);
+      localPackageManager = LocalPackageManager(appDstDir, isAppPackage: true);
+    });
+
+    test('copy app package', () {
+      expect(Directory(appDstDir).existsSync(), isTrue);
+    });
+
+    test('install local packages', () {
+      localPackageManager.installPackages(appSrcDir);
+      final expectedLocalPackage = 'local_package';
+      final expectedSharedLocalPackage = 'shared_package';
+      expect(
+          Directory('$appDstDir/$expectedLocalPackage').existsSync(), isTrue);
+      expect(Directory('$appDstDir/$expectedSharedLocalPackage').existsSync(),
+          isTrue);
+    });
+
+    test('cleanup apps pubspec.yaml', () {
+      localPackageManager.installPackages(appSrcDir);
+
+      final expectedPubSpec = '''
+name: "app"
+dependencies: 
+  local_package: 
+    path: "local_package"
+''';
+      expect(
+          File('$appDstDir/pubspec.yaml').readAsStringSync(), expectedPubSpec);
+    });
+
+    test(
+        'cleanup local dependencies of dependencies if at different directory levels',
+        () {
+      localPackageManager.installPackages(appSrcDir);
+
+      final expectedPubSpecLocal = '''
+name: "local_package"
+dependencies: 
+  shared_package: 
+    path: "../shared_package"
+environment: 
+  sdk: ">=2.0.0 <3.0.0"
+''';
+      expect(File('$appDstDir/local_package/pubspec.yaml').readAsStringSync(),
+          expectedPubSpecLocal);
+
+      final expectedPubSpecShared = '''
+name: "shared_package"
+dependencies: 
+  path: "^1.6.4"
+environment: 
+  sdk: ">=2.0.0 <3.0.0"
+''';
+      expect(File('$appDstDir/shared_package/pubspec.yaml').readAsStringSync(),
+          expectedPubSpecShared);
+    });
+
+    test('get dependencies in new project', () {
+      localPackageManager.installPackages(appSrcDir);
+      expect(cmd('flutter', ['packages', 'get'], appDstDir), isNotEmpty);
+    });
+  });
 }

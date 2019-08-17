@@ -1,0 +1,6 @@
+name: shared_package
+environment:
+  sdk: '>=2.0.0 <3.0.0'
+dependencies:
+  path: ^1.6.4
+

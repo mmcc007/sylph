@@ -16,6 +16,7 @@ dependencies:
   isolate: ^2.0.2
   duration: ^2.0.8
   version: ^1.0.3
+  yamlicious: ^0.1.0
 
 dev_dependencies:
   test: ^1.0.0

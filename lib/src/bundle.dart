@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:resource/resource.dart';
 
 import 'devices.dart';
+import 'local_packages.dart';
 import 'utils.dart';
 
 // resource consts
@@ -51,8 +52,11 @@ Future<int> bundleFlutterTests(Map config) async {
   // create default app dir in test bundle
   cmd('mkdir', [defaultAppDir], '.', false);
 
-  // Copy app dir to test bundle
-  cmd('cp', ['-r', '.', defaultAppDir], '.', false);
+  // Copy app dir to test bundle (including any local packages)
+  LocalPackageManager.copy('.', defaultAppDir, force: true);
+  final localPackageManager =
+      LocalPackageManager(defaultAppDir, isAppPackage: true);
+  localPackageManager.installPackages('.');
 
   // update .packages in case last build was on a different flutter repo
 //  cmd('flutter', ['packages', 'get'], defaultAppDir, true);
