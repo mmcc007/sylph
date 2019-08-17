@@ -13,7 +13,7 @@ import 'package:yamlicious/yamlicious.dart';
 /// Then pass the bundle's app dir as the [packageDir] and set [isAppPackage]
 /// to true.
 class LocalPackageManager {
-  LocalPackageManager(this.packageDir, {this.isAppPackage}) {
+  LocalPackageManager(this.packageDir, {this.isAppPackage = false}) {
 //    print('LocalPackageManager\n\tpackageDir=$packageDir');
     assert(packageDir != null);
     assert(isAppPackage != null);
@@ -82,8 +82,7 @@ class LocalPackageManager {
                   final pkgDstDir = path.join(dstDir, pkgName);
                   copy(pkgSrcDir, pkgDstDir);
                   // install any local packages within this local package
-                  final localPkgMgr =
-                      LocalPackageManager(pkgDstDir, isAppPackage: false);
+                  final localPkgMgr = LocalPackageManager(pkgDstDir);
                   localPkgMgr.installPackages(pkgSrcDir);
                 }
               }
