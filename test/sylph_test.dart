@@ -1,16 +1,20 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:sylph/src/bundle.dart';
 import 'package:sylph/src/concurrent_jobs.dart';
 import 'package:sylph/src/device_farm.dart';
 import 'package:sylph/src/devices.dart';
+import 'package:sylph/src/local_packages.dart';
 import 'package:sylph/src/sylph_run.dart';
 import 'package:sylph/src/utils.dart';
 import 'package:sylph/src/validator.dart';
 import 'package:test/test.dart';
 import 'package:version/version.dart';
 import 'package:yaml/yaml.dart';
+import 'package:path/path.dart' as path;
+import 'package:yamlicious/yamlicious.dart';
 
 const kTestProjectName = 'test concurrent runs';
 const kTestProjectArn =
@@ -102,7 +106,7 @@ void main() {
       final expected =
           'arn:aws:devicefarm:us-west-2:122621792560:project:c43f0049-7b2f-42ed-9e4b-c6c46de9de23';
       expect(result, expected);
-    }, skip: true);
+    }, skip: isCI());
 
     test('find device ARN', () {
       final sylphDevice = loadSylphDevice({
@@ -129,7 +133,7 @@ void main() {
         loadSylphDevice({
           'name': 'Google Pixel',
           'model': 'Pixel',
-          'os': '8.0.0'
+          'os': '7.1.2'
 //      'os': '11.4'
         }, 'android')
       ];
@@ -137,7 +141,7 @@ void main() {
       // convert devices to rules
       final rules = devicesToRule(devices);
       final expected =
-          '[{"attribute": "ARN", "operator": "IN","value": "[\\"arn:aws:devicefarm:us-west-2::device:D125AEEE8614463BAE106865CAF4470E\\",\\"arn:aws:devicefarm:us-west-2::device:6B26991B2257455788C5B8EA3C9F91C4\\"]"}]';
+          '[{"attribute": "ARN", "operator": "IN","value": "[\\"arn:aws:devicefarm:us-west-2::device:D125AEEE8614463BAE106865CAF4470E\\",\\"arn:aws:devicefarm:us-west-2::device:CEA80E8918814308A6275FEBC4310134\\"]"}]';
       expect(rules, expected);
     });
 
@@ -157,9 +161,9 @@ void main() {
       // check for existing pool
       final result = setupDevicePool(devicePoolInfo, projectArn);
       final expected =
-          'arn:aws:devicefarm:us-west-2:122621792560:devicepool:e1c97f71-f534-432b-9e86-3bd7529e327b/ab9460cf-fd81-4848-9ae5-643da98937ae';
+          'arn:aws:devicefarm:us-west-2:122621792560:devicepool:e1c97f71-f534-432b-9e86-3bd7529e327b/d1a72830-e094-4280-b8b9-3b800ba76a31';
       expect(result, expected);
-    }, skip: true);
+    });
 
     test('monitor successful run progress until complete', () {
       final timeout = 100;
@@ -373,11 +377,40 @@ void main() {
     });
 
     test('run sylph tests on a device pool in isolate', () async {
-      final config = await parseYaml('test/sylph_test.yaml');
+      // note: runs on device farm, assumes resources unpacked and bundle created
+      final configYaml = '''
+        tmp_dir: /tmp/sylph
+        artifacts_dir: /tmp/sylph_artifacts
+        sylph_timeout: 720 
+        concurrent_runs: true
+        project_name: test concurrent runs
+        default_job_timeout: 10 
+        device_pools:
+          - pool_name: android pool 1
+            pool_type: android
+            devices:
+              - name: Google Pixel 2
+                model: Google Pixel 2
+                os: 8.0.0
+          - pool_name: ios pool 1
+            pool_type: ios
+            devices:
+              - name: Apple iPhone X
+                model: A1865
+                os: 11.4
+        test_suites:
+          - test_suite: example tests 1
+            main: test_driver/main.dart
+            tests:
+              - test_driver/main_test.dart
+            pool_names:
+              - android pool 1
+              - ios pool 1
+            job_timeout: 15
+      ''';
+      final config = loadYaml(configYaml);
 
       // pack job args
-      //Map testSuite, Map config, poolName,
-      //    String projectArn, String sylphRunName, int sylphRunTimeout
       final timestamp = sylphTimestamp();
       final testSuite = config['test_suites'].first;
       final poolName = 'android pool 1';
@@ -387,16 +420,22 @@ void main() {
       final jobArgs = packArgs(testSuite, config, poolName, projectArn,
           sylphRunName, sylphRunTimeout);
 
+      // for this test change directory
+      final origDir = Directory.current;
+      Directory.current = 'example';
+
       // run
       final result = await runJobs(runSylphJobInIsolate, [jobArgs]);
       expect(result, [
         {'result': true}
       ]);
+
+      // allow other tests to continue
+      Directory.current = origDir;
     }, skip: true);
 
     test('check all sylph devices found', () async {
       // get all sylph devices from sylph.yaml
-//    final config = await parseYaml('test/sylph_test.yaml');
       final config = await parseYaml('example/sylph.yaml');
       // for this test change directory
       final origDir = Directory.current;
@@ -687,17 +726,96 @@ void main() {
       expect(isValidPoolTypes(config['device_pools']), isFalse);
     });
   });
+
+  group('local package manager', () {
+    final srcDir = 'test/resources/test_local_pkgs/apps';
+    final dstDir = '/tmp/test_local_pkgs';
+    final appName = 'app';
+    final appSrcDir = '$srcDir/$appName';
+    final appDstDir = '$dstDir/$appName';
+    LocalPackageManager localPackageManager;
+
+    setUp(() {
+      clearDirectory(dstDir);
+      LocalPackageManager.copy(appSrcDir, dstDir, force: true);
+      localPackageManager = LocalPackageManager(appDstDir, isAppPackage: true);
+    });
+
+    test('copy app package', () {
+      expect(Directory(appDstDir).existsSync(), isTrue);
+    });
+
+    test('install local packages', () {
+      localPackageManager.installPackages(appSrcDir);
+      final expectedLocalPackage = 'local_package';
+      final expectedSharedLocalPackage = 'shared_package';
+      expect(
+          Directory('$appDstDir/$expectedLocalPackage').existsSync(), isTrue);
+      expect(Directory('$appDstDir/$expectedSharedLocalPackage').existsSync(),
+          isTrue);
+    });
+
+    test('cleanup apps pubspec.yaml', () {
+      localPackageManager.installPackages(appSrcDir);
+
+      final expectedPubSpec = '''
+name: "app"
+dependencies: 
+  local_package: 
+    path: "local_package"
+''';
+      expect(
+          File('$appDstDir/pubspec.yaml').readAsStringSync(), expectedPubSpec);
+    });
+
+    test(
+        'cleanup local dependencies of dependencies if at different directory levels',
+        () {
+      localPackageManager.installPackages(appSrcDir);
+
+      final expectedPubSpecLocal = '''
+name: "local_package"
+dependencies: 
+  shared_package: 
+    path: "../shared_package"
+environment: 
+  sdk: ">=2.0.0 <3.0.0"
+''';
+      expect(File('$appDstDir/local_package/pubspec.yaml').readAsStringSync(),
+          expectedPubSpecLocal);
+
+      final expectedPubSpecShared = '''
+name: "shared_package"
+dependencies: 
+  path: "^1.6.4"
+environment: 
+  sdk: ">=2.0.0 <3.0.0"
+''';
+      expect(File('$appDstDir/shared_package/pubspec.yaml').readAsStringSync(),
+          expectedPubSpecShared);
+    });
+
+    test('get dependencies in new project', () {
+      localPackageManager.installPackages(appSrcDir);
+      expect(cmd('flutter', ['packages', 'get'], appDstDir), isNotEmpty);
+    }, skip: isCI());
+  });
+}
+
+/// Test for CI environment.
+bool isCI() {
+  return Platform.environment['CI'] == 'true';
 }
 
 // can be called locally or in an isolate. used in testing.
 Map square(Map args) {
-//  print('running square with args=$args, time=${DateTime.now()}');
+  //  print('running square with args=$args, time=${DateTime.now()}');
   int n = args['n'];
   return {'result': n * n};
 }
 
 Future<Map> squareFuture(Map args) {
-//  print('running square future with args=$args, time=${DateTime.now()}');
+  //  print('running square future with args=$args, time=${DateTime.now()}');
   int n = args['n'];
   return Future.value({'result': n * n});
 }

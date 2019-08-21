@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.com/mmcc007/sylph.svg?branch=master)](https://travis-ci.com/mmcc007/sylph)
 [![codecov](https://codecov.io/gh/mmcc007/sylph/branch/master/graph/badge.svg)](https://codecov.io/gh/mmcc007/sylph)
 
-<img src="art/sylph_logo.png" width="30%" title="Sylph" alt="Sylph">
+<a href="https://dlpng.com/png/3962939"><img src="art/sylph_logo.png" width="30%" title="Click for source" alt="Sylph"></a>
 
 _A sylph is a mythological invisible being of the air._
 [Wikipedia](https://en.wikipedia.org/wiki/Sylph)
