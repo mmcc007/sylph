@@ -35,7 +35,7 @@ main(List<String> arguments) async {
 
   // show help
   if (argResults[helpArg] ||
-      (argResults.wasParsed(configArg) && argResults.wasParsed(configArg))) {
+      (argResults.wasParsed(configArg) && argResults.wasParsed(devicesArg))) {
     _showUsage(argParser);
     exit(0);
   }
