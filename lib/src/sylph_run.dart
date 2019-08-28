@@ -53,7 +53,7 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
   await bundleFlutterTests(config);
 
   // gather job args
-  final jobArgs = [];
+  final jobArgs = <Map>[];
 
   bool isConcurrentRun() => config['concurrent_runs'] ?? false;
   for (var testSuite in config['test_suites']) {

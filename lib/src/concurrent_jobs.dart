@@ -5,14 +5,15 @@ import 'package:isolate/isolate.dart';
 
 import 'sylph_run.dart';
 
+typedef JobFunction = Future<Map> Function(Map args);
+
 /// Runs any number of jobs concurrently in an isolate for each job.
 /// Number of concurrent jobs is recommended to not exceed number of cores in CPU.
 /// Jobs arguments are passed as a [List] of [Map].
 /// Jobs results are returned as a [List] of [Map] in same order as jobs
 /// argument [List] passed.
-/// The job method signature should be 'Map job(Map args)'.
 // todo: replace load balanced pool with a runner pool.
-Future<List<Map>> runJobs(job, List jobArgs) {
+Future<List<Map>> runJobs(JobFunction job, List<Map> jobArgs) {
   return LoadBalancer.create(jobArgs.length, IsolateRunner.spawn)
       .then((LoadBalancer pool) {
     var jobResults = List<Future<Map>>(jobArgs.length);
@@ -25,7 +26,7 @@ Future<List<Map>> runJobs(job, List jobArgs) {
 }
 
 /// Runs [runSylphJob] in an isolate.
-/// Method signature should match signature used in [runJobs].
+/// Method signature should match [JobFunction].
 Future<Map> runSylphJobInIsolate(Map args) async {
   // unpack args
   final testSuite = jsonDecode(args['test_suite']);
@@ -43,7 +44,7 @@ Future<Map> runSylphJobInIsolate(Map args) async {
 }
 
 /// Pack [runSylphJob] args into [Map].
-Map packArgs(Map testSuite, Map config, poolName, String projectArn,
+Map<String, dynamic> packArgs(Map testSuite, Map config, poolName, String projectArn,
     String sylphRunName, int sylphRunTimeout) {
   return {
     'test_suite': jsonEncode(testSuite),
