@@ -1,3 +1,10 @@
+## 0.5.0
+- Added support for bundling local packages #59
+- Added code coverage #53
+- Added form factor (phone/tablet) to device listing feature. Sorting by phone then table. #52 #53
+- Added tracking error code when running on device farm. #45
+- Removed dependency on env vars when not building for iOS. #41
+
 ## 0.4.0
 - Fixed multiple tests not running on android devices. #31
 - Added feature to support configuring a device pool. #35  
