@@ -21,7 +21,7 @@ main() {
         bundle_app
         ;;
     --bundle-certs) # for dev
-        bundle_certs
+        bundle_certs $1
         ;;
     *)
         show_help
@@ -178,7 +178,7 @@ bundle_app(){
 bundle_certs() {
 
   local local_key_chain_name='login.keychain'
-  local local_key_chain_pass='gaga5.4x'
+  local local_key_chain_pass=$1
 #  local exported_cert='developer_cert.pem'
   local exported_certs='developer_certs.p12'
 
