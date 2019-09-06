@@ -27,7 +27,7 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
   bool sylphRunSucceeded = true;
 
   // Parse config file
-  Map config = await parseYaml(configFilePath);
+  Map config = await parseYamlFile(configFilePath);
 
   // Check if running on iOS and/or android pools
   final isIosPoolTypeActive = isPoolTypeActive(config, DeviceType.ios);

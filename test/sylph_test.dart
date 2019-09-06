@@ -29,12 +29,12 @@ void main() {
   group('initial tests', () {
     test('parse yaml', () async {
       final filePath = 'test/sylph_test.yaml';
-      await parseYaml(filePath);
+      await parseYamlFile(filePath);
     });
 
     test('get first poolname and devices', () async {
       final filePath = 'test/sylph_test.yaml';
-      final config = await parseYaml(filePath);
+      final config = await parseYamlFile(filePath);
 //    print('config=$config');
       final poolName = config['device_pools'][1]['pool_name'];
       final devices = config['device_pools'][1]['devices'];
@@ -154,7 +154,7 @@ void main() {
       final poolName = 'ios pool 1';
       final configFilePath = 'test/sylph_test.yaml';
 
-      Map config = await parseYaml(configFilePath);
+      Map config = await parseYamlFile(configFilePath);
 
       Map devicePoolInfo = getDevicePoolInfo(config['device_pools'], poolName);
 
@@ -178,7 +178,7 @@ void main() {
       // note: requires certain env vars to be defined
       final filePath = 'test/sylph_test.yaml';
 //    final filePath = 'example/sylph.yaml';
-      final config = await parseYaml(filePath);
+      final config = await parseYamlFile(filePath);
       // change directory to app
       final origDir = Directory.current;
       Directory.current = 'example';
@@ -191,7 +191,7 @@ void main() {
 
     test('iterate thru test suites', () async {
       final filePath = 'test/sylph_test.yaml';
-      final config = await parseYaml(filePath);
+      final config = await parseYamlFile(filePath);
 //    print('config=$config');
 
       final List testSuites = config['test_suites'];
@@ -240,7 +240,7 @@ void main() {
     });
     test('lookup device pool', () async {
       final filePath = 'test/sylph_test.yaml';
-      final config = await parseYaml(filePath);
+      final config = await parseYamlFile(filePath);
 
       final poolName = 'android pool 1';
       Map devicePool = getDevicePoolInfo(config['device_pools'], poolName);
@@ -258,7 +258,7 @@ void main() {
 
     test('check pool type', () async {
       final filePath = 'test/sylph_test.yaml';
-      final config = await parseYaml(filePath);
+      final config = await parseYamlFile(filePath);
       final poolName = 'android pool 1';
       Map devicePoolInfo = getDevicePoolInfo(config['device_pools'], poolName);
       expect(devicePoolInfo['pool_type'], enumToStr(DeviceType.android));
@@ -335,7 +335,7 @@ void main() {
     test('get first device in pool', () async {
       final filePath = 'test/sylph_test.yaml';
       final poolName = 'android pool 1';
-      final config = await parseYaml(filePath);
+      final config = await parseYamlFile(filePath);
       final devicePoolInfo =
           getDevicePoolInfo(config['device_pools'], poolName);
       final devices = devicePoolInfo['devices'];
@@ -428,7 +428,7 @@ void main() {
 
     test('check all sylph devices found', () async {
       // get all sylph devices from sylph.yaml
-      final config = await parseYaml('example/sylph.yaml');
+      final config = await parseYamlFile('example/sylph.yaml');
       // for this test change directory
       final origDir = Directory.current;
       Directory.current = 'example';
@@ -451,7 +451,7 @@ void main() {
 
     test('substitute MAIN and TESTS for actual debug main and tests', () async {
       final filePath = 'test/sylph_test.yaml';
-      final config = await parseYaml(filePath);
+      final config = await parseYamlFile(filePath);
       final test_suite = config['test_suites'][0];
       final expectedMainEnvVal = test_suite['main'];
       final expectedTestsEnvVal = test_suite['tests'].join(",");
@@ -571,7 +571,7 @@ void main() {
     group('get devices', () {
       test('get sylph devices from config file', () async {
         final configPath = 'test/sylph_test.yaml';
-        final config = await parseYaml(configPath);
+        final config = await parseYamlFile(configPath);
         final poolName = 'android pool 1';
         final devicePoolInfo =
             getDevicePoolInfo(config['device_pools'], poolName);
@@ -685,7 +685,7 @@ void main() {
   group('android only runs', () {
     test('is pool type active', () async {
       final configPath = 'test/sylph_test.yaml';
-      final config = await parseYaml(configPath);
+      final config = await parseYamlFile(configPath);
       final androidPoolType = DeviceType.android;
 
       bool isAndroidActive = isPoolTypeActive(config, androidPoolType);

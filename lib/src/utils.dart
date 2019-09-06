@@ -9,10 +9,13 @@ import 'devices.dart';
 
 /// Parses a named yaml file.
 /// Returns as [Map].
-Future<Map> parseYaml(String filePath) async {
-  final yaml = await File(filePath).readAsString(encoding: utf8);
-  return loadYaml(yaml) as Map;
-}
+Map parseYamlFile(String yamlPath) =>
+    jsonDecode(jsonEncode(loadYaml(File(yamlPath).readAsStringSync())));
+
+/// Parse a yaml string.
+/// Returns as [Map].
+Map parseYamlStr(String yamlString) =>
+    jsonDecode(jsonEncode(loadYaml(yamlString)));
 
 /// Clears a named directory.
 /// Creates directory if none exists.
