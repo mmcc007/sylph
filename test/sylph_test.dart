@@ -361,15 +361,7 @@ void main() {
         {'n': 10},
         {'n': 20}
       ];
-//    print('square=$square');
-      List results = await runJobs(square, jobArgs);
-      for (int i = 0; i < results.length; i++) {
-//      print("square job #$i: job(${jobArgs[i]}) = ${results[i]}");
-        expect(results[i], square(jobArgs[i]));
-      }
-
-      // try again with a future
-      results = await runJobs(squareFuture, jobArgs);
+      List results = await runJobs(squareFuture, jobArgs);
       for (int i = 0; i < results.length; i++) {
 //      print("squareFuture job #$i: job(${jobArgs[i]}) = ${results[i]}");
         expect(results[i], await squareFuture(jobArgs[i]));
@@ -808,14 +800,7 @@ bool isCI() {
 }
 
 // can be called locally or in an isolate. used in testing.
-Map square(Map args) {
-  //  print('running square with args=$args, time=${DateTime.now()}');
-  int n = args['n'];
-  return {'result': n * n};
-}
-
 Future<Map> squareFuture(Map args) {
-  //  print('running square future with args=$args, time=${DateTime.now()}');
   int n = args['n'];
   return Future.value({'result': n * n});
 }

@@ -22,7 +22,7 @@ main(List<String> arguments) async {
         valueHelp: 'sylph.yaml')
     ..addOption(devicesArg,
         abbr: 'd',
-        help: 'List availabe devices.',
+        help: 'List available devices.',
         allowed: ['all', 'android', 'ios'],
         valueHelp: 'all|android|ios')
     ..addFlag(helpArg,
