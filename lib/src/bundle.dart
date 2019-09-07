@@ -38,7 +38,7 @@ const kAppIdentifier = 'APP_IDENTIFIER';
 /// Bundles Flutter tests using appium template found in staging area.
 /// Resulting bundle is saved on disk in temporary location
 /// for later upload.
-Future<int> bundleFlutterTests(Map config) async {
+Future<int> bundleFlutterTests(Map config, {String appDir = '.'}) async {
   final stagingDir = config['tmp_dir'];
   final appiumTemplatePath = '$stagingDir/$kAppiumTemplateName';
   final testBundleDir = '$stagingDir/$kTestBundleDir';
@@ -54,25 +54,24 @@ Future<int> bundleFlutterTests(Map config) async {
   cmd(['mkdir', defaultAppDir], silent: false);
 
   // Copy app dir to test bundle (including any local packages)
-  LocalPackageManager.copy('.', defaultAppDir, force: true);
+  LocalPackageManager.copy(appDir, defaultAppDir, force: true);
   final localPackageManager =
       LocalPackageManager(defaultAppDir, isAppPackage: true);
-  localPackageManager.installPackages('.');
+  localPackageManager.installPackages(appDir);
 
   // update .packages in case last build was on a different flutter repo
 //  cmd('flutter', ['packages', 'get'], defaultAppDir, true);
 
   // clean build dir in case a build is present
 //  cmd('flutter', ['clean'], defaultAppDir, true);
-  cmd(['rm', '-rf', 'build'], workingDirectory: defaultAppDir);
+  cmd(['rm', '-rf', '$defaultAppDir/build']);
 
   // Copy scripts to test bundle
-  cmd(['cp', '-r', 'script', defaultAppDir],
-      workingDirectory: stagingDir, silent: false);
+  cmd(['cp', '-r', '$stagingDir/script', defaultAppDir], silent: false);
 
   // Copy build to os map file to test bundle
-  cmd(['cp', kBuildToOsMapFileName, defaultAppDir],
-      workingDirectory: stagingDir, silent: false);
+  cmd(['cp', '$stagingDir/$kBuildToOsMapFileName', defaultAppDir],
+      silent: false);
 
   // Remove files not used (to reduce zip file size)
   cmd(['rm', '-rf', '$defaultAppDir/ios/Flutter/Flutter.framework'],
@@ -80,8 +79,7 @@ Future<int> bundleFlutterTests(Map config) async {
   cmd(['rm', '-rf', '$defaultAppDir/ios/Flutter/App.framework'], silent: false);
 
   // Zip test bundle
-  cmd(['zip', '-rq', '../$kTestBundleName', '.'],
-      workingDirectory: testBundleDir, silent: false);
+  cmd(['zip', '-rq', testBundlePath, testBundleDir], silent: false);
 
   // report size of bundle
   final size =
