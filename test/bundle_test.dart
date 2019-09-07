@@ -5,6 +5,7 @@ import 'package:process/process.dart';
 import 'package:sylph/src/bundle.dart';
 import 'package:sylph/src/context_runner.dart';
 import 'package:sylph/src/local_packages.dart';
+import 'package:sylph/src/resources.dart';
 import 'package:sylph/src/utils.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
@@ -15,7 +16,7 @@ import 'src/common.dart';
 main() {
   group('bundle', () {
     final appDir = 'test/resources/test_local_pkgs/apps/app';
-    final stagingDir = '/tmp/screenshots_test';
+    final stagingDir = '/tmp/screenshots_test_bundle';
     final bundleDir = '$stagingDir/$kTestBundleDir';
     final bundleZipName = '$stagingDir/$kTestBundleName';
     final bundleAppDir = '$bundleDir/$kDefaultFlutterAppName';
@@ -24,12 +25,13 @@ main() {
 
     setUp(() async {
       fakeProcessManager = FakeProcessManager();
+      clearDirectory(bundleDir);
       // create fake app in bundle
 //      copyFiles(appDir, bundleAppDir);
       await runInContext<void>(() {
         LocalPackageManager.copy(appDir, bundleAppDir, force: true);
         final localPackageManager =
-            LocalPackageManager(appDir, isAppPackage: true);
+            LocalPackageManager(bundleAppDir, isAppPackage: true);
         localPackageManager.installPackages(appDir);
       });
     });
@@ -42,10 +44,10 @@ main() {
         Call('mkdir $bundleAppDir', null),
         Call('cp -r $appDir $bundleAppDir', null),
         Call('rm -rf $bundleAppDir/build', null),
-        Call('cp -r $stagingDir/script $bundleAppDir', null),
-        Call('cp $stagingDir/build_to_os.txt $bundleAppDir', null),
         Call('rm -rf $bundleAppDir/ios/Flutter/Flutter.framework', null),
         Call('rm -rf $bundleAppDir/ios/Flutter/App.framework', null),
+        Call('cp -r $stagingDir/script $bundleAppDir', null),
+        Call('cp $stagingDir/build_to_os.txt $bundleAppDir', null),
         Call('zip -rq $bundleZipName $bundleDir', null),
         Call('stat -f%z $bundleZipName', ProcessResult(0, 0, '5000000', '')),
       ];

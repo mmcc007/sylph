@@ -22,8 +22,10 @@ main() {
       clearDirectory(dstDir);
       await runInContext<void>(() async {
         LocalPackageManager.copy(appSrcDir, dstDir, force: true);
+        localPackageManager =
+            LocalPackageManager(appDstDir, isAppPackage: true);
+        localPackageManager.installPackages(appSrcDir);
       });
-      localPackageManager = LocalPackageManager(appDstDir, isAppPackage: true);
     });
 
     testUsingContext('copy app package', () {
