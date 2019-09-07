@@ -7,6 +7,7 @@ import 'package:sylph/src/concurrent_jobs.dart';
 import 'package:sylph/src/device_farm.dart';
 import 'package:sylph/src/devices.dart';
 import 'package:sylph/src/local_packages.dart';
+import 'package:sylph/src/resources.dart';
 import 'package:sylph/src/sylph_run.dart';
 import 'package:sylph/src/utils.dart';
 import 'package:sylph/src/validator.dart';
