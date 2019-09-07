@@ -48,10 +48,10 @@ Future<int> bundleFlutterTests(Map config, {String appDir = '.'}) async {
   printStatus('Creating test bundle for upload...');
 
   // unzip template into test bundle dir
-  cmd(['unzip', '-q', appiumTemplatePath, '-d', testBundleDir], silent: false);
+  cmd(['unzip', '-q', appiumTemplatePath, '-d', testBundleDir]);
 
   // create default app dir in test bundle
-  cmd(['mkdir', defaultAppDir], silent: false);
+  cmd(['mkdir', defaultAppDir]);
 
   // Copy app dir to test bundle (including any local packages)
   LocalPackageManager.copy(appDir, defaultAppDir, force: true);
@@ -59,27 +59,19 @@ Future<int> bundleFlutterTests(Map config, {String appDir = '.'}) async {
       LocalPackageManager(defaultAppDir, isAppPackage: true);
   localPackageManager.installPackages(appDir);
 
-  // update .packages in case last build was on a different flutter repo
-//  cmd('flutter', ['packages', 'get'], defaultAppDir, true);
-
-  // clean build dir in case a build is present
-//  cmd('flutter', ['clean'], defaultAppDir, true);
+  // Remove files not used (to reduce zip file size)
   cmd(['rm', '-rf', '$defaultAppDir/build']);
+  cmd(['rm', '-rf', '$defaultAppDir/ios/Flutter/Flutter.framework']);
+  cmd(['rm', '-rf', '$defaultAppDir/ios/Flutter/App.framework']);
 
   // Copy scripts to test bundle
-  cmd(['cp', '-r', '$stagingDir/script', defaultAppDir], silent: false);
+  cmd(['cp', '-r', '$stagingDir/script', defaultAppDir]);
 
-  // Copy build to os map file to test bundle
-  cmd(['cp', '$stagingDir/$kBuildToOsMapFileName', defaultAppDir],
-      silent: false);
-
-  // Remove files not used (to reduce zip file size)
-  cmd(['rm', '-rf', '$defaultAppDir/ios/Flutter/Flutter.framework'],
-      silent: false);
-  cmd(['rm', '-rf', '$defaultAppDir/ios/Flutter/App.framework'], silent: false);
+  // Copy build-to-os-map file to test bundle
+  cmd(['cp', '$stagingDir/$kBuildToOsMapFileName', defaultAppDir]);
 
   // Zip test bundle
-  cmd(['zip', '-rq', testBundlePath, testBundleDir], silent: false);
+  cmd(['zip', '-rq', testBundlePath, testBundleDir]);
 
   // report size of bundle
   final size =
