@@ -15,6 +15,7 @@ final ConcurrentJobs _kConcurrentJobs = ConcurrentJobs();
 ConcurrentJobs get concurrentJobs =>
     context.get<ConcurrentJobs>() ?? _kConcurrentJobs;
 
+// will work without this signature, but restricted to supported use case
 typedef JobFunction = Future<Map> Function(Map args);
 
 class ConcurrentJobs {
@@ -38,7 +39,7 @@ class ConcurrentJobs {
 }
 
 /// Runs [runSylphJob] in an isolate.
-/// Method signature should match [JobFunction].
+/// Function signature must match [JobFunction].
 Future<Map> runSylphJobInIsolate(Map args) async {
   // unpack args
   final testSuite = jsonDecode(args['test_suite']);
