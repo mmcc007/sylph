@@ -1,7 +1,8 @@
 import 'dart:convert';
-import 'dart:io';
+//import 'dart:io';
 
 import 'package:sylph/src/utils.dart';
+import 'package:tool_base/tool_base.dart';
 import 'package:yaml/yaml.dart';
 import 'package:path/path.dart' as path;
 import 'package:yamlicious/yamlicious.dart';
@@ -14,10 +15,10 @@ import 'package:yamlicious/yamlicious.dart';
 /// to true.
 class LocalPackageManager {
   LocalPackageManager(this.packageDir, {this.isAppPackage = false}) {
-//    print('LocalPackageManager\n\tpackageDir=$packageDir');
+//    printStatus('LocalPackageManager\n\tpackageDir=$packageDir');
     assert(packageDir != null);
     assert(isAppPackage != null);
-    _pubSpec = File('$packageDir/$kPubSpecYamlName');
+    _pubSpec = fs.file('$packageDir/$kPubSpecYamlName');
     _pubSpecMap = jsonDecode(jsonEncode(loadYaml(_pubSpec.readAsStringSync())));
   }
   final String packageDir;
@@ -41,7 +42,7 @@ class LocalPackageManager {
     } else {
       dstDir = path.dirname(packageDir);
     }
-//    print(
+//    printStatus(
 //        'copyLocalPackages:\n\tsrcDir=$srcDir\n\tdstDir=$dstDir\n\tisAppPackage=$isAppPackage');
     _processPubSpec(srcDir: srcDir, dstDir: dstDir);
     _cleanupPubSpec();
@@ -49,7 +50,7 @@ class LocalPackageManager {
 
   // set paths to dependent local packages
   void _cleanupPubSpec() {
-//    print(
+//    printStatus(
 //        '_cleanupPubSpec:\n\tisAppPackage=$isAppPackage\n\tpath=${_pkgPubSpec.path}');
     // set path to local dependencies
     _processPubSpec(setPkgPath: true);
@@ -96,11 +97,11 @@ class LocalPackageManager {
   /// Copy dir. Assumes path syntax is specific to current platform.
   static copy(String srcDir, String dstDir, {bool force = false}) async {
     // do not copy if package already exists
-    if (!Directory(dstDir).existsSync() || force) {
-      if (Platform.isWindows) {
-        cmd('xcopy', ['$srcDir', '$dstDir', '/e', '/i', '/q'], '.', true);
+    if (!fs.directory(dstDir).existsSync() || force) {
+      if (platform.isWindows) {
+        cmd(['xcopy', '$srcDir', '$dstDir', '/e', '/i', '/q']);
       } else {
-        cmd('cp', ['-r', '$srcDir', '$dstDir'], '.', true);
+        cmd(['cp', '-r', '$srcDir', '$dstDir']);
       }
     }
   }

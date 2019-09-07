@@ -1,7 +1,8 @@
 import 'dart:async';
-import 'dart:io';
+//import 'dart:io';
 
 import 'package:resource/resource.dart';
+import 'package:tool_base/tool_base.dart';
 
 import 'devices.dart';
 import 'local_packages.dart';
@@ -44,13 +45,13 @@ Future<int> bundleFlutterTests(Map config) async {
   final defaultAppDir = '$testBundleDir/$kDefaultFlutterAppName';
   final testBundlePath = '$stagingDir/$kTestBundleName';
 
-  print('Creating test bundle for upload...');
+  printStatus('Creating test bundle for upload...');
 
   // unzip template into test bundle dir
-  cmd('unzip', ['-q', appiumTemplatePath, '-d', testBundleDir], '.', false);
+  cmd(['unzip', '-q', appiumTemplatePath, '-d', testBundleDir], silent: false);
 
   // create default app dir in test bundle
-  cmd('mkdir', [defaultAppDir], '.', false);
+  cmd(['mkdir', defaultAppDir], silent: false);
 
   // Copy app dir to test bundle (including any local packages)
   LocalPackageManager.copy('.', defaultAppDir, force: true);
@@ -63,28 +64,29 @@ Future<int> bundleFlutterTests(Map config) async {
 
   // clean build dir in case a build is present
 //  cmd('flutter', ['clean'], defaultAppDir, true);
-  cmd('rm', ['-rf', 'build'], defaultAppDir, true);
+  cmd(['rm', '-rf', 'build'], workingDirectory: defaultAppDir);
 
   // Copy scripts to test bundle
-  cmd('cp', ['-r', 'script', defaultAppDir], stagingDir, false);
+  cmd(['cp', '-r', 'script', defaultAppDir],
+      workingDirectory: stagingDir, silent: false);
 
   // Copy build to os map file to test bundle
-  cmd('cp', [kBuildToOsMapFileName, defaultAppDir], stagingDir, false);
+  cmd(['cp', kBuildToOsMapFileName, defaultAppDir],
+      workingDirectory: stagingDir, silent: false);
 
   // Remove files not used (to reduce zip file size)
-  cmd('rm', ['-rf', '$defaultAppDir/ios/Flutter/Flutter.framework'], '.',
-      false);
-  cmd('rm', ['-rf', '$defaultAppDir/ios/Flutter/App.framework'], '.', false);
+  cmd(['rm', '-rf', '$defaultAppDir/ios/Flutter/Flutter.framework'],
+      silent: false);
+  cmd(['rm', '-rf', '$defaultAppDir/ios/Flutter/App.framework'], silent: false);
 
   // Zip test bundle
-  cmd('zip', ['-rq', '../$kTestBundleName', '.'], testBundleDir, false);
+  cmd(['zip', '-rq', '../$kTestBundleName', '.'],
+      workingDirectory: testBundleDir, silent: false);
 
   // report size of bundle
-  final size = (int.parse(cmd('stat', ['-f%z', testBundlePath], '.', true)) /
-          1024 /
-          1024)
-      .round();
-  print('Test bundle created (size $size MB)');
+  final size =
+      (int.parse(cmd(['stat', '-f%z', testBundlePath])) / 1024 / 1024).round();
+  printStatus('Test bundle created (size $size MB)');
 
   return size;
 }
@@ -93,7 +95,7 @@ Future<int> bundleFlutterTests(Map config) async {
 /// Appium template is used to deliver tests.
 /// Scripts are used to initialize device and run tests.
 Future<void> unpackResources(String tmpDir, bool isIosPoolTypeActive) async {
-  print('Unpacking sylph resources to $tmpDir');
+  printStatus('Unpacking sylph resources to $tmpDir');
   clearDirectory(tmpDir);
 
   // unpack Appium template
@@ -118,8 +120,9 @@ Future<void> unpackResources(String tmpDir, bool isIosPoolTypeActive) async {
   }
 
   // unpack components used in a CI environment
-  if (Platform.environment[kCIEnvVar] == 'true' && isIosPoolTypeActive) {
-    print('iOS build in CI environment detected. Unpacking related resources.');
+  if (platform.environment[kCIEnvVar] == 'true' && isIosPoolTypeActive) {
+    printStatus(
+        'iOS build in CI environment detected. Unpacking related resources.');
     // unpack fastlane
     await unpackFile('fastlane/Appfile', 'ios', nameVals: nameVals);
     await unpackFile('fastlane/Fastfile', 'ios');
@@ -159,7 +162,7 @@ Future<void> unpackScripts(String dstDir) async {
 Future<void> unpackScript(String srcPath, String dstDir) async {
   await unpackFile(srcPath, dstDir);
   // make executable
-  cmd('chmod', ['u+x', '$dstDir/$srcPath']);
+  cmd(['chmod', 'u+x', '$dstDir/$srcPath']);
 }
 
 /// Unpack file from resources while optionally applying env vars
@@ -171,7 +174,7 @@ Future unpackFile(String srcPath, String dstDir,
 
   // substitute env vars
   if (envVars != null) {
-    final env = Platform.environment;
+    final env = platform.environment;
     for (final envVar in envVars) {
       resourceStr = resourceStr.replaceAll('\$$envVar', env[envVar]);
     }
@@ -184,7 +187,7 @@ Future unpackFile(String srcPath, String dstDir,
     }
   }
 
-  final file = await File('$dstDir/$srcPath').create(recursive: true);
+  final file = await fs.file('$dstDir/$srcPath').create(recursive: true);
   await file.writeAsString(resourceStr, flush: true);
 }
 
@@ -192,7 +195,7 @@ Future unpackFile(String srcPath, String dstDir,
 String getAppIdentifier() {
   const kIosConfigPath = 'ios/Runner.xcodeproj/project.pbxproj';
   final regExp = 'PRODUCT_BUNDLE_IDENTIFIER = (.*);';
-  final iOSConfigStr = File(kIosConfigPath).readAsStringSync();
+  final iOSConfigStr = fs.file(kIosConfigPath).readAsStringSync();
   return RegExp(regExp).firstMatch(iOSConfigStr)[1];
 }
 

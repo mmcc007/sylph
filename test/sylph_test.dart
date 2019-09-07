@@ -165,10 +165,10 @@ void main() {
       expect(result, expected);
     });
 
-    test('monitor successful run progress until complete', () {
+    test('monitor successful run progress until complete', () async {
       final timeout = 100;
       final poolName = 'dummy pool name';
-      final result = runStatus(kSuccessfulRunArn, timeout, poolName);
+      final result = await runStatus(kSuccessfulRunArn, timeout, poolName);
 
       // generate report
       runReport(result);
@@ -361,7 +361,7 @@ void main() {
         {'n': 10},
         {'n': 20}
       ];
-      List results = await runJobs(squareFuture, jobArgs);
+      List results = await ConcurrentJobs().runJobs(squareFuture, jobArgs);
       for (int i = 0; i < results.length; i++) {
 //      print("squareFuture job #$i: job(${jobArgs[i]}) = ${results[i]}");
         expect(results[i], await squareFuture(jobArgs[i]));
@@ -410,14 +410,15 @@ void main() {
       final sylphRunName = 'dummy sylph run $timestamp';
       final sylphRunTimeout = config['sylph_timeout'];
       final jobArgs = packArgs(testSuite, config, poolName, projectArn,
-          sylphRunName, sylphRunTimeout);
+          sylphRunName, sylphRunTimeout, true);
 
       // for this test change directory
       final origDir = Directory.current;
       Directory.current = 'example';
 
       // run
-      final result = await runJobs(runSylphJobInIsolate, [jobArgs]);
+      final result =
+          await ConcurrentJobs().runJobs(runSylphJobInIsolate, [jobArgs]);
       expect(result, [
         {'result': true}
       ]);
@@ -465,7 +466,7 @@ void main() {
       setTestSpecEnv(test_suite, testSpecPath);
       expect(File(testSpecPath).readAsStringSync(), expected);
       // restore modified test spec test
-      cmd('git', ['checkout', testSpecPath]);
+      cmd(['git', 'checkout', testSpecPath]);
     });
   });
 
@@ -789,7 +790,8 @@ environment:
 
     test('get dependencies in new project', () {
       localPackageManager.installPackages(appSrcDir);
-      expect(cmd('flutter', ['packages', 'get'], appDstDir), isNotEmpty);
+      expect(cmd(['flutter', 'packages', 'get'], workingDirectory: appDstDir),
+          isNotEmpty);
     }, skip: isCI());
   });
 }

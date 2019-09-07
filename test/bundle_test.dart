@@ -30,15 +30,12 @@ main() {
       Directory(flutterLinuxUnpackDir).createSync(recursive: true);
       final flutterLinuxTarPath = '$flutterLinuxUnpackDir.tar.xz';
       if (!Directory(flutterLinuxDir).existsSync()) {
-        cmd(
-            'curl',
-            [
-              'https://storage.googleapis.com/flutter_infra/releases/stable/linux/flutter_linux_$flutterVersion-stable.tar.xz',
-              '-o',
-              flutterLinuxTarPath
-            ],
-            '.',
-            false);
+        cmd([
+          'curl',
+          'https://storage.googleapis.com/flutter_infra/releases/stable/linux/flutter_linux_$flutterVersion-stable.tar.xz',
+          '-o',
+          flutterLinuxTarPath
+        ], silent: false);
         expect(File(flutterLinuxTarPath).existsSync(), isTrue);
 //        cmd('tar', ['xf', flutterLinuxTarPath, '-C', flutterLinuxUnpackDir]);
 //        expect(Directory(flutterLinuxDir).existsSync(), isTrue);
@@ -50,15 +47,12 @@ main() {
       Directory(flutterMacOsUnpackDir).createSync(recursive: true);
       final flutterMacOsZipPath = '$flutterMacOsUnpackDir.zip';
       if (!Directory(flutterMacOsDir).existsSync()) {
-        cmd(
-            'curl',
-            [
-              'https://storage.googleapis.com/flutter_infra/releases/stable/macos/flutter_macos_$flutterVersion-stable.zip',
-              '-o',
-              flutterMacOsZipPath
-            ],
-            '.',
-            false);
+        cmd([
+          'curl',
+          'https://storage.googleapis.com/flutter_infra/releases/stable/macos/flutter_macos_$flutterVersion-stable.zip',
+          '-o',
+          flutterMacOsZipPath
+        ], silent: false);
         expect(File(flutterMacOsZipPath).existsSync(), isTrue);
 //        cmd('unzip', ['-qq', flutterMacOsZipPath, '-d', flutterMacOsUnpackDir]);
 //        expect(Directory(flutterMacOsDir).existsSync(), isTrue);
