@@ -109,7 +109,7 @@ String scheduleRun(
 /// Returns final run status as [Map].
 Future<Map> runStatus(
     String runArn, int sylphRunTimeout, String poolName) async {
-  const timeoutIncrement = 2;
+  const timeoutIncrement = 10;
   Map runStatus;
   for (int i = 0; i < sylphRunTimeout; i += timeoutIncrement) {
     runStatus = deviceFarmCmd([
