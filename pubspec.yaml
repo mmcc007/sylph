@@ -22,6 +22,8 @@ dependencies:
 dev_dependencies:
   test: ^1.0.0
   pedantic: ^1.8.0+1
+  tool_base_test:
+    path: ../tool_base_test
 
 executables:
   sylph: main
