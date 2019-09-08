@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 //import 'dart:io';
 
@@ -35,7 +36,7 @@ class LocalPackageManager {
   /// Install any local packages from [srcDir] and their local packages.
   /// All local packages end-up at the same level in new project.
   /// Adjust each pubspec.yaml to the new project.
-  void installPackages(String srcDir) {
+  Future installPackages(String srcDir) async {
     String dstDir;
     if (isAppPackage) {
       dstDir = packageDir;
@@ -44,32 +45,32 @@ class LocalPackageManager {
     }
 //    printStatus(
 //        'copyLocalPackages:\n\tsrcDir=$srcDir\n\tdstDir=$dstDir\n\tisAppPackage=$isAppPackage');
-    _processPubSpec(srcDir: srcDir, dstDir: dstDir);
-    _cleanupPubSpec();
+    await _processPubSpec(srcDir: srcDir, dstDir: dstDir);
+    await _cleanupPubSpec();
   }
 
   // set paths to dependent local packages
-  void _cleanupPubSpec() {
+  Future _cleanupPubSpec() async {
 //    printStatus(
-//        '_cleanupPubSpec:\n\tisAppPackage=$isAppPackage\n\tpath=${_pkgPubSpec.path}');
+//        '_cleanupPubSpec:\n\tisAppPackage=$isAppPackage\n\tpath=${_pubSpec.path}');
     // set path to local dependencies
-    _processPubSpec(setPkgPath: true);
+    await _processPubSpec(setPkgPath: true);
     // convert map to json, to string, parse as yaml, convert to yaml string and save
     _pubSpec.writeAsStringSync(toYamlString(loadYaml(jsonEncode(_pubSpecMap))));
   }
 
   // scan pubSpec for local packages and copy to dstDir, or,
   // scan pubSpec for local packages and adjust local paths.
-  void _processPubSpec(
-      {String srcDir, String dstDir, bool setPkgPath = false}) {
+  Future _processPubSpec(
+      {String srcDir, String dstDir, bool setPkgPath = false}) async {
     if (!setPkgPath && (srcDir == null || dstDir == null)) {
       throw 'Error: cannot process ${_pubSpec.path}\nsrcDir=$srcDir\ndstDir=$dstDir\nsetPackagePath=$setPkgPath';
     }
-    _pubSpecMap.forEach((k, v) {
+    await _pubSpecMap.forEach((k, v) async {
       if (k == kDependencies || k == kDevDependencies) {
-        v?.forEach((pkgName, pkgInfo) {
+        await v?.forEach((pkgName, pkgInfo) async {
           if (pkgInfo is Map) {
-            pkgInfo.forEach((k, v) {
+            await pkgInfo.forEach((k, v) async {
               if (k == kLocalDependencyPath) {
                 // found a local package
                 if (setPkgPath) {
@@ -81,10 +82,10 @@ class LocalPackageManager {
                   final pkgSrcDir =
                       path.joinAll([srcDir, path.joinAll(v.split('/'))]);
                   final pkgDstDir = path.join(dstDir, pkgName);
-                  copy(pkgSrcDir, pkgDstDir);
+                  await copy(pkgSrcDir, pkgDstDir);
                   // install any local packages within this local package
                   final localPkgMgr = LocalPackageManager(pkgDstDir);
-                  localPkgMgr.installPackages(pkgSrcDir);
+                  await localPkgMgr.installPackages(pkgSrcDir);
                 }
               }
             });
@@ -95,14 +96,16 @@ class LocalPackageManager {
   }
 
   /// Copy dir. Assumes path syntax is specific to current platform.
-  static copy(String srcDir, String dstDir, {bool force = false}) async {
+  static Future copy(String srcDir, String dstDir, {bool force = false}) async {
     // do not copy if package already exists
     if (!fs.directory(dstDir).existsSync() || force) {
-      if (platform.isWindows) {
-        cmd(['xcopy', '$srcDir', '$dstDir', '/e', '/i', '/q']);
-      } else {
-        cmd(['cp', '-r', '$srcDir', '$dstDir']);
-      }
+//      if (platform.isWindows) {
+//        cmd(['xcopy', '$srcDir', '$dstDir', '/e', '/i', '/q']);
+//      } else {
+//        cmd(['cp', '-r', '$srcDir', '$dstDir']);
+//      }
+//      print('copyFiles($srcDir, $dstDir)');
+      await copyFiles(srcDir, dstDir);
     }
   }
 }
