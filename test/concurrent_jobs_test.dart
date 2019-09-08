@@ -1,30 +1,38 @@
 import 'dart:async';
 
+import 'package:mockito/mockito.dart';
 import 'package:sylph/src/concurrent_jobs.dart';
 import 'package:sylph/src/context_runner.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_base_test/tool_base_test.dart';
 
+class MockConcurrentJobs extends Mock implements ConcurrentJobs {}
+
 main() {
   group('concurrent jobs', () {
     group('in context', () {
-      testUsingContext('square', () async {
+      testUsingContext('run square', () async {
         final jobArgs = [
           {'n': 10, 'verbose': true},
           {'n': 20, 'verbose': false}
         ];
-        List results = await ConcurrentJobs().runJobs(squareInContext, jobArgs);
+        List results = await concurrentJobs.runJobs(squareInContext, jobArgs);
         for (int i = 0; i < results.length; i++) {
           expect(results[i], await squareInContext(jobArgs[i]));
         }
       }, overrides: <Type, Generator>{
 //        Logger: () => VerboseLogger(StdoutLogger()),
       });
+
+      testUsingContext('run sylph', () async {}, overrides: <Type, Generator>{
+        ConcurrentJobs: () => MockConcurrentJobs,
+//        Logger: () => VerboseLogger(StdoutLogger()),
+      });
     });
 
     group('not in context', () {
-      test('square', () async {
+      test('run square', () async {
         final jobArgs = [
           {'n': 10},
           {'n': 20}
