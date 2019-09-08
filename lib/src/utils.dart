@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 
 //import 'dart:io';
+//import 'package:io/io.dart' as io show copyPathSync;
 
 import 'package:tool_base/tool_base.dart';
 import 'package:yaml/yaml.dart';
 import 'package:path/path.dart' as p;
 
 import 'devices.dart';
+import 'copy_path.dart' as io;
 
 /// Parses a named yaml file.
 /// Returns as [Map].
@@ -28,24 +30,59 @@ void clearDirectory(String dir) {
   fs.directory(dir).createSync(recursive: true);
 }
 
-/// Copy files from [srcDir] to [dstDir].
-/// Create dstDir if none exists
-Future copyFiles(String srcDir, dstDir) async {
-  if (!fs.directory(dstDir).existsSync()) {
-    fs.directory(dstDir).createSync(recursive: true);
-  }
-  await fs.directory(srcDir).listSync().forEach((entity) async {
-    printTrace('entity ${entity.path}');
-    if (entity is File) {
-      printTrace(
-          'copying ${entity.path} to $dstDir/${p.basename(entity.path)}');
-      await fs.file(entity.path).copy('$dstDir/${p.basename(entity.path)}');
-    }
-//    if (entity is Directory) {
-//      await copyFiles(entity.path, '${dstDir}/${p.basename(entity.path)}');
+///// Copy files from [srcDir] to [dstDir].
+///// Create dstDir if none exists
+//Future copyFiles(String srcDir, dstDir) async {
+//  if (!fs.directory(dstDir).existsSync()) {
+//    fs.directory(dstDir).createSync(recursive: true);
+//  }
+//  await fs.directory(srcDir).listSync().forEach((entity) async {
+//    printTrace('entity ${entity.path}');
+//    if (entity is File) {
+//      printTrace(
+//          'copying ${entity.path} to $dstDir/${p.basename(entity.path)}');
+//      await fs.file(entity.path).copy('$dstDir/${p.basename(entity.path)}');
 //    }
-  });
+////    if (entity is Directory) {
+////      await copyFiles(entity.path, '${dstDir}/${p.basename(entity.path)}');
+////    }
+//  });
+//}
+
+///// Copy directory [srcDirPath] to directory [dstDirPath].
+///// Does not create [dstDirPath] basename if none exists.
+//void copyDir(String srcDirPath, String dstDirPath) {
+//  copyDirectory(fs.directory(srcDirPath), fs.directory(dstDirPath));
+//}
+//
+///// Copy directory [srcDir] to directory [dstDir].
+///// Does not create [dstDir] basename if none exists.
+//void copyDirectory(Directory srcDir, Directory dstDir) =>
+//    srcDir.listSync(recursive: false).forEach((var entity) {
+//      if (entity is Directory) {
+//        printTrace(
+//            'new dir: ${p.join(dstDir.absolute.path, p.basename(entity.path))}');
+//        var newDir =
+//            fs.directory(p.join(dstDir.absolute.path, p.basename(entity.path)));
+//        newDir.createSync();
+//        copyDirectory(entity.absolute, newDir);
+//      } else if (entity is File) {
+////        print('copy file: ${p.join(dstDir.path, p.basename(entity.path))}');
+//        entity.copySync(p.join(dstDir.path, p.basename(entity.path)));
+//      }
+//    });
+
+void copyPathSync(String from, String to) {
+  io.copyPathSync(from, to);
+//  listFiles(fs.directory(to));
 }
+
+///// List entities in [dir].
+//void listFiles(Directory dir) {
+//  dir.listSync().forEach((entity) {
+//    printTrace(entity.path);
+//  });
+//}
 
 /// Writes a file image to a path on disk.
 Future<void> writeFileImage(List<int> fileImage, String path) async {
