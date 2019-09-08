@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import 'package:tool_base/tool_base.dart';
 import 'package:yaml/yaml.dart';
+import 'package:path/path.dart' as p;
 
 import 'devices.dart';
 
@@ -27,9 +28,28 @@ void clearDirectory(String dir) {
   fs.directory(dir).createSync(recursive: true);
 }
 
+/// Copy files from [srcDir] to [dstDir].
+/// Create dstDir if none exists
+Future copyFiles(String srcDir, dstDir) async {
+  if (!fs.directory(dstDir).existsSync()) {
+    fs.directory(dstDir).createSync(recursive: true);
+  }
+  await fs.directory(srcDir).listSync().forEach((entity) async {
+    printTrace('entity ${entity.path}');
+    if (entity is File) {
+      printTrace(
+          'copying ${entity.path} to $dstDir/${p.basename(entity.path)}');
+      await fs.file(entity.path).copy('$dstDir/${p.basename(entity.path)}');
+    }
+//    if (entity is Directory) {
+//      await copyFiles(entity.path, '${dstDir}/${p.basename(entity.path)}');
+//    }
+  });
+}
+
 /// Writes a file image to a path on disk.
 Future<void> writeFileImage(List<int> fileImage, String path) async {
-  final file = await fs.file(path).create(recursive: true);
+  final File file = await fs.file(path).create(recursive: true);
   await file.writeAsBytes(fileImage, flush: true);
 }
 
