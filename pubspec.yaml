@@ -30,6 +30,7 @@ dev_dependencies:
     git: https://github.com/mmcc007/fake_process_manager.git
 #    path: ../fake_process_manager
   mockito: ^4.1.0
+  file: ^5.0.7
 
 executables:
   sylph: main
