@@ -9,17 +9,19 @@ jobs:
       dart: stable
       install:
         # install aws
-        - curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
-        - unzip awscli-bundle.zip
-        - sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
-        - aws --version
-        - cp -r .aws ~
+#        - curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+#        - unzip awscli-bundle.zip
+#        - sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+#        - aws --version
+#        - cp -r .aws ~
         # install coverage tool
-        - pub global activate coverage
+#        - pub global activate coverage
 #        - export AWS_DEFAULT_REGION='us-west-2'
         # install sylph
-        - pub global activate --source path .
+#        - pub global activate --source path .
       script:
+        - pub run test test/all_tests.dart
+        - pub global activate coverage
         - script/code_coverage.sh
       after_success: bash <(curl -s https://codecov.io/bash) -f coverage/lcov.info
 
