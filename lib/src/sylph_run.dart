@@ -26,12 +26,17 @@ const kDebugIpaPath = 'build/ios/Debug-iphoneos/Debug_Runner.ipa';
 ///    2. Report and collect artifacts for each device.
 /// Returns [Future<bool>] for pass or fail.
 Future<bool> sylphRun(String configFilePath, String sylphRunName,
-    DateTime sylphRunTimestamp, bool jobVerbose) async {
+    DateTime sylphRunTimestamp, bool jobVerbose,
+    {String configStr}) async {
   bool sylphRunSucceeded = true;
 
-  // Parse config file
-  Map config = await parseYamlFile(configFilePath);
-
+  Map config;
+  if (configStr != null) {
+    config = await parseYamlStr(configStr);
+  } else {
+    // Parse config file
+    config = await parseYamlFile(configFilePath);
+  }
   // Check if running on iOS and/or android pools
   final isIosPoolTypeActive = isPoolTypeActive(config, DeviceType.ios);
   final isAndroidPoolTypeActive = isPoolTypeActive(config, DeviceType.android);
@@ -40,7 +45,7 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
   if (!isValidConfig(config, isIosPoolTypeActive)) {
     printError(
         'Sylph run was terminated due to invalid config file or environment settings.');
-    exit(1);
+    return false;
   }
 
   final sylphRunTimeout = config['sylph_timeout'];
