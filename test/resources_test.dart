@@ -1,10 +1,11 @@
 import 'package:sylph/src/resources.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
+import 'package:tool_base_test/tool_base_test.dart';
 
 main() {
   group('resources', () {
-    group('unpack resources', () {
+    group('unpack some resources', () {
       test('unpack a file', () async {
         final srcPath = 'exportOptions.plist';
         final dstDir = '/tmp/test_unpack_file';
@@ -37,13 +38,7 @@ main() {
         final envVars = ['TEAM_ID'];
         final filePaths = ['fastlane/Appfile', 'exportOptions.plist'];
         final dstDir = '/tmp/test_env_files';
-
-        // change directory to app to get to ios dir
-        final origDir = fs.currentDirectory;
-        fs.currentDirectory = 'example';
-        final nameVals = {kAppIdentifier: getAppIdentifier()};
-        // change back for tests to continue
-        fs.currentDirectory = origDir;
+        final nameVals = {kAppIdentifier: getAppIdentifier('example')};
 
         for (final srcPath in filePaths) {
           await unpackFile(srcPath, dstDir,
@@ -56,16 +51,22 @@ main() {
 
       test('find APP_IDENTIFIER', () {
         final expected = 'com.orbsoft.counter';
-        // change directory to app
-        final origDir = fs.currentDirectory;
-        fs.currentDirectory = 'example';
-
-        String appIdentifier = getAppIdentifier();
+        String appIdentifier = getAppIdentifier('example');
         expect(appIdentifier, expected);
-
-        // change back for tests to continue
-        fs.currentDirectory = origDir;
       });
+    });
+  });
+
+  group('unpack all', () {
+    testUsingContext('unpack resources', () async {
+      final stagingDir = '/tmp/sylph_test_unpack';
+      // note: expects certain env vars to be defined
+      await unpackResources(stagingDir, true, appDir: 'example');
+      expect(fs.file('$stagingDir/$kAppiumTemplateName').existsSync(), isTrue);
+    }, overrides: <Type, Generator>{
+      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+        ..environment = {kCIEnvVar: 'true', 'TEAM_ID': 'team_id'},
+//      Logger: () => VerboseLogger(StdoutLogger()),
     });
   });
 }

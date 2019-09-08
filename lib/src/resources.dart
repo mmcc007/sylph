@@ -35,7 +35,8 @@ const kAppIdentifier = 'APP_IDENTIFIER';
 /// Unpacks resources found in package into [tmpDir].
 /// Appium template is used to deliver tests.
 /// Scripts are used to initialize device and run tests.
-Future<void> unpackResources(String tmpDir, bool isIosPoolTypeActive) async {
+Future<void> unpackResources(String tmpDir, bool isIosPoolTypeActive,
+    {String appDir = '.'}) async {
   printStatus('Unpacking sylph resources to $tmpDir');
   clearDirectory(tmpDir);
 
@@ -52,7 +53,7 @@ Future<void> unpackResources(String tmpDir, bool isIosPoolTypeActive) async {
   // unpack build to os map file
   await unpackFile(kBuildToOsMapFileName, tmpDir);
 
-  final nameVals = {kAppIdentifier: getAppIdentifier()};
+  final nameVals = {kAppIdentifier: getAppIdentifier(appDir)};
 
   // unpack export options
   if (isIosPoolTypeActive) {
@@ -133,8 +134,8 @@ Future unpackFile(String srcPath, String dstDir,
 }
 
 /// Gets the first app identifier found.
-String getAppIdentifier() {
-  const kIosConfigPath = 'ios/Runner.xcodeproj/project.pbxproj';
+String getAppIdentifier(String appDir) {
+  final kIosConfigPath = '$appDir/ios/Runner.xcodeproj/project.pbxproj';
   final regExp = 'PRODUCT_BUNDLE_IDENTIFIER = (.*);';
   final iOSConfigStr = fs.file(kIosConfigPath).readAsStringSync();
   return RegExp(regExp).firstMatch(iOSConfigStr)[1];
