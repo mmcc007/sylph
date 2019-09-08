@@ -18,15 +18,15 @@ main() {
     final appDstDir = '$dstDir/$appName';
     LocalPackageManager localPackageManager;
 
-    setUp(() async {
+    setUp(() {
       clearDirectory(dstDir);
-      await runInContext<void>(() async {
-        await LocalPackageManager.copy(appSrcDir, appDstDir, force: true);
+      runInContext<void>(() {
+        LocalPackageManager.copy(appSrcDir, appDstDir, force: true);
         localPackageManager =
             LocalPackageManager(appDstDir, isAppPackage: true);
-        await localPackageManager.installPackages(appSrcDir);
+        localPackageManager.installPackages(appSrcDir);
       }, overrides: <Type, Generator>{
-        Logger: () => VerboseLogger(StdoutLogger()),
+//        Logger: () => VerboseLogger(StdoutLogger()),
       });
     });
 
@@ -34,8 +34,8 @@ main() {
       expect(fs.directory(appDstDir).existsSync(), isTrue);
     });
 
-    testUsingContext('install local packages', () async {
-      await localPackageManager.installPackages(appSrcDir);
+    testUsingContext('install local packages', () {
+//      localPackageManager.installPackages(appSrcDir);
       final expectedLocalPackage = 'local_package';
       final expectedSharedLocalPackage = 'shared_package';
       expect(fs.directory('$appDstDir/$expectedLocalPackage').existsSync(),
@@ -45,8 +45,8 @@ main() {
           isTrue);
     });
 
-    testUsingContext('cleanup apps pubspec.yaml', () async {
-      await localPackageManager.installPackages(appSrcDir);
+    testUsingContext('cleanup apps pubspec.yaml', () {
+//      localPackageManager.installPackages(appSrcDir);
 
       final expectedPubSpec = '''
 name: "app"
@@ -60,8 +60,8 @@ dependencies:
 
     testUsingContext(
         'cleanup local dependencies of dependencies if at different directory levels',
-        () async {
-      await localPackageManager.installPackages(appSrcDir);
+        () {
+//      localPackageManager.installPackages(appSrcDir);
 
       final expectedPubSpecLocal = '''
 name: "local_package"
@@ -87,8 +87,8 @@ environment:
           expectedPubSpecShared);
     });
 
-    testUsingContext('get dependencies in new project', () async {
-      await localPackageManager.installPackages(appSrcDir);
+    testUsingContext('get dependencies in new project', () {
+//      localPackageManager.installPackages(appSrcDir);
       expect(cmd(['flutter', 'packages', 'get'], workingDirectory: appDstDir),
           isNotEmpty);
     }, skip: isCI());

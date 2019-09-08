@@ -58,7 +58,7 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
   await unpackResources(config['tmp_dir'], isIosPoolTypeActive);
 
   // Bundle tests
-  await bundleFlutterTests(config);
+  bundleFlutterTests(config);
 
   // gather job args
   final jobArgs = <Map>[];

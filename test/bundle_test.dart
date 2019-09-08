@@ -23,20 +23,20 @@ main() {
 
     FakeProcessManager fakeProcessManager;
 
-    setUp(() async {
+    setUp(() {
       fakeProcessManager = FakeProcessManager();
       clearDirectory(bundleDir);
       // create fake app in bundle
 //      copyFiles(appDir, bundleAppDir);
-      await runInContext<void>(() async {
-        await LocalPackageManager.copy(appDir, bundleAppDir, force: true);
+      runInContext<void>(() {
+        LocalPackageManager.copy(appDir, bundleAppDir, force: true);
         final localPackageManager =
             LocalPackageManager(bundleAppDir, isAppPackage: true);
-        await localPackageManager.installPackages(appDir);
+        localPackageManager.installPackages(appDir);
       });
     });
 
-    testUsingContext('bundle flutter tests', () async {
+    testUsingContext('bundle flutter tests', () {
       fakeProcessManager.calls = [
         Call(
             'unzip -q $stagingDir/appium_bundle.zip -d $stagingDir/test_bundle',
@@ -52,7 +52,7 @@ main() {
       ];
 
       final result =
-          await bundleFlutterTests({'tmp_dir': stagingDir}, appDir: appDir);
+          bundleFlutterTests({'tmp_dir': stagingDir}, appDir: appDir);
       expect(result, equals(5));
       fakeProcessManager.verifyCalls();
     }, overrides: <Type, Generator>{

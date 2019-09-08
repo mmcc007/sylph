@@ -14,11 +14,11 @@ const kDefaultFlutterAppName = 'flutter_app';
 /// Bundles Flutter tests using appium template found in staging area.
 /// Resulting bundle is saved on disk in temporary location
 /// for later upload.
-Future<int> bundleFlutterTests(Map config, {String appDir = '.'}) async {
+int bundleFlutterTests(Map config, {String appDir = '.'}) {
   final stagingDir = config['tmp_dir'];
   final appiumTemplatePath = '$stagingDir/$kAppiumTemplateName';
   final testBundleDir = '$stagingDir/$kTestBundleDir';
-  final defaultAppDir = '$testBundleDir/$kDefaultFlutterAppName';
+  final defaultAppDir = '$stagingDir/$kTestBundleDir/$kDefaultFlutterAppName';
   final testBundlePath = '$stagingDir/$kTestBundleName';
 
   printStatus('Creating test bundle for upload...');
@@ -28,12 +28,13 @@ Future<int> bundleFlutterTests(Map config, {String appDir = '.'}) async {
 
   // create default app dir in test bundle
   cmd(['mkdir', defaultAppDir]);
+  clearDirectory(defaultAppDir);
 
   // Copy app dir to test bundle (including any local packages)
-  await LocalPackageManager.copy(appDir, defaultAppDir, force: true);
+  LocalPackageManager.copy(appDir, defaultAppDir, force: true);
   final localPackageManager =
       LocalPackageManager(defaultAppDir, isAppPackage: true);
-  await localPackageManager.installPackages(appDir);
+  localPackageManager.installPackages(appDir);
 
   // Remove files not used (to reduce zip file size)
   cmd(['rm', '-rf', '$defaultAppDir/build']);

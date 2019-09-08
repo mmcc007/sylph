@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 //import 'dart:io';
 
@@ -9,14 +8,19 @@ import 'package:path/path.dart' as path;
 import 'package:yamlicious/yamlicious.dart';
 
 /// Installs any local packages to the app project at the same level.
+///
 /// Includes handling of local packages that have other local packages using
 /// recursion.
-/// Initialize the app project dir using [LocalPackageManager.copy].
-/// Then pass the bundle's app dir as the [packageDir] and set [isAppPackage]
-/// to true.
+///
+/// Sample usage:
+/// ```
+/// LocalPackageManager.copy(srcDir, dstDir, force: true);
+/// final localPackageManager = LocalPackageManager(dstDir, isAppPackage: true);
+/// localPackageManager.installPackages(srcDir).
+/// ```
 class LocalPackageManager {
   LocalPackageManager(this.packageDir, {this.isAppPackage = false}) {
-//    printStatus('LocalPackageManager\n\tpackageDir=$packageDir');
+    printTrace('LocalPackageManager(${this.packageDir}, ${this.isAppPackage})');
     assert(packageDir != null);
     assert(isAppPackage != null);
     _pubSpec = fs.file('$packageDir/$kPubSpecYamlName');
@@ -36,41 +40,41 @@ class LocalPackageManager {
   /// Install any local packages from [srcDir] and their local packages.
   /// All local packages end-up at the same level in new project.
   /// Adjust each pubspec.yaml to the new project.
-  Future installPackages(String srcDir) async {
+  void installPackages(String srcDir) {
     String dstDir;
     if (isAppPackage) {
       dstDir = packageDir;
     } else {
       dstDir = path.dirname(packageDir);
     }
-//    printStatus(
-//        'copyLocalPackages:\n\tsrcDir=$srcDir\n\tdstDir=$dstDir\n\tisAppPackage=$isAppPackage');
-    await _processPubSpec(srcDir: srcDir, dstDir: dstDir);
-    await _cleanupPubSpec();
+    printTrace(
+        'copyLocalPackages:\n\tsrcDir=$srcDir\n\tdstDir=$dstDir\n\tisAppPackage=$isAppPackage');
+    _processPubSpec(srcDir: srcDir, dstDir: dstDir);
+    _cleanupPubSpec();
   }
 
   // set paths to dependent local packages
-  Future _cleanupPubSpec() async {
-//    printStatus(
-//        '_cleanupPubSpec:\n\tisAppPackage=$isAppPackage\n\tpath=${_pubSpec.path}');
-    // set path to local dependencies
-    await _processPubSpec(setPkgPath: true);
+  void _cleanupPubSpec() {
+    printTrace(
+        '_cleanupPubSpec:\n\tisAppPackage=$isAppPackage\n\tpath=${_pubSpec.path}');
+//     set path to local dependencies
+    _processPubSpec(setPkgPath: true);
     // convert map to json, to string, parse as yaml, convert to yaml string and save
     _pubSpec.writeAsStringSync(toYamlString(loadYaml(jsonEncode(_pubSpecMap))));
   }
 
   // scan pubSpec for local packages and copy to dstDir, or,
   // scan pubSpec for local packages and adjust local paths.
-  Future _processPubSpec(
-      {String srcDir, String dstDir, bool setPkgPath = false}) async {
+  void _processPubSpec(
+      {String srcDir, String dstDir, bool setPkgPath = false}) {
     if (!setPkgPath && (srcDir == null || dstDir == null)) {
       throw 'Error: cannot process ${_pubSpec.path}\nsrcDir=$srcDir\ndstDir=$dstDir\nsetPackagePath=$setPkgPath';
     }
-    await _pubSpecMap.forEach((k, v) async {
+    _pubSpecMap.forEach((k, v) {
       if (k == kDependencies || k == kDevDependencies) {
-        await v?.forEach((pkgName, pkgInfo) async {
+        v?.forEach((pkgName, pkgInfo) {
           if (pkgInfo is Map) {
-            await pkgInfo.forEach((k, v) async {
+            pkgInfo.forEach((k, v) {
               if (k == kLocalDependencyPath) {
                 // found a local package
                 if (setPkgPath) {
@@ -82,10 +86,10 @@ class LocalPackageManager {
                   final pkgSrcDir =
                       path.joinAll([srcDir, path.joinAll(v.split('/'))]);
                   final pkgDstDir = path.join(dstDir, pkgName);
-                  await copy(pkgSrcDir, pkgDstDir);
+                  copy(pkgSrcDir, pkgDstDir);
                   // install any local packages within this local package
                   final localPkgMgr = LocalPackageManager(pkgDstDir);
-                  await localPkgMgr.installPackages(pkgSrcDir);
+                  localPkgMgr.installPackages(pkgSrcDir);
                 }
               }
             });
@@ -96,7 +100,8 @@ class LocalPackageManager {
   }
 
   /// Copy dir. Assumes path syntax is specific to current platform.
-  static Future copy(String srcDir, String dstDir, {bool force = false}) async {
+  static copy(String srcDir, String dstDir, {bool force = false}) {
+    printTrace('LocalPackageManager: copy($srcDir, $dstDir, force: $force)');
     // do not copy if package already exists
     if (!fs.directory(dstDir).existsSync() || force) {
 //      if (platform.isWindows) {
@@ -105,7 +110,9 @@ class LocalPackageManager {
 //        cmd(['cp', '-r', '$srcDir', '$dstDir']);
 //      }
 //      print('copyFiles($srcDir, $dstDir)');
-      await copyFiles(srcDir, dstDir);
+      fs.directory(dstDir).createSync();
+//      copyDir(srcDir, dstDir);
+      copyPathSync(srcDir, dstDir);
     }
   }
 }
