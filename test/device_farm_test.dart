@@ -26,7 +26,14 @@ main() {
             ProcessResult(
                 0,
                 0,
-                '{"project": {"arn": "$projectArn","name": "$projectName","defaultJobTimeoutMinutes": $jobTimeoutMinutes,"created": 1567902055.614}}',
+                jsonEncode({
+                  "project": {
+                    "arn": "$projectArn",
+                    "name": "$projectName",
+                    "defaultJobTimeoutMinutes": jobTimeoutMinutes,
+                    "created": 1567902055.614
+                  }
+                }),
                 '')),
       ];
       final result = setupProject(projectName, jobTimeoutMinutes);
