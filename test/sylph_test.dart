@@ -1,20 +1,16 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:sylph/src/bundle.dart';
 import 'package:sylph/src/concurrent_jobs.dart';
 import 'package:sylph/src/device_farm.dart';
 import 'package:sylph/src/devices.dart';
-import 'package:sylph/src/local_packages.dart';
+import 'package:sylph/src/resources.dart';
 import 'package:sylph/src/sylph_run.dart';
 import 'package:sylph/src/utils.dart';
 import 'package:sylph/src/validator.dart';
 import 'package:test/test.dart';
-import 'package:version/version.dart';
 import 'package:yaml/yaml.dart';
-import 'package:path/path.dart' as path;
-import 'package:yamlicious/yamlicious.dart';
 
 const kTestProjectName = 'test concurrent runs';
 const kTestProjectArn =
@@ -29,12 +25,12 @@ void main() {
   group('initial tests', () {
     test('parse yaml', () async {
       final filePath = 'test/sylph_test.yaml';
-      await parseYaml(filePath);
+      await parseYamlFile(filePath);
     });
 
     test('get first poolname and devices', () async {
       final filePath = 'test/sylph_test.yaml';
-      final config = await parseYaml(filePath);
+      final config = await parseYamlFile(filePath);
 //    print('config=$config');
       final poolName = config['device_pools'][1]['pool_name'];
       final devices = config['device_pools'][1]['devices'];
@@ -154,7 +150,7 @@ void main() {
       final poolName = 'ios pool 1';
       final configFilePath = 'test/sylph_test.yaml';
 
-      Map config = await parseYaml(configFilePath);
+      Map config = await parseYamlFile(configFilePath);
 
       Map devicePoolInfo = getDevicePoolInfo(config['device_pools'], poolName);
 
@@ -165,10 +161,10 @@ void main() {
       expect(result, expected);
     });
 
-    test('monitor successful run progress until complete', () {
+    test('monitor successful run progress until complete', () async {
       final timeout = 100;
       final poolName = 'dummy pool name';
-      final result = runStatus(kSuccessfulRunArn, timeout, poolName);
+      final result = await runStatus(kSuccessfulRunArn, timeout, poolName);
 
       // generate report
       runReport(result);
@@ -178,7 +174,7 @@ void main() {
       // note: requires certain env vars to be defined
       final filePath = 'test/sylph_test.yaml';
 //    final filePath = 'example/sylph.yaml';
-      final config = await parseYaml(filePath);
+      final config = await parseYamlFile(filePath);
       // change directory to app
       final origDir = Directory.current;
       Directory.current = 'example';
@@ -191,7 +187,7 @@ void main() {
 
     test('iterate thru test suites', () async {
       final filePath = 'test/sylph_test.yaml';
-      final config = await parseYaml(filePath);
+      final config = await parseYamlFile(filePath);
 //    print('config=$config');
 
       final List testSuites = config['test_suites'];
@@ -240,7 +236,7 @@ void main() {
     });
     test('lookup device pool', () async {
       final filePath = 'test/sylph_test.yaml';
-      final config = await parseYaml(filePath);
+      final config = await parseYamlFile(filePath);
 
       final poolName = 'android pool 1';
       Map devicePool = getDevicePoolInfo(config['device_pools'], poolName);
@@ -258,7 +254,7 @@ void main() {
 
     test('check pool type', () async {
       final filePath = 'test/sylph_test.yaml';
-      final config = await parseYaml(filePath);
+      final config = await parseYamlFile(filePath);
       final poolName = 'android pool 1';
       Map devicePoolInfo = getDevicePoolInfo(config['device_pools'], poolName);
       expect(devicePoolInfo['pool_type'], enumToStr(DeviceType.android));
@@ -335,7 +331,7 @@ void main() {
     test('get first device in pool', () async {
       final filePath = 'test/sylph_test.yaml';
       final poolName = 'android pool 1';
-      final config = await parseYaml(filePath);
+      final config = await parseYamlFile(filePath);
       final devicePoolInfo =
           getDevicePoolInfo(config['device_pools'], poolName);
       final devices = devicePoolInfo['devices'];
@@ -361,15 +357,7 @@ void main() {
         {'n': 10},
         {'n': 20}
       ];
-//    print('square=$square');
-      List results = await runJobs(square, jobArgs);
-      for (int i = 0; i < results.length; i++) {
-//      print("square job #$i: job(${jobArgs[i]}) = ${results[i]}");
-        expect(results[i], square(jobArgs[i]));
-      }
-
-      // try again with a future
-      results = await runJobs(squareFuture, jobArgs);
+      List results = await ConcurrentJobs().runJobs(squareFuture, jobArgs);
       for (int i = 0; i < results.length; i++) {
 //      print("squareFuture job #$i: job(${jobArgs[i]}) = ${results[i]}");
         expect(results[i], await squareFuture(jobArgs[i]));
@@ -418,14 +406,15 @@ void main() {
       final sylphRunName = 'dummy sylph run $timestamp';
       final sylphRunTimeout = config['sylph_timeout'];
       final jobArgs = packArgs(testSuite, config, poolName, projectArn,
-          sylphRunName, sylphRunTimeout);
+          sylphRunName, sylphRunTimeout, true);
 
       // for this test change directory
       final origDir = Directory.current;
       Directory.current = 'example';
 
       // run
-      final result = await runJobs(runSylphJobInIsolate, [jobArgs]);
+      final result =
+          await ConcurrentJobs().runJobs(runSylphJobInIsolate, [jobArgs]);
       expect(result, [
         {'result': true}
       ]);
@@ -436,7 +425,7 @@ void main() {
 
     test('check all sylph devices found', () async {
       // get all sylph devices from sylph.yaml
-      final config = await parseYaml('example/sylph.yaml');
+      final config = await parseYamlFile('example/sylph.yaml');
       // for this test change directory
       final origDir = Directory.current;
       Directory.current = 'example';
@@ -459,7 +448,7 @@ void main() {
 
     test('substitute MAIN and TESTS for actual debug main and tests', () async {
       final filePath = 'test/sylph_test.yaml';
-      final config = await parseYaml(filePath);
+      final config = await parseYamlFile(filePath);
       final test_suite = config['test_suites'][0];
       final expectedMainEnvVal = test_suite['main'];
       final expectedTestsEnvVal = test_suite['tests'].join(",");
@@ -473,332 +462,8 @@ void main() {
       setTestSpecEnv(test_suite, testSpecPath);
       expect(File(testSpecPath).readAsStringSync(), expected);
       // restore modified test spec test
-      cmd('git', ['checkout', testSpecPath]);
+      cmd(['git', 'checkout', testSpecPath]);
     });
-  });
-
-  group('devices', () {
-    group('device equality', () {
-      test('test for equality between sylph devices', () {
-        final name1 = 'name1';
-        final name2 = 'name2';
-        final model = 'model';
-        final os = Version.parse('1.2.3');
-        final deviceType = DeviceType.android;
-        final sylphDevice1 = SylphDevice(name1, model, os, deviceType);
-        final sylphDevice2 = SylphDevice(name2, model, os, deviceType);
-        expect(sylphDevice1 == Object(), isFalse);
-        expect(sylphDevice1 == sylphDevice1, isTrue);
-        expect(sylphDevice1 == sylphDevice2, isFalse);
-      });
-
-      test('test for equality between device farm devices', () {
-        final formFactor = FormFactor.phone;
-        final arn1 = 'arn1';
-        final arn2 = 'arn2';
-        final availability = 'availability';
-        final name = 'name';
-        final model = 'model';
-        final os = Version.parse('1.2.3');
-        final deviceType = DeviceType.android;
-        final deviceFarmDevice1 = DeviceFarmDevice(
-            name, model, os, deviceType, formFactor, availability, arn1);
-        final deviceFarmDevice2 = DeviceFarmDevice(
-            name, model, os, deviceType, formFactor, availability, arn2);
-        expect(deviceFarmDevice1 == Object(), isFalse);
-        expect(deviceFarmDevice1 == deviceFarmDevice1, isTrue);
-        expect(deviceFarmDevice1 == deviceFarmDevice2, isFalse);
-      });
-
-      test('test for equality between SylphDevice and DeviceFarmDevice classes',
-          () {
-        final name = 'name';
-        final model = 'model';
-        final os = Version.parse('1.2.3');
-        final deviceType = DeviceType.android;
-        final sylphDevice = SylphDevice(name, model, os, deviceType);
-        final formFactor = FormFactor.phone;
-        final availability = 'availability';
-        final arn = 'arn';
-        final deviceFarmDevice = DeviceFarmDevice(
-            name, model, os, deviceType, formFactor, availability, arn);
-        expect(deviceFarmDevice == sylphDevice,
-            isTrue); // uses DeviceFarmDevice ==
-        expect(sylphDevice == deviceFarmDevice, isTrue); // uses SylphDevice ==
-
-        // device farm device has a different value for a shared member
-        final deviceFarmDeviceDiffSharedMember = DeviceFarmDevice(
-            'device farm name',
-            model,
-            os,
-            deviceType,
-            formFactor,
-            availability,
-            arn);
-        expect(deviceFarmDeviceDiffSharedMember == sylphDevice, isFalse);
-        expect(sylphDevice == deviceFarmDeviceDiffSharedMember, isFalse);
-
-        // device farm device has a different value for a unique member
-        final deviceFarmDeviceDiffUniqueMember = DeviceFarmDevice(name, model,
-            os, deviceType, formFactor, availability, 'device farm arn');
-        expect(deviceFarmDeviceDiffUniqueMember == sylphDevice, isTrue);
-        expect(sylphDevice == deviceFarmDeviceDiffUniqueMember, isTrue);
-      });
-    });
-
-    const kOrderedBefore = -1;
-    group('device sorting', () {
-      test('sort sylph devices', () {
-        final name1 = 'name1';
-        final name2 = 'name2';
-        final model = 'model';
-        final os = Version.parse('1.2.3');
-        final deviceType = DeviceType.android;
-        final sylphDevice1 = SylphDevice(name1, model, os, deviceType);
-        final sylphDevice2 = SylphDevice(name2, model, os, deviceType);
-        expect(sylphDevice1.compareTo(sylphDevice2), kOrderedBefore);
-      });
-
-      test('sort device farm devices', () {
-        final name = 'name';
-        final model = 'model';
-        final os = Version.parse('1.2.3');
-        final deviceType = DeviceType.android;
-        final formFactor1 = FormFactor.phone;
-        final formFactor2 = FormFactor.tablet;
-        final availability = 'availability';
-        final arn = 'arn';
-        final dfDev1 = DeviceFarmDevice(
-            name, model, os, deviceType, formFactor1, availability, arn);
-        final dfDevice2 = DeviceFarmDevice(
-            name, model, os, deviceType, formFactor2, availability, arn);
-        expect(dfDev1.compareTo(dfDevice2), kOrderedBefore);
-      });
-    });
-
-    group('get devices', () {
-      test('get sylph devices from config file', () async {
-        final configPath = 'test/sylph_test.yaml';
-        final config = await parseYaml(configPath);
-        final poolName = 'android pool 1';
-        final devicePoolInfo =
-            getDevicePoolInfo(config['device_pools'], poolName);
-        final expectedFirstDeviceName = devicePoolInfo['devices'][0]['name'];
-        final expectedDeviceCount = devicePoolInfo.length;
-        final sylphDevices = getSylphDevices(devicePoolInfo);
-        expect(sylphDevices[0].name, expectedFirstDeviceName);
-        expect(sylphDevices.length, expectedDeviceCount);
-        // check sorting
-        expect(sylphDevices[0].compareTo(sylphDevices[1]), kOrderedBefore);
-      });
-
-      test('get device farm devices from device farm api', () async {
-        final deviceFarmDevices = getDeviceFarmDevices();
-        expect(deviceFarmDevices[0].compareTo(deviceFarmDevices[1]),
-            kOrderedBefore);
-        expect(deviceFarmDevices.length, greaterThan(10));
-      });
-
-      test('get all device farm devices', () {
-        final List<DeviceFarmDevice> deviceFarmDevices = getDeviceFarmDevices();
-        expect(deviceFarmDevices.length > 10, isTrue);
-//        for (final deviceFarmDevice in deviceFarmDevices) {
-//          print(deviceFarmDevice);
-//        }
-      });
-
-      test('get device farm android devices', () {
-        final List<DeviceFarmDevice> androidDevices =
-            getDeviceFarmDevicesByType(DeviceType.android);
-        expect(androidDevices.length > 10, isTrue);
-//        for (final androidDevice in androidDevices) {
-//          print(androidDevice);
-//        }
-      });
-
-      test('get device farm ios devices', () {
-        final List<DeviceFarmDevice> iOSDevices =
-            getDeviceFarmDevicesByType(DeviceType.ios);
-        expect(iOSDevices.length > 10, isTrue);
-//        for (final iOSDevice in iOSDevices) {
-//          print(iOSDevice);
-//        }
-      });
-    });
-  });
-
-  group('unpack resources', () {
-    test('unpack a file', () async {
-      final srcPath = 'exportOptions.plist';
-      final dstDir = '/tmp/test_unpack_file';
-      await unpackFile(srcPath, dstDir);
-      final dstPath = '$dstDir/$srcPath';
-      expect(File(dstPath).existsSync(), isTrue,
-          reason: '$dstPath does not exist');
-    });
-
-    test('substitute env vars in string', () {
-      final env = Platform.environment;
-      final envVars = ['TEAM_ID'];
-      final expected = () {
-        final envs = [];
-        for (final envVar in envVars) {
-          final envVal = env[envVar];
-          expect(envVal, isNotNull);
-          envs.add(envVal);
-        }
-        return envs.join(',');
-      };
-      String str = envVars.join(',');
-      for (final envVar in envVars) {
-        str = str.replaceAll(envVar, env[envVar]);
-      }
-      expect(str, expected());
-    });
-
-    test('unpack files with env vars and name/value pairs', () async {
-      final envVars = ['TEAM_ID'];
-      final filePaths = ['fastlane/Appfile', 'exportOptions.plist'];
-      final dstDir = '/tmp/test_env_files';
-
-      // change directory to app to get to ios dir
-      final origDir = Directory.current;
-      Directory.current = 'example';
-      final nameVals = {kAppIdentifier: getAppIdentifier()};
-      // change back for tests to continue
-      Directory.current = origDir;
-
-      for (final srcPath in filePaths) {
-        await unpackFile(srcPath, dstDir, envVars: envVars, nameVals: nameVals);
-        final dstPath = '$dstDir/$srcPath';
-        expect(File(dstPath).existsSync(), isTrue,
-            reason: '$dstPath not found');
-      }
-    });
-
-    test('find APP_IDENTIFIER', () {
-      final expected = 'com.orbsoft.counter';
-      // change directory to app
-      final origDir = Directory.current;
-      Directory.current = 'example';
-
-      String appIdentifier = getAppIdentifier();
-      expect(appIdentifier, expected);
-
-      // change back for tests to continue
-      Directory.current = origDir;
-    });
-  });
-
-  group('android only runs', () {
-    test('is pool type active', () async {
-      final configPath = 'test/sylph_test.yaml';
-      final config = await parseYaml(configPath);
-      final androidPoolType = DeviceType.android;
-
-      bool isAndroidActive = isPoolTypeActive(config, androidPoolType);
-
-      expect(isAndroidActive, isTrue);
-    });
-
-    test('check for valid pool types', () {
-      final goodConfigStr = '''
-      device_pools:
-        - pool_name: android pool 1
-          pool_type: android
-        - pool_name: ios pool 1
-          pool_type: ios
-        - pool_name: ios pool 2
-          pool_type: ios
-      ''';
-      Map config = loadYaml(goodConfigStr);
-      expect(isValidPoolTypes(config['device_pools']), isTrue);
-      final badConfigStr = '''
-      device_pools:
-        - pool_name: android pool 1
-          pool_type: android
-        - pool_name: ios pool 1
-          pool_type: iosx
-        - pool_name: ios pool 2
-          pool_type: ios
-      ''';
-      config = loadYaml(badConfigStr);
-      expect(isValidPoolTypes(config['device_pools']), isFalse);
-    });
-  });
-
-  group('local package manager', () {
-    final srcDir = 'test/resources/test_local_pkgs/apps';
-    final dstDir = '/tmp/test_local_pkgs';
-    final appName = 'app';
-    final appSrcDir = '$srcDir/$appName';
-    final appDstDir = '$dstDir/$appName';
-    LocalPackageManager localPackageManager;
-
-    setUp(() {
-      clearDirectory(dstDir);
-      LocalPackageManager.copy(appSrcDir, dstDir, force: true);
-      localPackageManager = LocalPackageManager(appDstDir, isAppPackage: true);
-    });
-
-    test('copy app package', () {
-      expect(Directory(appDstDir).existsSync(), isTrue);
-    });
-
-    test('install local packages', () {
-      localPackageManager.installPackages(appSrcDir);
-      final expectedLocalPackage = 'local_package';
-      final expectedSharedLocalPackage = 'shared_package';
-      expect(
-          Directory('$appDstDir/$expectedLocalPackage').existsSync(), isTrue);
-      expect(Directory('$appDstDir/$expectedSharedLocalPackage').existsSync(),
-          isTrue);
-    });
-
-    test('cleanup apps pubspec.yaml', () {
-      localPackageManager.installPackages(appSrcDir);
-
-      final expectedPubSpec = '''
-name: "app"
-dependencies: 
-  local_package: 
-    path: "local_package"
-''';
-      expect(
-          File('$appDstDir/pubspec.yaml').readAsStringSync(), expectedPubSpec);
-    });
-
-    test(
-        'cleanup local dependencies of dependencies if at different directory levels',
-        () {
-      localPackageManager.installPackages(appSrcDir);
-
-      final expectedPubSpecLocal = '''
-name: "local_package"
-dependencies: 
-  shared_package: 
-    path: "../shared_package"
-environment: 
-  sdk: ">=2.0.0 <3.0.0"
-''';
-      expect(File('$appDstDir/local_package/pubspec.yaml').readAsStringSync(),
-          expectedPubSpecLocal);
-
-      final expectedPubSpecShared = '''
-name: "shared_package"
-dependencies: 
-  path: "^1.6.4"
-environment: 
-  sdk: ">=2.0.0 <3.0.0"
-''';
-      expect(File('$appDstDir/shared_package/pubspec.yaml').readAsStringSync(),
-          expectedPubSpecShared);
-    });
-
-    test('get dependencies in new project', () {
-      localPackageManager.installPackages(appSrcDir);
-      expect(cmd('flutter', ['packages', 'get'], appDstDir), isNotEmpty);
-    }, skip: isCI());
   });
 }
 
@@ -808,14 +473,7 @@ bool isCI() {
 }
 
 // can be called locally or in an isolate. used in testing.
-Map square(Map args) {
-  //  print('running square with args=$args, time=${DateTime.now()}');
-  int n = args['n'];
-  return {'result': n * n};
-}
-
 Future<Map> squareFuture(Map args) {
-  //  print('running square future with args=$args, time=${DateTime.now()}');
   int n = args['n'];
   return Future.value({'result': n * n});
 }

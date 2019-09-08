@@ -17,10 +17,20 @@ dependencies:
   duration: ^2.0.8
   version: ^1.0.3
   yamlicious: ^0.1.0
+  tool_base: ^1.9.5+1
+  process: ^3.0.9
 
 dev_dependencies:
   test: ^1.0.0
   pedantic: ^1.8.0+1
+  tool_base_test:
+    git: https://github.com/mmcc007/tool_base_test.git
+#    path: ../tool_base_test
+  fake_process_manager:
+    git: https://github.com/mmcc007/fake_process_manager.git
+#    path: ../fake_process_manager
+  mockito: ^4.1.0
+  file: ^5.0.7
 
 executables:
   sylph: main

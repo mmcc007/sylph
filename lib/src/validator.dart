@@ -1,4 +1,7 @@
-import 'dart:io';
+//import 'dart:io';
+
+import 'package:sylph/src/resources.dart';
+import 'package:tool_base/tool_base.dart';
 
 import 'bundle.dart';
 import 'devices.dart';
@@ -10,18 +13,19 @@ bool isValidConfig(Map config, bool isIosPoolTypeActive) {
   // get pool names used in tests
   // and check tests are present
   List poolNames = [];
+  bool isMissingAppFile = false;
   for (final testSuite in config['test_suites']) {
     for (final poolName in testSuite['pool_names']) {
       poolNames.add(poolName);
     }
-    if (!File(testSuite['main']).existsSync()) {
-      stderr.writeln('Error: test app \`${testSuite['main']}\` not found.');
-      exit(1);
+    if (!fs.file(testSuite['main']).existsSync()) {
+      printError('Error: test app \`${testSuite['main']}\` not found.');
+      isMissingAppFile = true;
     }
     for (final testAppPath in testSuite['tests']) {
-      if (!File(testAppPath).existsSync()) {
-        stderr.writeln('Error: test app \`$testAppPath\` not found.');
-        exit(1);
+      if (!fs.file(testAppPath).existsSync()) {
+        printError('Error: test driver \`$testAppPath\` not found.');
+        isMissingAppFile = true;
       }
     }
   }
@@ -49,12 +53,12 @@ bool isValidConfig(Map config, bool isIosPoolTypeActive) {
         .firstWhere((device) => device == sylphDevice, orElse: () => null);
     if (jobDevice != null) {
       if (jobDevice.availability == 'BUSY') {
-        stderr.writeln('Error: device: \'$jobDevice\' is busy.');
+        printError('Error: device: \'$jobDevice\' is busy.');
         exit(1);
       }
       matchingSylphDevices.add(jobDevice);
     } else {
-      stderr.writeln('Error: No match found for $sylphDevice.');
+      printError('Error: No match found for $sylphDevice.');
       missingSylphDevices.add(sylphDevice);
     }
   }
@@ -67,22 +71,25 @@ bool isValidConfig(Map config, bool isIosPoolTypeActive) {
   if (isIosPoolTypeActive) {
     isEnvFail = isEnvVarUndefined(kExportOptionsPlistEnvVars);
     // if running in CI
-    final envVars = Platform.environment;
+    final envVars = platform.environment;
     if (envVars[kCIEnvVar] != null) {
       isEnvFail = isEnvVarUndefined(kIosCIBuildEnvVars) || isEnvFail;
       isEnvFail = isEnvVarUndefined(kAWSCredentialsEnvVars) || isEnvFail;
     }
   }
-  return missingSylphDevices.isEmpty && !isEnvFail && isPoolTypesValid;
+  return missingSylphDevices.isEmpty &&
+      !isEnvFail &&
+      isPoolTypesValid &&
+      !isMissingAppFile;
 }
 
 /// Check the list of environment variables for undefined.
 bool isEnvVarUndefined(List envVars) {
   bool envFail = false;
-  final env = Platform.environment;
+  final env = platform.environment;
   for (final envVar in envVars) {
     if (env[envVar] == null) {
-      stderr.writeln('Error: $envVar environmental variable is not defined.');
+      printError('Error: $envVar environmental variable is not defined.');
       envFail = true;
     }
   }
@@ -97,7 +104,7 @@ bool isValidPoolTypes(devicePools) {
     try {
       stringToEnum(DeviceType.values, poolType);
     } catch (e) {
-      stderr.writeln(
+      printError(
           'Error: \'${devicePool['pool_name']}\' has an invalid pool type: \'$poolType\'.');
       isInValidPoolType = isInValidPoolType || true;
     }

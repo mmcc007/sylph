@@ -1,23 +1,29 @@
 import 'dart:convert';
-import 'dart:io';
+//import 'dart:io';
 
 import 'package:sylph/src/utils.dart';
+import 'package:tool_base/tool_base.dart';
 import 'package:yaml/yaml.dart';
 import 'package:path/path.dart' as path;
 import 'package:yamlicious/yamlicious.dart';
 
 /// Installs any local packages to the app project at the same level.
+///
 /// Includes handling of local packages that have other local packages using
 /// recursion.
-/// Initialize the app project dir using [LocalPackageManager.copy].
-/// Then pass the bundle's app dir as the [packageDir] and set [isAppPackage]
-/// to true.
+///
+/// Sample usage:
+/// ```
+/// LocalPackageManager.copy(srcDir, dstDir, force: true);
+/// final localPackageManager = LocalPackageManager(dstDir, isAppPackage: true);
+/// localPackageManager.installPackages(srcDir).
+/// ```
 class LocalPackageManager {
   LocalPackageManager(this.packageDir, {this.isAppPackage = false}) {
-//    print('LocalPackageManager\n\tpackageDir=$packageDir');
+    printTrace('LocalPackageManager(${this.packageDir}, ${this.isAppPackage})');
     assert(packageDir != null);
     assert(isAppPackage != null);
-    _pubSpec = File('$packageDir/$kPubSpecYamlName');
+    _pubSpec = fs.file('$packageDir/$kPubSpecYamlName');
     _pubSpecMap = jsonDecode(jsonEncode(loadYaml(_pubSpec.readAsStringSync())));
   }
   final String packageDir;
@@ -41,17 +47,17 @@ class LocalPackageManager {
     } else {
       dstDir = path.dirname(packageDir);
     }
-//    print(
-//        'copyLocalPackages:\n\tsrcDir=$srcDir\n\tdstDir=$dstDir\n\tisAppPackage=$isAppPackage');
+    printTrace(
+        'copyLocalPackages:\n\tsrcDir=$srcDir\n\tdstDir=$dstDir\n\tisAppPackage=$isAppPackage');
     _processPubSpec(srcDir: srcDir, dstDir: dstDir);
     _cleanupPubSpec();
   }
 
   // set paths to dependent local packages
   void _cleanupPubSpec() {
-//    print(
-//        '_cleanupPubSpec:\n\tisAppPackage=$isAppPackage\n\tpath=${_pkgPubSpec.path}');
-    // set path to local dependencies
+    printTrace(
+        '_cleanupPubSpec:\n\tisAppPackage=$isAppPackage\n\tpath=${_pubSpec.path}');
+//     set path to local dependencies
     _processPubSpec(setPkgPath: true);
     // convert map to json, to string, parse as yaml, convert to yaml string and save
     _pubSpec.writeAsStringSync(toYamlString(loadYaml(jsonEncode(_pubSpecMap))));
@@ -94,14 +100,19 @@ class LocalPackageManager {
   }
 
   /// Copy dir. Assumes path syntax is specific to current platform.
-  static copy(String srcDir, String dstDir, {bool force = false}) async {
+  static copy(String srcDir, String dstDir, {bool force = false}) {
+    printTrace('LocalPackageManager: copy($srcDir, $dstDir, force: $force)');
     // do not copy if package already exists
-    if (!Directory(dstDir).existsSync() || force) {
-      if (Platform.isWindows) {
-        cmd('xcopy', ['$srcDir', '$dstDir', '/e', '/i', '/q'], '.', true);
-      } else {
-        cmd('cp', ['-r', '$srcDir', '$dstDir'], '.', true);
-      }
+    if (!fs.directory(dstDir).existsSync() || force) {
+//      if (platform.isWindows) {
+//        cmd(['xcopy', '$srcDir', '$dstDir', '/e', '/i', '/q']);
+//      } else {
+//        cmd(['cp', '-r', '$srcDir', '$dstDir']);
+//      }
+//      print('copyFiles($srcDir, $dstDir)');
+      fs.directory(dstDir).createSync();
+//      copyDir(srcDir, dstDir);
+      copyPathSync(srcDir, dstDir);
     }
   }
 }

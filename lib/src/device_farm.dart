@@ -1,6 +1,8 @@
-import 'dart:io';
+import 'dart:async';
+//import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:sprintf/sprintf.dart';
+import 'package:tool_base/tool_base.dart';
 
 import 'devices.dart';
 import 'utils.dart';
@@ -22,7 +24,7 @@ String setupProject(String projectName, int jobTimeoutMinutes) {
 
   if (project == null) {
     // create new project
-    print('Creating new project for \'$projectName\' ...');
+    printStatus('Creating new project for \'$projectName\' ...');
     return deviceFarmCmd([
       'create-project',
       '--name',
@@ -53,7 +55,7 @@ String setupDevicePool(Map devicePoolInfo, String projectArn) {
 
   if (pool == null) {
     // create new device pool
-    print('Creating new device pool \'$poolName\' ...');
+    printStatus('Creating new device pool \'$poolName\' ...');
     // convert devices to a rule
     String rules = devicesToRule(devices);
 
@@ -105,8 +107,9 @@ String scheduleRun(
 
 /// Tracks run status.
 /// Returns final run status as [Map].
-Map runStatus(String runArn, int sylphRunTimeout, String poolName) {
-  const timeoutIncrement = 2;
+Future<Map> runStatus(
+    String runArn, int sylphRunTimeout, String poolName) async {
+  const timeoutIncrement = 10;
   Map runStatus;
   for (int i = 0; i < sylphRunTimeout; i += timeoutIncrement) {
     runStatus = deviceFarmCmd([
@@ -117,18 +120,18 @@ Map runStatus(String runArn, int sylphRunTimeout, String poolName) {
     final runStatusFlag = runStatus['status'];
 
     // print run status
-    print(
+    printStatus(
         'Run status on device pool \'$poolName\': $runStatusFlag (sylph run timeout: $i of $sylphRunTimeout)');
 
     // print job status' for this run
     final jobsInfo = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
     for (final jobInfo in jobsInfo) {
-      print('\t\t${jobStatus(jobInfo)}');
+      printStatus('\t\t${jobStatus(jobInfo)}');
     }
 
     if (runStatusFlag == kCompletedRunStatus) return runStatus;
 
-    sleep(Duration(seconds: timeoutIncrement));
+    await Future.delayed(Duration(milliseconds: 1000 * timeoutIncrement));
   }
   // todo: cancel run on device farm
   throw 'Error: run timed-out';
@@ -150,23 +153,23 @@ String jobStatus(Map job) {
 /// Returns [bool] for pass/fail of run.
 bool runReport(Map run) {
   // print intro
-  print(
+  printStatus(
       'Run \'${run['name']}\' completed ${run['completedJobs']} of ${run['totalJobs']} jobs.');
 
   final result = run['result'];
 
   // print result
-  print('  Result: $result');
+  printStatus('  Result: $result');
 
   // print device minutes
   final deviceMinutes = run['deviceMinutes'];
   if (deviceMinutes != null) {
-    print(
+    printStatus(
         '  Device minutes: ${deviceMinutes['total']} (${deviceMinutes['metered']} metered).');
   }
   // print counters
   final counters = run['counters'];
-  print('  Counters:\n'
+  printStatus('  Counters:\n'
       '    skipped: ${counters['skipped']}\n'
       '    warned: ${counters['warned']}\n'
       '    failed: ${counters['failed']}\n'
@@ -176,7 +179,7 @@ bool runReport(Map run) {
       '    total: ${counters['total']}\n');
 
   if (result != kSuccessResult) {
-    print('Warning: run failed. Continuing...');
+    printStatus('Warning: run failed. Continuing...');
     return false;
   }
   return true;
@@ -207,7 +210,8 @@ String devicesToRule(List<SylphDevice> sylphDevices) {
 
 /// Uploads a file to device farm.
 /// Returns file ARN as [String].
-String uploadFile(String projectArn, String filePath, String fileType) {
+Future<String> uploadFile(
+    String projectArn, String filePath, String fileType) async {
   // 1. Create upload
   final upload = deviceFarmCmd([
     'create-upload',
@@ -222,12 +226,12 @@ String uploadFile(String projectArn, String filePath, String fileType) {
   final uploadArn = upload['arn'];
 
   // 2. Upload file
-  cmd('curl', ['-T', filePath, uploadUrl]);
+  cmd(['curl', '-T', filePath, uploadUrl]);
 
   // 3. Wait until file upload complete
   for (int i = 0; i < kUploadTimeout; i++) {
     final upload = deviceFarmCmd(['get-upload', '--arn', uploadArn])['upload'];
-    sleep(Duration(seconds: 1));
+    await Future.delayed(Duration(milliseconds: 1000));
     if (upload['status'] == kUploadSucceeded) {
       return uploadArn;
     }
@@ -253,7 +257,7 @@ void downloadJobArtifacts(String runArn, String runArtifactDir) {
 /// Downloads artifacts generated during a run.
 /// [arn] can be a run, job, suite, or test ARN.
 void downloadArtifacts(String arn, String artifactsDir) {
-  print('Downloading artifacts to $artifactsDir');
+  printStatus('Downloading artifacts to $artifactsDir');
   // create directory
   clearDirectory(artifactsDir);
 
@@ -274,6 +278,6 @@ void downloadArtifacts(String arn, String artifactsDir) {
     // use last artifactID to make unique
     final fileName = '$name ${artifactIDs[3]}.$extension'.replaceAll(' ', '_');
     final filePath = '$artifactsDir/$fileName';
-    cmd('wget', ['-O', filePath, fileUrl]);
+    cmd(['wget', '-O', filePath, fileUrl]);
   }
 }

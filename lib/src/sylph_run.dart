@@ -1,11 +1,14 @@
 import 'dart:async';
-import 'dart:io';
+//import 'dart:io';
 
 import 'package:duration/duration.dart';
+import 'package:sylph/src/resources.dart';
 import 'package:sylph/src/validator.dart';
+import 'package:tool_base/tool_base.dart';
 
 import 'bundle.dart';
 import 'concurrent_jobs.dart';
+import 'config.dart';
 import 'device_farm.dart';
 import 'devices.dart';
 import 'utils.dart';
@@ -23,21 +26,26 @@ const kDebugIpaPath = 'build/ios/Debug-iphoneos/Debug_Runner.ipa';
 ///    2. Report and collect artifacts for each device.
 /// Returns [Future<bool>] for pass or fail.
 Future<bool> sylphRun(String configFilePath, String sylphRunName,
-    DateTime sylphRunTimestamp) async {
+    DateTime sylphRunTimestamp, bool jobVerbose,
+    {String configStr}) async {
   bool sylphRunSucceeded = true;
 
-  // Parse config file
-  Map config = await parseYaml(configFilePath);
-
+  Map config;
+  if (configStr != null) {
+    config = await parseYamlStr(configStr);
+  } else {
+    // Parse config file
+    config = await parseYamlFile(configFilePath);
+  }
   // Check if running on iOS and/or android pools
   final isIosPoolTypeActive = isPoolTypeActive(config, DeviceType.ios);
   final isAndroidPoolTypeActive = isPoolTypeActive(config, DeviceType.android);
 
   // Validate config file
   if (!isValidConfig(config, isIosPoolTypeActive)) {
-    stderr.writeln(
+    printError(
         'Sylph run was terminated due to invalid config file or environment settings.');
-    exit(1);
+    return false;
   }
 
   final sylphRunTimeout = config['sylph_timeout'];
@@ -50,14 +58,14 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
   await unpackResources(config['tmp_dir'], isIosPoolTypeActive);
 
   // Bundle tests
-  await bundleFlutterTests(config);
+  bundleFlutterTests(config);
 
   // gather job args
-  final jobArgs = [];
+  final jobArgs = <Map>[];
 
   bool isConcurrentRun() => config['concurrent_runs'] ?? false;
   for (var testSuite in config['test_suites']) {
-    print('\nRunning \'${testSuite['test_suite']}\' test suite...\n');
+    printStatus('\nRunning \'${testSuite['test_suite']}\' test suite...\n');
 
     // Initialize device pools and run tests in each pool
     for (final poolName in testSuite['pool_names']) {
@@ -65,7 +73,7 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
       if (isConcurrentRun()) {
         // gather job args
         jobArgs.add(packArgs(testSuite, config, poolName, projectArn,
-            sylphRunName, sylphRunTimeout));
+            sylphRunName, sylphRunTimeout, jobVerbose));
       } else {
         runTestsSucceeded = await runSylphJob(testSuite, config, poolName,
             projectArn, sylphRunName, sylphRunTimeout);
@@ -79,23 +87,26 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
     // run concurrently
     if (isConcurrentRun()) {
       if (isIosPoolTypeActive && isAndroidPoolTypeActive) {
-        print('Running tests concurrently on iOS and Android pools...');
+        printStatus('Running tests concurrently on iOS and Android pools...');
       } else {
         if (isIosPoolTypeActive && !isAndroidPoolTypeActive) {
-          print('Running tests concurrently on iOS pools...');
+          printStatus('Running tests concurrently on iOS pools...');
         } else if (!isIosPoolTypeActive && isAndroidPoolTypeActive) {
-          print('Running tests concurrently on Android pools...');
+          printStatus('Running tests concurrently on Android pools...');
         }
       }
-      final results = await runJobs(runSylphJobInIsolate, jobArgs);
-      print('results=$results');
+      final results = await concurrentJobs.runJobs(
+        runSylphJobInIsolate,
+        jobArgs,
+      );
+      printStatus('results=$results');
       // process results
       for (final result in results) {
         if (sylphRunSucceeded & result['result'] != true) {
           sylphRunSucceeded = false;
         }
       }
-      print('Concurrent runs completed.');
+      printStatus('Concurrent runs completed.');
     }
   }
   return sylphRunSucceeded;
@@ -104,7 +115,7 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
 /// Run sylph tests on a pool of devices using a device farm run.
 Future<bool> runSylphJob(Map testSuite, Map config, poolName, String projectArn,
     String sylphRunName, int sylphRunTimeout) async {
-  print(
+  printStatus(
       'Running test suite \'${testSuite['test_suite']}\'  in project \'${config['project_name']}\' on pool \'$poolName\'...');
   // lookup device pool info in config file
   Map devicePoolInfo = getDevicePoolInfo(config['device_pools'], poolName);
@@ -122,17 +133,17 @@ Future<bool> runSylphJob(Map testSuite, Map config, poolName, String projectArn,
 
   // 1. Upload test package
   final testBundlePath = '$tmpDir/$kTestBundleName';
-  print('Uploading tests: $testBundlePath ...');
-  String testPackageArn =
-      uploadFile(projectArn, testBundlePath, 'APPIUM_PYTHON_TEST_PACKAGE');
+  printStatus('Uploading tests: $testBundlePath ...');
+  String testPackageArn = await uploadFile(
+      projectArn, testBundlePath, 'APPIUM_PYTHON_TEST_PACKAGE');
 
   // 2. Upload custom test spec yaml
   final testSpecPath = '$tmpDir/$kAppiumTestSpecName';
   // Substitute MAIN and TESTS for actual debug main and tests from test suite.
   setTestSpecEnv(testSuite, testSpecPath);
-  print('Uploading test specification: $testSpecPath ...');
+  printStatus('Uploading test specification: $testSpecPath ...');
   String testSpecArn =
-      uploadFile(projectArn, testSpecPath, 'APPIUM_PYTHON_TEST_SPEC');
+      await uploadFile(projectArn, testSpecPath, 'APPIUM_PYTHON_TEST_SPEC');
 
   // run tests and report
   return _runTests(
@@ -156,28 +167,28 @@ Future<String> _buildUploadApp(
     String projectArn, String poolType, String mainPath, String tmpDir) async {
   String appArn;
   if (poolType == 'android') {
-    print('Building debug .apk from $mainPath...');
-    await streamCmd('flutter', ['build', 'apk', '-t', mainPath, '--debug']);
+    printStatus('Building debug .apk from $mainPath...');
+    await streamCmd(['flutter', 'build', 'apk', '-t', mainPath, '--debug']);
     // Upload apk
-    print('Uploading debug android app: $kDebugApkPath ...');
-    appArn = uploadFile(projectArn, kDebugApkPath, 'ANDROID_APP');
+    printStatus('Uploading debug android app: $kDebugApkPath ...');
+    appArn = await uploadFile(projectArn, kDebugApkPath, 'ANDROID_APP');
   } else {
-    print('Building debug .ipa from $mainPath...');
-    if (Platform.environment['CI'] == 'true') {
+    printStatus('Building debug .ipa from $mainPath...');
+    if (platform.environment['CI'] == 'true') {
       await streamCmd(
-          '$tmpDir/script/local_utils.sh', ['--ci', Directory.current.path]);
+          ['$tmpDir/script/local_utils.sh', '--ci', fs.currentDirectory.path]);
     }
-    await streamCmd('$tmpDir/script/local_utils.sh', ['--build-debug-ipa']);
+    await streamCmd(['$tmpDir/script/local_utils.sh', '--build-debug-ipa']);
     // Upload ipa
-    print('Uploading debug iOS app: $kDebugIpaPath ...');
-    appArn = uploadFile(projectArn, kDebugIpaPath, 'IOS_APP');
+    printStatus('Uploading debug iOS app: $kDebugIpaPath ...');
+    appArn = await uploadFile(projectArn, kDebugIpaPath, 'IOS_APP');
   }
   return appArn;
 }
 
 /// Runs the test suite on each device in device pool and downloads artifacts.
 /// Returns [bool] on pass/fail.
-bool _runTests(
+Future<bool> _runTests(
     String runName,
     int sylphRunTimeout,
     String projectArn,
@@ -187,10 +198,10 @@ bool _runTests(
     String testSpecArn,
     String artifactsDir,
     int jobTimeout,
-    poolName) {
+    poolName) async {
   bool runSucceeded = false;
   // Schedule run
-  print('Starting run \'$runName\' on AWS Device Farms...');
+  printStatus('Starting run \'$runName\' on AWS Device Farms...');
   String runArn = scheduleRun(runName, projectArn, appArn, devicePoolArn,
       testSpecArn, testPackageArn, jobTimeout);
 
@@ -198,10 +209,10 @@ bool _runTests(
   final run = runStatus(runArn, sylphRunTimeout, poolName);
 
   // Output run result
-  runSucceeded = runReport(run);
+  runSucceeded = runReport(await run);
 
   // Download artifacts
-  print('Downloading artifacts...');
+  printStatus('Downloading artifacts...');
   downloadJobArtifacts(runArn, artifactsDir);
   return runSucceeded;
 }
@@ -232,10 +243,10 @@ void setTestSpecEnv(Map test_suite, String testSpecPath) {
   final testsEnvVal = test_suite['tests'].join(",");
   final mainRegExp = RegExp('$kMainEnvName.*');
   final testsRegExp = RegExp('$kTestsEnvName.*');
-  String testSpecStr = File(testSpecPath).readAsStringSync();
+  String testSpecStr = fs.file(testSpecPath).readAsStringSync();
   testSpecStr =
       testSpecStr.replaceFirst(mainRegExp, '$kMainEnvName$mainEnvVal');
   testSpecStr =
       testSpecStr.replaceAll(testsRegExp, '$kTestsEnvName\'$testsEnvVal\'');
-  File(testSpecPath).writeAsStringSync(testSpecStr);
+  fs.file(testSpecPath).writeAsStringSync(testSpecStr);
 }
