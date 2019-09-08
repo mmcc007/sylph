@@ -5,6 +5,7 @@ import 'device_farm_test.dart' as device_farm_test;
 import 'devices_test.dart' as devices_test;
 import 'local_packages_test.dart' as local_packages_test;
 import 'resources_test.dart' as resources_test;
+import 'sylph_run_test.dart' as sylph_run_test;
 import 'validator_test.dart' as validator_test;
 
 main() {
@@ -15,5 +16,6 @@ main() {
   devices_test.main();
   local_packages_test.main();
   resources_test.main();
+  sylph_run_test.main();
   validator_test.main();
 }
