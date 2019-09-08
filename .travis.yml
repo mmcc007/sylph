@@ -1,12 +1,10 @@
-os: osx
-language: generic
-
 jobs:
   include:
     - stage: Run tests
       env: Run Tests
       language: dart
       dart: stable
+      os: linux
       install:
         # install aws
 #        - curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
@@ -27,6 +25,7 @@ jobs:
 
     - stage: Run Sylph
       env: Run Sylph on AWS Device Farms
+      os: osx
       # only build on tag releases
       if: tag IS present
       before_install:
