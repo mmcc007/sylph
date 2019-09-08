@@ -13,18 +13,19 @@ bool isValidConfig(Map config, bool isIosPoolTypeActive) {
   // get pool names used in tests
   // and check tests are present
   List poolNames = [];
+  bool isMissingAppFile = false;
   for (final testSuite in config['test_suites']) {
     for (final poolName in testSuite['pool_names']) {
       poolNames.add(poolName);
     }
     if (!fs.file(testSuite['main']).existsSync()) {
       printError('Error: test app \`${testSuite['main']}\` not found.');
-      exit(1);
+      isMissingAppFile = true;
     }
     for (final testAppPath in testSuite['tests']) {
       if (!fs.file(testAppPath).existsSync()) {
-        printError('Error: test app \`$testAppPath\` not found.');
-        exit(1);
+        printError('Error: test driver \`$testAppPath\` not found.');
+        isMissingAppFile = true;
       }
     }
   }
@@ -76,7 +77,10 @@ bool isValidConfig(Map config, bool isIosPoolTypeActive) {
       isEnvFail = isEnvVarUndefined(kAWSCredentialsEnvVars) || isEnvFail;
     }
   }
-  return missingSylphDevices.isEmpty && !isEnvFail && isPoolTypesValid;
+  return missingSylphDevices.isEmpty &&
+      !isEnvFail &&
+      isPoolTypesValid &&
+      !isMissingAppFile;
 }
 
 /// Check the list of environment variables for undefined.
