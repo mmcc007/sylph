@@ -30,10 +30,10 @@ Future<int> bundleFlutterTests(Map config, {String appDir = '.'}) async {
   cmd(['mkdir', defaultAppDir]);
 
   // Copy app dir to test bundle (including any local packages)
-  LocalPackageManager.copy(appDir, defaultAppDir, force: true);
+  await LocalPackageManager.copy(appDir, defaultAppDir, force: true);
   final localPackageManager =
       LocalPackageManager(defaultAppDir, isAppPackage: true);
-  localPackageManager.installPackages(appDir);
+  await localPackageManager.installPackages(appDir);
 
   // Remove files not used (to reduce zip file size)
   cmd(['rm', '-rf', '$defaultAppDir/build']);

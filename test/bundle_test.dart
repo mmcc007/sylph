@@ -28,11 +28,11 @@ main() {
       clearDirectory(bundleDir);
       // create fake app in bundle
 //      copyFiles(appDir, bundleAppDir);
-      await runInContext<void>(() {
-        LocalPackageManager.copy(appDir, bundleAppDir, force: true);
+      await runInContext<void>(() async {
+        await LocalPackageManager.copy(appDir, bundleAppDir, force: true);
         final localPackageManager =
             LocalPackageManager(bundleAppDir, isAppPackage: true);
-        localPackageManager.installPackages(appDir);
+        await localPackageManager.installPackages(appDir);
       });
     });
 
@@ -42,7 +42,6 @@ main() {
             'unzip -q $stagingDir/appium_bundle.zip -d $stagingDir/test_bundle',
             null),
         Call('mkdir $bundleAppDir', null),
-        Call('cp -r $appDir $bundleAppDir', null),
         Call('rm -rf $bundleAppDir/build', null),
         Call('rm -rf $bundleAppDir/ios/Flutter/Flutter.framework', null),
         Call('rm -rf $bundleAppDir/ios/Flutter/App.framework', null),
