@@ -1,21 +1,16 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:sylph/src/bundle.dart';
 import 'package:sylph/src/concurrent_jobs.dart';
 import 'package:sylph/src/device_farm.dart';
 import 'package:sylph/src/devices.dart';
-import 'package:sylph/src/local_packages.dart';
 import 'package:sylph/src/resources.dart';
 import 'package:sylph/src/sylph_run.dart';
 import 'package:sylph/src/utils.dart';
 import 'package:sylph/src/validator.dart';
 import 'package:test/test.dart';
-import 'package:version/version.dart';
 import 'package:yaml/yaml.dart';
-import 'package:path/path.dart' as path;
-import 'package:yamlicious/yamlicious.dart';
 
 const kTestProjectName = 'test concurrent runs';
 const kTestProjectArn =
@@ -468,43 +463,6 @@ void main() {
       expect(File(testSpecPath).readAsStringSync(), expected);
       // restore modified test spec test
       cmd(['git', 'checkout', testSpecPath]);
-    });
-  });
-
-  group('android only runs', () {
-    test('is pool type active', () async {
-      final configPath = 'test/sylph_test.yaml';
-      final config = await parseYamlFile(configPath);
-      final androidPoolType = DeviceType.android;
-
-      bool isAndroidActive = isPoolTypeActive(config, androidPoolType);
-
-      expect(isAndroidActive, isTrue);
-    });
-
-    test('check for valid pool types', () {
-      final goodConfigStr = '''
-      device_pools:
-        - pool_name: android pool 1
-          pool_type: android
-        - pool_name: ios pool 1
-          pool_type: ios
-        - pool_name: ios pool 2
-          pool_type: ios
-      ''';
-      Map config = loadYaml(goodConfigStr);
-      expect(isValidPoolTypes(config['device_pools']), isTrue);
-      final badConfigStr = '''
-      device_pools:
-        - pool_name: android pool 1
-          pool_type: android
-        - pool_name: ios pool 1
-          pool_type: iosx
-        - pool_name: ios pool 2
-          pool_type: ios
-      ''';
-      config = loadYaml(badConfigStr);
-      expect(isValidPoolTypes(config['device_pools']), isFalse);
     });
   });
 }

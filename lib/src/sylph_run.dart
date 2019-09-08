@@ -8,6 +8,7 @@ import 'package:tool_base/tool_base.dart';
 
 import 'bundle.dart';
 import 'concurrent_jobs.dart';
+import 'config.dart';
 import 'device_farm.dart';
 import 'devices.dart';
 import 'utils.dart';
