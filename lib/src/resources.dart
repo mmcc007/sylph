@@ -68,8 +68,8 @@ Future<void> unpackResources(String tmpDir, bool isIosPoolTypeActive,
     // unpack fastlane
     await unpackFile('fastlane/Appfile', 'ios', nameVals: nameVals);
     await unpackFile('fastlane/Fastfile', 'ios');
-    await unpackFile('GemFile', 'ios');
-    await unpackFile('GemFile.lock', 'ios');
+    await unpackFile('Gemfile', 'ios');
+    await unpackFile('Gemfile.lock', 'ios');
 
     // unpack dummy keys
     await unpackFile('dummy-ssh-keys/key', '.');

@@ -5,9 +5,23 @@ import 'package:tool_base_test/tool_base_test.dart';
 
 main() {
   group('resources', () {
+    group('in context', () {
+      testUsingContext('unpack all', () async {
+        final stagingDir = '/tmp/sylph_test_unpack';
+        // note: expects certain env vars to be defined
+        await unpackResources(stagingDir, true, appDir: 'example');
+        expect(
+            fs.file('$stagingDir/$kAppiumTemplateName').existsSync(), isTrue);
+      }, overrides: <Type, Generator>{
+        Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+          ..environment = {kCIEnvVar: 'true', 'TEAM_ID': 'team_id'},
+//        Logger: () => VerboseLogger(StdoutLogger()),
+      });
+    });
+
     group('unpack some resources', () {
       test('unpack a file', () async {
-        final srcPath = 'exportOptions.plist';
+        final srcPath = 'Gemfile';
         final dstDir = '/tmp/test_unpack_file';
         await unpackFile(srcPath, dstDir);
         final dstPath = '$dstDir/$srcPath';
@@ -54,19 +68,6 @@ main() {
         String appIdentifier = getAppIdentifier('example');
         expect(appIdentifier, expected);
       });
-    });
-  });
-
-  group('unpack all', () {
-    testUsingContext('unpack resources', () async {
-      final stagingDir = '/tmp/sylph_test_unpack';
-      // note: expects certain env vars to be defined
-      await unpackResources(stagingDir, true, appDir: 'example');
-      expect(fs.file('$stagingDir/$kAppiumTemplateName').existsSync(), isTrue);
-    }, overrides: <Type, Generator>{
-      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..environment = {kCIEnvVar: 'true', 'TEAM_ID': 'team_id'},
-//      Logger: () => VerboseLogger(StdoutLogger()),
     });
   });
 }
