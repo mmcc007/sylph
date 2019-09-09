@@ -2,6 +2,60 @@ import 'package:sylph/src/utils.dart';
 
 import 'devices.dart';
 
+/// default config file name
+const String kConfigFileName = 'sylph.yaml';
+
+class Config {
+  Config({this.configPath = kConfigFileName, String configStr}) {
+    if (configStr != null) {
+      _configInfo = parseYamlStr(configStr);
+    } else {
+      _configInfo = parseYamlFile(configPath);
+    }
+  }
+
+  final String configPath;
+  Map _configInfo;
+
+  // Getters
+//  List<SylphDevice> get devices =>
+//      _processDevices(_configInfo['devices'], isFrameEnabled);
+//  List<SylphDevice> get iosDevices =>
+//      devices.where((device) => device.deviceType == DeviceType.ios).toList();
+//  List<SylphDevice> get androidDevices => devices
+//      .where((device) => device.deviceType == DeviceType.android)
+//      .toList();
+
+//  SylphDevice getDevice(String deviceName) => devices.firstWhere(
+//          (device) => device.name == deviceName,
+//      orElse: () => throw 'Error: no device configured for \'$deviceName\'');
+
+  List<SylphDevice> getPoolDevices(String poolName) {
+    final poolInfo = _configInfo['device_pools'].firstWhere(
+        (devicePool) => devicePool['pool_name'] == poolName,
+        orElse: () => null);
+    return _getSylphDevices(poolInfo);
+  }
+
+  /// Get current sylph devices from [Map] of device pool info.
+  List<SylphDevice> _getSylphDevices(Map devicePoolInfo) {
+    final _sylphDevices = devicePoolInfo['devices'];
+    final sylphDevices = <SylphDevice>[];
+    for (final _sylphDevice in _sylphDevices) {
+      sylphDevices
+          .add(loadSylphDevice(_sylphDevice, devicePoolInfo['pool_type']));
+    }
+    sylphDevices.sort();
+    return sylphDevices;
+  }
+
+  /// Check for active pool type.
+  /// Active pools can only be one of [DeviceType].
+  bool isPoolTypeActive(DeviceType poolType) => null;
+
+  DeviceType getPoolType(String poolName) => null;
+}
+
 /// Check for active pool type.
 /// Active pools can only be one of [DeviceType].
 bool isPoolTypeActive(Map config, DeviceType poolType) {
