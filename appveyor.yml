@@ -1,0 +1,91 @@
+# Do not build feature branch with open Pull Requests
+skip_branch_with_pr: true
+
+#init:
+#  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+#
+#on_finish:
+#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
+install:
+
+  # examine env
+  - echo Examine environment
+  - echo %USERPROFILE%
+  - pwd
+  - echo %CD%
+#  - set
+#  - hostname
+#  - SET /?
+
+  - which python
+  - which pip
+  - where pip3
+  - which java
+  - which curl
+  - which 7z
+  - which mkdir
+  - which touch
+  - which yes
+#  - which no
+  - which head
+  - which start
+  - which sc
+  - which systeminfo
+#  - sc query state= all
+
+#  - sc query intelhaxm
+#  - systeminfo
+  - java -version
+  - dir
+
+  # install aws
+  #  - curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+  #  - unzip awscli-bundle.zip
+  #  - sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+  - pip3 install awscli
+  - SET PATH=$MAGICK_HOME;%PATH%
+  - where aws
+  - where c:\ aws
+  - where /R c:\ aws
+  - aws --version & exit 0
+  - move .aws %USERPROFILE%
+
+  # install android SDK
+  - echo Install Android SDK
+  - SET ANDROID_HOME=c:\android-sdk-windows
+  - SET ANDROID_SDK_ROOT=%ANDROID_HOME%
+  - SET ANDROID_TOOLS=4333796 # android-28
+  - SET ANDROID_PLATFORM_SDK=28
+  - SET ANDROID_BUILD_TOOLS=28.0.3
+
+  - curl https://dl.google.com/android/repository/sdk-tools-windows-%ANDROID_TOOLS%.zip -o android-sdk-tools.zip
+  - 7z x android-sdk-tools.zip -o%ANDROID_HOME% > nul
+  - del android-sdk-tools.zip
+#  - dir %ANDROID_HOME%
+  - SET PATH=%ANDROID_HOME%/emulator;%ANDROID_HOME%/tools/bin;%ANDROID_HOME%/platform-tools;%PATH%
+  # silence warning
+  - touch %USERPROFILE%/.android/repositories.cfg
+  # install components
+  - yes | sdkmanager --licenses > nul
+  - sdkmanager "tools" "platform-tools" "platforms;android-${ANDROID_PLATFORM_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
+  - sdkmanager --list | head -15
+
+  # install flutter
+  - echo Install Flutter
+  - git clone -b stable https://github.com/flutter/flutter.git
+  - SET PATH=%CD%\flutter\bin;%CD%\flutter\bin\cache\dart-sdk\bin;%APPDATA%\Pub\Cache\bin;%PATH%
+  - flutter precache
+  - flutter doctor -v
+
+  # install sylph
+  - echo Install sylph
+  - pub global activate --source path .
+
+build: off
+
+test_script:
+  # run sylph
+  - echo Run sylph
+  - cd example
+  - sylph -c sylph_android.yaml -v

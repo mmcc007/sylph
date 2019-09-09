@@ -1,5 +1,6 @@
 [![pub package](https://img.shields.io/pub/v/sylph.svg)](https://pub.dartlang.org/packages/sylph) 
 [![Build Status](https://travis-ci.com/mmcc007/sylph.svg?branch=master)](https://travis-ci.com/mmcc007/sylph)
+[![Build status](https://ci.appveyor.com/api/projects/status/b6vlfyio9e21hxw8?svg=true)](https://ci.appveyor.com/project/mmcc007/sylph)
 [![codecov](https://codecov.io/gh/mmcc007/sylph/branch/master/graph/badge.svg)](https://codecov.io/gh/mmcc007/sylph)
 
 <a href="https://dlpng.com/png/3962939"><img src="art/sylph_logo.png" width="30%" title="Click for source" alt="Sylph"></a>
@@ -26,17 +27,18 @@ sylph -c <path to config file>
 
 General usage:
 ```
-usage: sylph [--help] [--config <config file>] [--devices <all|android|ios>]
+usage: sylph [--help] [--config <config file>] [--devices <all|android|ios>] [--verbose]
 
 sample usage: sylph
 
 -c, --config=<sylph.yaml>          Path to config file.
                                    (defaults to "sylph.yaml")
 
--d, --devices=<all|android|ios>    List availabe devices.
+-d, --devices=<all|android|ios>    List devices available in cloud.
                                    [all, android, ios]
 
-    --help                         Display this help information.
+-v, --verbose                      Noisy logging, including all shell commands executed.
+-h, --help                         Display this help information.
 ```
 
 # Dependencies
