@@ -43,8 +43,8 @@ class ConcurrentJobs {
 /// Function signature must match [JobFunction].
 Future<Map> runSylphJobInIsolate(Map args) async {
   // unpack args
-  final testSuite = jsonDecode(args['test_suite']);
-  final config = jsonDecode(args['config']);
+  final testSuite = args['test_suite'];
+  final config = args['config'];
   final poolName = args['pool_name'];
   final projectArn = args['projectArn'];
   final sylphRunName = args['sylph_run_name'];
@@ -81,8 +81,8 @@ Map<String, dynamic> packArgs(
     int sylphRunTimeout,
     bool jobVerbose) {
   return {
-    'test_suite': jsonEncode(testSuite),
-    'config': jsonEncode(config),
+    'test_suite': testSuite,
+    'config': config,
     'pool_name': poolName,
     'projectArn': projectArn,
     'sylph_run_name': sylphRunName,
