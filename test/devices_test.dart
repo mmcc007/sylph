@@ -1,9 +1,10 @@
 import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:process/process.dart';
+import 'package:sylph/src/config.dart';
 import 'package:sylph/src/devices.dart';
 import 'package:sylph/src/utils.dart';
 import 'package:test/test.dart';
-import 'package:tool_base/tool_base.dart';
+import 'package:tool_base/tool_base.dart' hide Config;
 import 'package:tool_base_test/tool_base_test.dart';
 import 'package:version/version.dart' as v;
 
@@ -110,13 +111,12 @@ main() {
     group('sylph devices', () {
       test('get sylph devices from config file', () async {
         final configPath = 'test/sylph_test.yaml';
-        final config = await parseYamlFile(configPath);
+        final config = Config(configPath: configPath);
         final poolName = 'android pool 1';
-        final devicePoolInfo =
-            getDevicePoolInfo(config['device_pools'], poolName);
-        final expectedFirstDeviceName = devicePoolInfo['devices'][0]['name'];
-        final expectedDeviceCount = devicePoolInfo.length;
-        final sylphDevices = getSylphDevices(devicePoolInfo);
+        final devicePool = config.getDevicePool(poolName);
+        final expectedFirstDeviceName = devicePool.devices[0].name;
+        final expectedDeviceCount = devicePool.devices.length;
+        final sylphDevices = devicePool.devices;
         expect(sylphDevices[0].name, expectedFirstDeviceName);
         expect(sylphDevices.length, expectedDeviceCount);
         // check sorting

@@ -34,17 +34,17 @@ DeviceFarmDevice loadDeviceFarmDevice(Map device) {
       device['arn']);
 }
 
-/// Get current sylph devices from [Map] of device pool info.
-List<SylphDevice> getSylphDevices(Map devicePoolInfo) {
-  final _sylphDevices = devicePoolInfo['devices'];
-  final sylphDevices = <SylphDevice>[];
-  for (final _sylphDevice in _sylphDevices) {
-    sylphDevices
-        .add(loadSylphDevice(_sylphDevice, devicePoolInfo['pool_type']));
-  }
-  sylphDevices.sort();
-  return sylphDevices;
-}
+///// Get current sylph devices from [Map] of device pool info.
+//List<SylphDevice> getSylphDevices(Map devicePoolInfo) {
+//  final _sylphDevices = devicePoolInfo['devices'];
+//  final sylphDevices = <SylphDevice>[];
+//  for (final _sylphDevice in _sylphDevices) {
+//    sylphDevices
+//        .add(loadSylphDevice(_sylphDevice, devicePoolInfo['pool_type']));
+//  }
+//  sylphDevices.sort();
+//  return sylphDevices;
+//}
 
 /// Load a sylph device from [Map] of device and pool type.
 SylphDevice loadSylphDevice(Map device, String poolType) {

@@ -3,12 +3,13 @@
 import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:process/process.dart';
 import 'package:sylph/src/bundle.dart';
+import 'package:sylph/src/config.dart';
 import 'package:sylph/src/context_runner.dart';
 import 'package:sylph/src/local_packages.dart';
 import 'package:sylph/src/resources.dart';
 import 'package:sylph/src/utils.dart';
 import 'package:test/test.dart';
-import 'package:tool_base/tool_base.dart';
+import 'package:tool_base/tool_base.dart' hide Config;
 import 'package:tool_base_test/tool_base_test.dart';
 
 import 'src/common.dart';
@@ -50,9 +51,11 @@ main() {
         Call('zip -rq $bundleZipName $bundleDir', null),
         Call('stat -f%z $bundleZipName', ProcessResult(0, 0, '5000000', '')),
       ];
-
-      final result =
-          bundleFlutterTests({'tmp_dir': stagingDir}, appDir: appDir);
+      final configStr = '''
+        tmp_dir: $stagingDir
+      ''';
+      final config = Config(configStr: configStr);
+      final result = bundleFlutterTests(config, appDir: appDir);
       expect(result, equals(5));
       fakeProcessManager.verifyCalls();
     }, overrides: <Type, Generator>{
