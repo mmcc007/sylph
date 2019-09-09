@@ -1,5 +1,5 @@
 import 'package:sylph/src/config.dart';
-import 'package:sylph/src/devices.dart';
+import 'package:sylph/src/base/devices.dart';
 import 'package:test/test.dart';
 import 'package:tool_base_test/tool_base_test.dart';
 import 'package:version/version.dart';

@@ -1,5 +1,5 @@
-import 'dart:async';
 //import 'dart:io';
+import 'dart:async';
 
 import 'package:duration/duration.dart';
 import 'package:sylph/src/resources.dart';
@@ -7,11 +7,12 @@ import 'package:sylph/src/validator.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
 
 import 'bundle.dart';
-import 'concurrent_jobs.dart';
+import 'base/concurrent_jobs.dart';
 import 'config.dart';
+import 'context_runner.dart';
 import 'device_farm.dart';
-import 'devices.dart';
-import 'utils.dart';
+import 'base/devices.dart';
+import 'base/utils.dart';
 
 const kDebugApkPath = 'build/app/outputs/apk/debug/app-debug.apk';
 const kDebugIpaPath = 'build/ios/Debug-iphoneos/Debug_Runner.ipa';
@@ -34,10 +35,8 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
   if (configStr != null) {
     config = Config(configStr: configStr);
   } else {
-    // Parse config file
     config = Config(configPath: configFilePath);
   }
-  // Check if running on iOS and/or android pools
   final isIosPoolTypeActive = config.isPoolTypeActive(DeviceType.ios);
   final isAndroidPoolTypeActive = config.isPoolTypeActive(DeviceType.android);
 
@@ -94,7 +93,7 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
           printStatus('Running tests concurrently on Android pools...');
         }
       }
-      final results = await concurrentJobs.runJobs(
+      final results = await runJobs(
         runSylphJobInIsolate,
         jobArgs,
       );
@@ -116,7 +115,6 @@ Future<bool> runSylphJob(TestSuite testSuite, Config config, poolName,
     String projectArn, String sylphRunName, int sylphRunTimeout) async {
   printStatus(
       'Running test suite \'${testSuite.name}\'  in project \'${config.projectName}\' on pool \'$poolName\'...');
-  // lookup device pool info in config file
   final devicePool = config.getDevicePool(poolName);
 
   // Setup device pool
@@ -248,4 +246,56 @@ void setTestSpecEnv(TestSuite test_suite, String testSpecPath) {
   testSpecStr =
       testSpecStr.replaceAll(testsRegExp, '$kTestsEnvName\'$testsEnvVal\'');
   fs.file(testSpecPath).writeAsStringSync(testSpecStr);
+}
+
+/// Runs [runSylphJob] in an isolate.
+/// Function signature must match [JobFunction].
+Future<Map> runSylphJobInIsolate(Map args) async {
+  // unpack args
+  final testSuite = args['test_suite'];
+  final config = args['config'];
+  final poolName = args['pool_name'];
+  final projectArn = args['projectArn'];
+  final sylphRunName = args['sylph_run_name'];
+  final sylphRunTimeout = args['sylph_run_timeout'];
+  final jobVerbose = args['jobVerbose'];
+
+  // run runSylphTests
+  bool succeeded;
+  if (jobVerbose) {
+    succeeded = await runInContext<bool>(() {
+      return runSylphJob(testSuite, config, poolName, projectArn, sylphRunName,
+          sylphRunTimeout);
+    }, overrides: <Type, Generator>{
+      Logger: () => VerboseLogger(
+          platform.isWindows ? WindowsStdoutLogger() : StdoutLogger()),
+    });
+  } else {
+    succeeded = await runInContext<bool>(() {
+      return runSylphJob(testSuite, config, poolName, projectArn, sylphRunName,
+          sylphRunTimeout);
+    });
+  }
+
+  return {'result': succeeded};
+}
+
+/// Pack [runSylphJob] args into [Map].
+Map<String, dynamic> packArgs(
+    TestSuite testSuite,
+    Config config,
+    poolName,
+    String projectArn,
+    String sylphRunName,
+    int sylphRunTimeout,
+    bool jobVerbose) {
+  return {
+    'test_suite': testSuite,
+    'config': config,
+    'pool_name': poolName,
+    'projectArn': projectArn,
+    'sylph_run_name': sylphRunName,
+    'sylph_run_timeout': sylphRunTimeout,
+    'jobVerbose': jobVerbose,
+  };
 }

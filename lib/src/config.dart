@@ -1,8 +1,8 @@
 import 'package:collection/collection.dart' show ListEquality;
-import 'package:sylph/src/utils.dart' show parseYamlStr, parseYamlFile, stringToEnum;
+import 'base/utils.dart' show parseYamlStr, parseYamlFile, stringToEnum;
 import 'package:tool_base/tool_base.dart' show printError;
 
-import 'devices.dart';
+import 'base/devices.dart';
 
 /// default config file name
 const String kConfigFileName = 'sylph.yaml';
@@ -20,17 +20,6 @@ class Config {
   Map<String, dynamic> _configInfo;
 
   // Getters
-//  List<SylphDevice> get devices =>
-//      _processDevices(_configInfo['devices'], isFrameEnabled);
-//  List<SylphDevice> get iosDevices =>
-//      devices.where((device) => device.deviceType == DeviceType.ios).toList();
-//  List<SylphDevice> get androidDevices => devices
-//      .where((device) => device.deviceType == DeviceType.android)
-//      .toList();
-
-//  SylphDevice getDevice(String deviceName) => devices.firstWhere(
-//          (device) => device.name == deviceName,
-//      orElse: () => throw 'Error: no device configured for \'$deviceName\'');
   int get sylphTimeout => _configInfo['sylph_timeout'];
   String get projectName => _configInfo['project_name'];
   int get defaultJobTimeout => _configInfo['default_job_timeout'];
@@ -98,15 +87,6 @@ class Config {
       stringToEnum(DeviceType.values, _getPoolInfo(poolName)['pool_type']);
 
   List<TestSuite> get testSuites {
-//    final List<TestSuite> wut = _configInfo['test_suites'].map((testSuite) {
-//      return TestSuite(
-//          testSuite['test_suite'],
-//          testSuite['main'],
-//          _processList(testSuite['tests']),
-//          _processList(testSuite['pool_names']),
-//          testSuite['job_timeout']);
-//    }).toList();
-//    print(wut);
     final List<TestSuite> testSuites = [];
     _configInfo['test_suites'].forEach((testSuite) {
       testSuites.add(TestSuite(
@@ -209,26 +189,3 @@ class DevicePool {
 }
 
 Function eq = const ListEquality().equals;
-
-///// Check for active pool type.
-///// Active pools can only be one of [DeviceType].
-//bool isPoolTypeActive(Map config, DeviceType poolType) {
-//  // get active pool names
-//  List poolNames = [];
-//  for (final testSuite in config['test_suites']) {
-//    for (var poolName in testSuite['pool_names']) {
-//      poolNames.add(poolName);
-//    }
-//  }
-//  poolNames = poolNames.toSet().toList(); // remove dups
-//
-//  // get active pool types
-//  List poolTypes = [];
-//  for (final poolName in poolNames) {
-//    poolTypes.add(stringToEnum(DeviceType.values,
-//        getDevicePoolInfo(config['device_pools'], poolName)['pool_type']));
-//  }
-//
-//  // test for requested pool type
-//  return poolTypes.contains(poolType);
-//}

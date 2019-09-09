@@ -1,10 +1,8 @@
 import 'dart:async';
 
 import 'package:resource/resource.dart';
-import 'package:sylph/src/utils.dart';
+import 'base/utils.dart';
 import 'package:tool_base/tool_base.dart';
-
-import 'devices.dart';
 
 // resource consts
 const kResourcesUri = 'package:sylph/resources';

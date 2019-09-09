@@ -1,12 +1,12 @@
 import 'bundle_test.dart' as bundle_test;
-import 'concurrent_jobs_test.dart' as concurrent_jobs_test;
+import 'base/concurrent_jobs_test.dart' as concurrent_jobs_test;
 import 'config_test.dart' as config_test;
 import 'device_farm_test.dart' as device_farm_test;
-import 'devices_test.dart' as devices_test;
-import 'local_packages_test.dart' as local_packages_test;
+import 'base/devices_test.dart' as devices_test;
+import 'base/local_packages_test.dart' as local_packages_test;
 import 'resources_test.dart' as resources_test;
 import 'sylph_run_test.dart' as sylph_run_test;
-import 'utils_test.dart' as utils_test;
+import 'base/utils_test.dart' as utils_test;
 import 'validator_test.dart' as validator_test;
 
 main() {

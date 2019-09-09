@@ -1,7 +1,7 @@
 import 'dart:convert';
 //import 'dart:io';
 
-import 'package:sylph/src/utils.dart';
+import 'copy_path.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:yaml/yaml.dart';
 import 'package:path/path.dart' as path;

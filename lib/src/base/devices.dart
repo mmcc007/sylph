@@ -4,48 +4,6 @@ import 'utils.dart';
 
 enum DeviceType { ios, android }
 
-/// Get device farm devices filtered by type.
-List<DeviceFarmDevice> getDeviceFarmDevicesByType(DeviceType deviceType) {
-  return getDeviceFarmDevices()
-      .where((device) => device.deviceType == deviceType)
-      .toList();
-}
-
-/// Get current device farm devices using device farm API.
-List<DeviceFarmDevice> getDeviceFarmDevices() {
-  final _deviceFarmDevices = deviceFarmCmd(['list-devices'])['devices'];
-  final deviceFarmDevices = <DeviceFarmDevice>[];
-  for (final _deviceFarmDevice in _deviceFarmDevices) {
-    deviceFarmDevices.add(loadDeviceFarmDevice(_deviceFarmDevice));
-  }
-  deviceFarmDevices.sort();
-  return deviceFarmDevices;
-}
-
-/// Load a device farm device from a [Map] of device.
-DeviceFarmDevice loadDeviceFarmDevice(Map device) {
-  return DeviceFarmDevice(
-      device['name'],
-      device['modelId'],
-      Version.parse(device['os']),
-      device['platform'] == 'ANDROID' ? DeviceType.android : DeviceType.ios,
-      device['formFactor'] == 'PHONE' ? FormFactor.phone : FormFactor.tablet,
-      device['availability'] ?? '',
-      device['arn']);
-}
-
-///// Get current sylph devices from [Map] of device pool info.
-//List<SylphDevice> getSylphDevices(Map devicePoolInfo) {
-//  final _sylphDevices = devicePoolInfo['devices'];
-//  final sylphDevices = <SylphDevice>[];
-//  for (final _sylphDevice in _sylphDevices) {
-//    sylphDevices
-//        .add(loadSylphDevice(_sylphDevice, devicePoolInfo['pool_type']));
-//  }
-//  sylphDevices.sort();
-//  return sylphDevices;
-//}
-
 /// Load a sylph device from [Map] of device and pool type.
 SylphDevice loadSylphDevice(Map device, String poolType) {
   return SylphDevice(

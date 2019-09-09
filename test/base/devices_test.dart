@@ -1,8 +1,8 @@
 import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:process/process.dart';
 import 'package:sylph/src/config.dart';
-import 'package:sylph/src/devices.dart';
-import 'package:sylph/src/utils.dart';
+import 'package:sylph/src/base/devices.dart';
+import 'package:sylph/src/device_farm.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
 import 'package:tool_base_test/tool_base_test.dart';
