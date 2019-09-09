@@ -143,13 +143,6 @@ Map deviceFarmCmd(List<String> arguments, [String workingDir = '.']) {
       workingDirectory: workingDir));
 }
 
-/// Gets device pool from config file.
-/// Returns as [Map].
-Map getDevicePoolInfo(List devicePools, String poolName) {
-  return devicePools.firstWhere((pool) => pool['pool_name'] == poolName,
-      orElse: () => throw 'Error: device pool $poolName not found');
-}
-
 /// Converts [enum] value to [String].
 String enumToStr(dynamic _enum) => _enum.toString().split('.').last;
 

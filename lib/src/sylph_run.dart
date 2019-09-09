@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:duration/duration.dart';
 import 'package:sylph/src/resources.dart';
 import 'package:sylph/src/validator.dart';
-import 'package:tool_base/tool_base.dart';
+import 'package:tool_base/tool_base.dart' hide Config;
 
 import 'bundle.dart';
 import 'concurrent_jobs.dart';
@@ -30,16 +30,16 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
     {String configStr}) async {
   bool sylphRunSucceeded = true;
 
-  Map config;
+  Config config;
   if (configStr != null) {
-    config = await parseYamlStr(configStr);
+    config = Config(configStr: configStr);
   } else {
     // Parse config file
-    config = await parseYamlFile(configFilePath);
+    config = Config(configPath: configFilePath);
   }
   // Check if running on iOS and/or android pools
-  final isIosPoolTypeActive = isPoolTypeActive(config, DeviceType.ios);
-  final isAndroidPoolTypeActive = isPoolTypeActive(config, DeviceType.android);
+  final isIosPoolTypeActive = config.isPoolTypeActive(DeviceType.ios);
+  final isAndroidPoolTypeActive = config.isPoolTypeActive(DeviceType.android);
 
   // Validate config file
   if (!isValidConfig(config, isIosPoolTypeActive)) {
@@ -48,14 +48,13 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
     return false;
   }
 
-  final sylphRunTimeout = config['sylph_timeout'];
+  final sylphRunTimeout = config.sylphTimeout;
 
   // Setup project (if needed)
-  final projectArn =
-      setupProject(config['project_name'], config['default_job_timeout']);
+  final projectArn = setupProject(config.projectName, config.defaultJobTimeout);
 
   // Unpack resources used for building debug .ipa and to bundle tests
-  await unpackResources(config['tmp_dir'], isIosPoolTypeActive);
+  await unpackResources(config.tmpDir, isIosPoolTypeActive);
 
   // Bundle tests
   bundleFlutterTests(config);
@@ -63,12 +62,12 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
   // gather job args
   final jobArgs = <Map>[];
 
-  bool isConcurrentRun() => config['concurrent_runs'] ?? false;
-  for (var testSuite in config['test_suites']) {
-    printStatus('\nRunning \'${testSuite['test_suite']}\' test suite...\n');
+  bool isConcurrentRun() => config.concurrentRuns ?? false;
+  for (var testSuite in config.testSuites) {
+    printStatus('\nRunning \'${testSuite.name}\' test suite...\n');
 
     // Initialize device pools and run tests in each pool
-    for (final poolName in testSuite['pool_names']) {
+    for (final poolName in testSuite.poolNames) {
       bool runTestsSucceeded = false;
       if (isConcurrentRun()) {
         // gather job args
@@ -113,21 +112,21 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
 }
 
 /// Run sylph tests on a pool of devices using a device farm run.
-Future<bool> runSylphJob(Map testSuite, Map config, poolName, String projectArn,
-    String sylphRunName, int sylphRunTimeout) async {
+Future<bool> runSylphJob(TestSuite testSuite, Config config, poolName,
+    String projectArn, String sylphRunName, int sylphRunTimeout) async {
   printStatus(
-      'Running test suite \'${testSuite['test_suite']}\'  in project \'${config['project_name']}\' on pool \'$poolName\'...');
+      'Running test suite \'${testSuite.name}\'  in project \'${config.projectName}\' on pool \'$poolName\'...');
   // lookup device pool info in config file
-  Map devicePoolInfo = getDevicePoolInfo(config['device_pools'], poolName);
+  final devicePool = config.getDevicePool(poolName);
 
   // Setup device pool
-  String devicePoolArn = setupDevicePool(devicePoolInfo, projectArn);
+  String devicePoolArn = setupDevicePool(devicePool, projectArn);
 
-  final tmpDir = config['tmp_dir'];
+  final tmpDir = config.tmpDir;
 
   // Build debug app for pool type and upload
   final appArn = await _buildUploadApp(
-      projectArn, devicePoolInfo['pool_type'], testSuite['main'], tmpDir);
+      projectArn, devicePool.deviceType, testSuite.main, tmpDir);
 
   // Upload test suite (in 2 parts)
 
@@ -155,18 +154,18 @@ Future<bool> runSylphJob(Map testSuite, Map config, poolName, String projectArn,
       testPackageArn,
       testSpecArn,
       // construct artifacts dir path for device farm run
-      runArtifactsDirPath(config['artifacts_dir'], sylphRunName,
-          config['project_name'], poolName),
-      testSuite['job_timeout'],
+      runArtifactsDirPath(
+          config.artifactsDir, sylphRunName, config.projectName, poolName),
+      testSuite.jobTimeout,
       poolName);
 }
 
 /// Builds and uploads debug app (.ipa or .apk) for current pool type.
 /// Returns debug app ARN as [String].
-Future<String> _buildUploadApp(
-    String projectArn, String poolType, String mainPath, String tmpDir) async {
+Future<String> _buildUploadApp(String projectArn, DeviceType poolType,
+    String mainPath, String tmpDir) async {
   String appArn;
-  if (poolType == 'android') {
+  if (poolType == DeviceType.android) {
     printStatus('Building debug .apk from $mainPath...');
     await streamCmd(['flutter', 'build', 'apk', '-t', mainPath, '--debug']);
     // Upload apk
@@ -236,11 +235,11 @@ DateTime sylphTimestamp() {
 }
 
 /// Set MAIN and TESTS env vars in test spec.
-void setTestSpecEnv(Map test_suite, String testSpecPath) {
+void setTestSpecEnv(TestSuite test_suite, String testSpecPath) {
   const kMainEnvName = 'MAIN=';
   const kTestsEnvName = 'TESTS=';
-  final mainEnvVal = test_suite['main'];
-  final testsEnvVal = test_suite['tests'].join(",");
+  final mainEnvVal = test_suite.main;
+  final testsEnvVal = test_suite.tests.join(",");
   final mainRegExp = RegExp('$kMainEnvName.*');
   final testsRegExp = RegExp('$kTestsEnvName.*');
   String testSpecStr = fs.file(testSpecPath).readAsStringSync();

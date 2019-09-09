@@ -2,8 +2,9 @@ import 'dart:async';
 //import 'dart:io';
 
 import 'package:resource/resource.dart';
+import 'package:sylph/src/config.dart';
 import 'package:sylph/src/resources.dart';
-import 'package:tool_base/tool_base.dart';
+import 'package:tool_base/tool_base.dart' hide Config;
 
 import 'devices.dart';
 import 'local_packages.dart';
@@ -14,8 +15,8 @@ const kDefaultFlutterAppName = 'flutter_app';
 /// Bundles Flutter tests using appium template found in staging area.
 /// Resulting bundle is saved on disk in temporary location
 /// for later upload.
-int bundleFlutterTests(Map config, {String appDir = '.'}) {
-  final stagingDir = config['tmp_dir'];
+int bundleFlutterTests(Config config, {String appDir = '.'}) {
+  final stagingDir = config.tmpDir;
   final appiumTemplatePath = '$stagingDir/$kAppiumTemplateName';
   final testBundleDir = '$stagingDir/$kTestBundleDir';
   final defaultAppDir = '$stagingDir/$kTestBundleDir/$kDefaultFlutterAppName';

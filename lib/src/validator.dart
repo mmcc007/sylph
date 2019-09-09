@@ -1,70 +1,72 @@
 //import 'dart:io';
 
 import 'package:sylph/src/resources.dart';
-import 'package:tool_base/tool_base.dart';
+import 'package:tool_base/tool_base.dart' hide Config;
 
 import 'bundle.dart';
+import 'config.dart';
 import 'devices.dart';
 import 'utils.dart';
 
 /// Check devices used in tests are valid and available.
 /// Also checks tests are present and env vars are set.
-bool isValidConfig(Map config, bool isIosPoolTypeActive) {
+bool isValidConfig(Config config, bool isIosPoolTypeActive) {
   // get pool names used in tests
   // and check tests are present
-  List poolNames = [];
+
+  // get all job devices
+  final allJobDevices = getDeviceFarmDevices();
+
+  final matchingSylphDevices = [];
+  final missingSylphDevices = [];
+
+//  List poolNames = [];
   bool isMissingAppFile = false;
-  for (final testSuite in config['test_suites']) {
-    for (final poolName in testSuite['pool_names']) {
-      poolNames.add(poolName);
-    }
-    if (!fs.file(testSuite['main']).existsSync()) {
-      printError('Error: test app \`${testSuite['main']}\` not found.');
+  for (final testSuite in config.testSuites) {
+//    for (final poolName in testSuite.poolNames) {
+//      poolNames.add(poolName);
+//    }
+    if (!fs.file(testSuite.main).existsSync()) {
+      printError('Error: test app \`${testSuite.main}\` not found.');
       isMissingAppFile = true;
     }
-    for (final testAppPath in testSuite['tests']) {
+    for (final testAppPath in testSuite.tests) {
       if (!fs.file(testAppPath).existsSync()) {
         printError('Error: test driver \`$testAppPath\` not found.');
         isMissingAppFile = true;
       }
     }
-  }
-  poolNames = poolNames.toSet().toList(); // remove duplicates
-
-  final allSylphDevices = [];
-  // iterate the pools
-  for (final pool in config['device_pools']) {
-    if (poolNames.contains(pool['pool_name'])) {
-      // iterate the pool's devices
-      for (final sylphDevice in pool['devices']) {
-        allSylphDevices.add(loadSylphDevice(sylphDevice, pool['pool_type']));
+    // find all matching sylph devices
+    for (final sylphDevice in config.getDevicesInSuite(testSuite.name)) {
+      final jobDevice = allJobDevices
+          .firstWhere((device) => device == sylphDevice, orElse: () => null);
+      if (jobDevice != null) {
+        if (jobDevice.availability == 'BUSY') {
+          printError('Error: device: \'$jobDevice\' is busy.');
+          exit(1);
+        }
+        matchingSylphDevices.add(jobDevice);
+      } else {
+        printError('Error: No match found for $sylphDevice.');
+        missingSylphDevices.add(sylphDevice);
       }
     }
   }
+//  poolNames = poolNames.toSet().toList(); // remove duplicates
 
-  // get all job devices
-  final allJobDevices = getDeviceFarmDevices();
-
-  // find all matching sylph devices
-  final matchingSylphDevices = [];
-  final missingSylphDevices = [];
-  for (final sylphDevice in allSylphDevices) {
-    final jobDevice = allJobDevices
-        .firstWhere((device) => device == sylphDevice, orElse: () => null);
-    if (jobDevice != null) {
-      if (jobDevice.availability == 'BUSY') {
-        printError('Error: device: \'$jobDevice\' is busy.');
-        exit(1);
-      }
-      matchingSylphDevices.add(jobDevice);
-    } else {
-      printError('Error: No match found for $sylphDevice.');
-      missingSylphDevices.add(sylphDevice);
-    }
-  }
+//  final allSylphDevices = [];
+//  // iterate the pools
+//  for (final pool in config['device_pools']) {
+//    if (poolNames.contains(pool['pool_name'])) {
+//      // iterate the pool's devices
+//      for (final sylphDevice in pool['devices']) {
+//        allSylphDevices.add(loadSylphDevice(sylphDevice, pool['pool_type']));
+//      }
+//    }
+//  }
 
   // check for valid pool types
-  final isPoolTypesValid = isValidPoolTypes(config['device_pools']);
+  final isPoolTypesValid = config.isValidPoolTypes();
 
   // check environment vars are present
   bool isEnvFail = false;
@@ -94,20 +96,4 @@ bool isEnvVarUndefined(List envVars) {
     }
   }
   return envFail;
-}
-
-/// Check that pool types in [devicePools] are valid.
-bool isValidPoolTypes(devicePools) {
-  bool isInValidPoolType = false;
-  for (final devicePool in devicePools) {
-    final poolType = devicePool['pool_type'];
-    try {
-      stringToEnum(DeviceType.values, poolType);
-    } catch (e) {
-      printError(
-          'Error: \'${devicePool['pool_name']}\' has an invalid pool type: \'$poolType\'.');
-      isInValidPoolType = isInValidPoolType || true;
-    }
-  }
-  return !isInValidPoolType;
 }

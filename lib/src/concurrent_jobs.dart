@@ -2,8 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:isolate/isolate.dart';
+import 'package:sylph/src/config.dart';
 import 'package:sylph/src/context_runner.dart';
-import 'package:tool_base/tool_base.dart';
+import 'package:tool_base/tool_base.dart' hide Config;
 
 import 'sylph_run.dart';
 
@@ -72,8 +73,8 @@ Future<Map> runSylphJobInIsolate(Map args) async {
 
 /// Pack [runSylphJob] args into [Map].
 Map<String, dynamic> packArgs(
-    Map testSuite,
-    Map config,
+    TestSuite testSuite,
+    Config config,
     poolName,
     String projectArn,
     String sylphRunName,
