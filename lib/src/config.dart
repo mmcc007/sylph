@@ -15,7 +15,7 @@ class Config {
   }
 
   final String configPath;
-  Map _configInfo;
+  Map<String, dynamic> _configInfo;
 
   // Getters
 //  List<SylphDevice> get devices =>
@@ -30,11 +30,14 @@ class Config {
 //          (device) => device.name == deviceName,
 //      orElse: () => throw 'Error: no device configured for \'$deviceName\'');
 
-  List<SylphDevice> getPoolDevices(String poolName) {
+  List<SylphDevice> getPoolDevices(String poolName) =>
+      _getSylphDevices(_getPoolInfo(poolName));
+
+  _getPoolInfo(String poolName) {
     final poolInfo = _configInfo['device_pools'].firstWhere(
         (devicePool) => devicePool['pool_name'] == poolName,
         orElse: () => null);
-    return _getSylphDevices(poolInfo);
+    return poolInfo;
   }
 
   /// Get current sylph devices from [Map] of device pool info.
@@ -76,7 +79,8 @@ class Config {
     return poolTypes.contains(poolType);
   }
 
-  DeviceType getPoolType(String poolName) => null;
+  DeviceType getPoolType(String poolName) =>
+      stringToEnum(DeviceType.values, _getPoolInfo(poolName)['pool_type']);
 }
 
 /// Check for active pool type.

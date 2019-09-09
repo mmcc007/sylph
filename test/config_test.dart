@@ -30,12 +30,6 @@ main() {
 
     test('isActivePoolType', () {
       final configStr = '''
-        tmp_dir: /tmp/sylph
-        artifacts_dir: /tmp/sylph_artifacts
-        sylph_timeout: 720 
-        concurrent_runs: true
-        project_name: test concurrent runs
-        default_job_timeout: 10 
         device_pools:
           - pool_name: android pool 1
             pool_type: android
@@ -62,6 +56,44 @@ main() {
       final config = Config(configStr: configStr);
       expect(config.isPoolTypeActive(DeviceType.android), isTrue);
       expect(config.isPoolTypeActive(DeviceType.ios), isFalse);
+    });
+
+    test('getPoolType', () {
+      final poolNameAndroid = 'android pool 1';
+      final poolNameIos = 'ios pool 1';
+      final configStr = '''
+        tmp_dir: /tmp/sylph
+        artifacts_dir: /tmp/sylph_artifacts
+        sylph_timeout: 720 
+        concurrent_runs: true
+        project_name: test concurrent runs
+        default_job_timeout: 10 
+        device_pools:
+          - pool_name: $poolNameAndroid
+            pool_type: android
+            devices:
+              - name: Google Pixel 2
+                model: Google Pixel 2
+                os: 8.0.0
+          - pool_name: $poolNameIos
+            pool_type: ios
+            devices:
+              - name: Apple iPhone X
+                model: A1865
+                os: 11.4
+        test_suites:
+          - test_suite: example tests 1
+            main: test_driver/main.dart
+            tests:
+              - test_driver/main_test.dart
+            pool_names:
+              - android pool 1
+              # - ios pool 1
+            job_timeout: 15
+      ''';
+      final config = Config(configStr: configStr);
+      expect(config.getPoolType(poolNameAndroid), equals(DeviceType.android));
+      expect(config.getPoolType(poolNameIos), equals(DeviceType.ios));
     });
   });
 
