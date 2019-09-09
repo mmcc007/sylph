@@ -2,12 +2,9 @@ import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:file/memory.dart';
 import 'package:process/process.dart';
 import 'package:sylph/src/bundle.dart';
-import 'package:sylph/src/context_runner.dart';
 import 'package:sylph/src/device_farm.dart';
-import 'package:sylph/src/local_packages.dart';
 import 'package:sylph/src/resources.dart';
 import 'package:sylph/src/sylph_run.dart';
-import 'package:sylph/src/utils.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_base_test/tool_base_test.dart';
@@ -22,6 +19,7 @@ const kSuccessfulRunArn =
     'arn:aws:devicefarm:us-west-2:122621792560:run:908d123f-af8c-4d4b-9b86-65d3d51a0e49/5f484a00-5399-40ee-aae8-2d65196a5bcd';
 const kFirstJobArn =
     'arn:aws:devicefarm:us-west-2:122621792560:job:908d123f-af8c-4d4b-9b86-65d3d51a0e49/5f484a00-5399-40ee-aae8-2d65196a5bcd/00000';
+
 main() {
   group('sylph run', () {
     FakeProcessManager fakeProcessManager;
@@ -45,18 +43,6 @@ main() {
       final appDir = '.';
 
       copyDirFs(io.Directory('example'), fs.directory(appDir));
-//      copyDirFs(io.Directory('example'), fs.directory(bundleAppDir));
-//      clearDirectory(bundleDir);
-      // create fake app in bundle
-//      copyFiles(appDir, bundleAppDir);
-//      await runInContext<void>(() {
-//        LocalPackageManager.copy(appDir, bundleAppDir, force: true);
-//        final localPackageManager =
-//        LocalPackageManager(bundleAppDir, isAppPackage: true);
-//        localPackageManager.installPackages(appDir);
-//      });
-//      listFiles(fs.directory(appDir));
-//      listFiles(fs.directory('$appDir/test_driver'));
 
       fakeProcessManager.calls = [
         Call(
@@ -313,7 +299,7 @@ main() {
                 }),
                 '')),
         Call(
-            'aws devicefarm schedule-run --project-arn arn:aws:devicefarm:us-west-2:122621792560:project:9796b48e-ad3d-4b3c-97a6-94d4e50b1792 --app-arn arn:aws:devicefarm:us-west-2:122621792560:upload:9796b48e-ad3d-4b3c-97a6-94d4e50b1792/94210aaa-5b94-4fe4-8535-80f2c6b8a847 --device-pool-arn arn:aws:devicefarm:us-west-2:122621792560:project:9796b48e-ad3d-4b3c-97a6-94d4e50b1792/eb91a358-91ae-4e0f-9e77-1c7309363b18 --name sylph run name --test testSpecArn=arn:aws:devicefarm:us-west-2:122621792560:upload:9796b48e-ad3d-4b3c-97a6-94d4e50b1792/34e61fe1-efc8-4e90-93fe-70eac350fa89,type=APPIUM_PYTHON,testPackageArn=arn:aws:devicefarm:us-west-2:122621792560:upload:9796b48e-ad3d-4b3c-97a6-94d4e50b1792/d73555c0-a254-48ad-b340-24b8eee1f6c2 --execution-configuration jobTimeoutMinutes=15,accountsCleanup=false,appPackagesCleanup=false,videoCapture=true,skipAppResign=false',
+            'aws devicefarm schedule-run --project-arn arn:aws:devicefarm:us-west-2:122621792560:project:9796b48e-ad3d-4b3c-97a6-94d4e50b1792 --app-arn arn:aws:devicefarm:us-west-2:122621792560:upload:9796b48e-ad3d-4b3c-97a6-94d4e50b1792/94210aaa-5b94-4fe4-8535-80f2c6b8a847 --device-pool-arn arn:aws:devicefarm:us-west-2:122621792560:project:9796b48e-ad3d-4b3c-97a6-94d4e50b1792/eb91a358-91ae-4e0f-9e77-1c7309363b18 --name sylph run name --test testSpecArn=arn:aws:devicefarm:us-west-2:122621792560:upload:9796b48e-ad3d-4b3c-97a6-94d4e50b1792/34e61fe1-efc8-4e90-93fe-70eac350fa89,type=APPIUM_PYTHON,testPackageArn=arn:aws:devicefarm:us-west-2:122621792560:upload:9796b48e-ad3d-4b3c-97a6-94d4e50b1792/d73555c0-a254-48ad-b340-24b8eee1f6c2 --execution-configuration jobTimeoutMinutes=$jobTimeoutMinutes,accountsCleanup=false,appPackagesCleanup=false,videoCapture=true,skipAppResign=false',
             ProcessResult(
                 0,
                 0,
@@ -637,7 +623,7 @@ main() {
               - test_driver/main_test.dart
             pool_names:
               - android pool 1
-            job_timeout: 15
+            job_timeout: $jobTimeoutMinutes
       ''';
 //      - ios pool 1
 

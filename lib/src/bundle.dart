@@ -1,14 +1,11 @@
-import 'dart:async';
 //import 'dart:io';
 
-import 'package:resource/resource.dart';
 import 'package:sylph/src/config.dart';
 import 'package:sylph/src/resources.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
 
-import 'devices.dart';
-import 'local_packages.dart';
-import 'utils.dart';
+import 'base/local_packages.dart';
+import 'base/utils.dart';
 
 const kDefaultFlutterAppName = 'flutter_app';
 

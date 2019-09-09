@@ -2,13 +2,13 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:sylph/src/bundle.dart';
-import 'package:sylph/src/concurrent_jobs.dart';
+import 'package:sylph/src/base/concurrent_jobs.dart';
 import 'package:sylph/src/config.dart';
 import 'package:sylph/src/device_farm.dart';
-import 'package:sylph/src/devices.dart';
+import 'package:sylph/src/base/devices.dart';
 import 'package:sylph/src/resources.dart';
 import 'package:sylph/src/sylph_run.dart';
-import 'package:sylph/src/utils.dart';
+import 'package:sylph/src/base/utils.dart';
 import 'package:sylph/src/validator.dart';
 import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
@@ -330,7 +330,7 @@ void main() {
     test('get first device in pool', () async {
       final filePath = 'test/sylph_test.yaml';
       final poolName = 'android pool 1';
-      final config=Config(configPath:  filePath);
+      final config = Config(configPath: filePath);
       final devicePoolInfo = config.getDevicePool(poolName);
       final devices = devicePoolInfo.devices;
       final expected = {
@@ -355,7 +355,7 @@ void main() {
         {'n': 10},
         {'n': 20}
       ];
-      List results = await ConcurrentJobs().runJobs(squareFuture, jobArgs);
+      List results = await runJobs(squareFuture, jobArgs);
       for (int i = 0; i < results.length; i++) {
 //      print("squareFuture job #$i: job(${jobArgs[i]}) = ${results[i]}");
         expect(results[i], await squareFuture(jobArgs[i]));
@@ -411,8 +411,7 @@ void main() {
       Directory.current = 'example';
 
       // run
-      final result =
-          await ConcurrentJobs().runJobs(runSylphJobInIsolate, [jobArgs]);
+      final result = await runJobs(runSylphJobInIsolate, [jobArgs]);
       expect(result, [
         {'result': true}
       ]);

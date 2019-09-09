@@ -1,12 +1,9 @@
 //import 'dart:io';
-
 import 'package:sylph/src/resources.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
 
-import 'bundle.dart';
 import 'config.dart';
-import 'devices.dart';
-import 'utils.dart';
+import 'device_farm.dart';
 
 /// Check devices used in tests are valid and available.
 /// Also checks tests are present and env vars are set.
@@ -20,12 +17,8 @@ bool isValidConfig(Config config, bool isIosPoolTypeActive) {
   final matchingSylphDevices = [];
   final missingSylphDevices = [];
 
-//  List poolNames = [];
   bool isMissingAppFile = false;
   for (final testSuite in config.testSuites) {
-//    for (final poolName in testSuite.poolNames) {
-//      poolNames.add(poolName);
-//    }
     if (!fs.file(testSuite.main).existsSync()) {
       printError('Error: test app \`${testSuite.main}\` not found.');
       isMissingAppFile = true;
@@ -52,18 +45,6 @@ bool isValidConfig(Config config, bool isIosPoolTypeActive) {
       }
     }
   }
-//  poolNames = poolNames.toSet().toList(); // remove duplicates
-
-//  final allSylphDevices = [];
-//  // iterate the pools
-//  for (final pool in config['device_pools']) {
-//    if (poolNames.contains(pool['pool_name'])) {
-//      // iterate the pool's devices
-//      for (final sylphDevice in pool['devices']) {
-//        allSylphDevices.add(loadSylphDevice(sylphDevice, pool['pool_type']));
-//      }
-//    }
-//  }
 
   // check for valid pool types
   final isPoolTypesValid = config.isValidPoolTypes();

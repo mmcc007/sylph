@@ -5,14 +5,12 @@ import 'package:process/process.dart';
 import 'package:sylph/src/bundle.dart';
 import 'package:sylph/src/config.dart';
 import 'package:sylph/src/context_runner.dart';
-import 'package:sylph/src/local_packages.dart';
+import 'package:sylph/src/base/local_packages.dart';
 import 'package:sylph/src/resources.dart';
-import 'package:sylph/src/utils.dart';
+import 'package:sylph/src/base/utils.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
 import 'package:tool_base_test/tool_base_test.dart';
-
-import 'src/common.dart';
 
 main() {
   group('bundle', () {

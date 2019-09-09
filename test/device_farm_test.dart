@@ -67,7 +67,7 @@ main() {
                 }),
                 '')),
       ];
-      final devicePoolInfo = {};
+//      final devicePoolInfo = {};
 //      final result = setupDevicePool(devicePoolInfo, projectArn);
 //      expect(result, equals(projectArn));
 //      fakeProcessManager.verifyCalls();

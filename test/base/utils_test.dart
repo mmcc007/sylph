@@ -1,12 +1,13 @@
 import 'dart:io' as io;
 
 import 'package:file/memory.dart';
-import 'package:sylph/src/utils.dart';
+import 'package:sylph/src/base/copy_path.dart';
+import 'package:sylph/src/base/utils.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_base_test/tool_base_test.dart';
 
-import 'src/common.dart';
+import '../src/common.dart';
 
 main() {
   group('utils', () {

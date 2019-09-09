@@ -1,12 +1,13 @@
-import 'dart:async';
 //import 'dart:io';
+import 'dart:async';
 import 'package:path/path.dart' as p;
 import 'package:sprintf/sprintf.dart';
-import 'package:tool_base/tool_base.dart';
+import 'package:tool_base/tool_base.dart' hide Version;
+import 'package:version/version.dart';
 
 import 'config.dart';
-import 'devices.dart';
-import 'utils.dart';
+import 'base/devices.dart';
+import 'base/utils.dart';
 
 const kUploadTimeout = 5;
 const kUploadSucceeded = 'SUCCEEDED';
@@ -153,22 +154,17 @@ String jobStatus(Map job) {
 /// Runs run report.
 /// Returns [bool] for pass/fail of run.
 bool runReport(Map run) {
-  // print intro
   printStatus(
       'Run \'${run['name']}\' completed ${run['completedJobs']} of ${run['totalJobs']} jobs.');
 
   final result = run['result'];
 
-  // print result
   printStatus('  Result: $result');
-
-  // print device minutes
   final deviceMinutes = run['deviceMinutes'];
   if (deviceMinutes != null) {
     printStatus(
         '  Device minutes: ${deviceMinutes['total']} (${deviceMinutes['metered']} metered).');
   }
-  // print counters
   final counters = run['counters'];
   printStatus('  Counters:\n'
       '    skipped: ${counters['skipped']}\n'
@@ -190,7 +186,6 @@ bool runReport(Map run) {
 /// Returns device ARNs as a [List].
 List findDevicesArns(List<SylphDevice> sylphDevices) {
   final deviceArns = [];
-  // get all devices
   final deviceFarmDevices = getDeviceFarmDevices();
   for (final sylphDevice in sylphDevices) {
     final deviceFarmDevice = deviceFarmDevices.firstWhere(
@@ -242,14 +237,9 @@ Future<String> uploadFile(
 
 /// Downloads artifacts for each job generated during a run.
 void downloadJobArtifacts(String runArn, String runArtifactDir) {
-  // list jobs
   final List jobs = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
-
   for (final job in jobs) {
-    // load job device
     final jobDevice = loadDeviceFarmDevice(job['device']);
-
-    // generate job artifacts dir and download job artifacts
     downloadArtifacts(
         job['arn'], jobArtifactsDirPath(runArtifactDir, jobDevice));
   }
@@ -259,7 +249,6 @@ void downloadJobArtifacts(String runArn, String runArtifactDir) {
 /// [arn] can be a run, job, suite, or test ARN.
 void downloadArtifacts(String arn, String artifactsDir) {
   printStatus('Downloading artifacts to $artifactsDir');
-  // create directory
   clearDirectory(artifactsDir);
 
   final artifacts = deviceFarmCmd(
@@ -281,4 +270,42 @@ void downloadArtifacts(String arn, String artifactsDir) {
     final filePath = '$artifactsDir/$fileName';
     cmd(['wget', '-O', filePath, fileUrl]);
   }
+}
+
+/// Get device farm devices filtered by type.
+List<DeviceFarmDevice> getDeviceFarmDevicesByType(DeviceType deviceType) {
+  return getDeviceFarmDevices()
+      .where((device) => device.deviceType == deviceType)
+      .toList();
+}
+
+/// Get current device farm devices using device farm API.
+List<DeviceFarmDevice> getDeviceFarmDevices() {
+  final _deviceFarmDevices = deviceFarmCmd(['list-devices'])['devices'];
+  final deviceFarmDevices = <DeviceFarmDevice>[];
+  for (final _deviceFarmDevice in _deviceFarmDevices) {
+    deviceFarmDevices.add(loadDeviceFarmDevice(_deviceFarmDevice));
+  }
+  deviceFarmDevices.sort();
+  return deviceFarmDevices;
+}
+
+/// Load a device farm device from a [Map] of device.
+DeviceFarmDevice loadDeviceFarmDevice(Map device) {
+  return DeviceFarmDevice(
+      device['name'],
+      device['modelId'],
+      Version.parse(device['os']),
+      device['platform'] == 'ANDROID' ? DeviceType.android : DeviceType.ios,
+      device['formFactor'] == 'PHONE' ? FormFactor.phone : FormFactor.tablet,
+      device['availability'] ?? '',
+      device['arn']);
+}
+
+/// generates a download directory path for each Device Farm run job's artifacts
+String jobArtifactsDirPath(String runArtifactDir, SylphDevice sylphDevice) {
+  final downloadDir = '$runArtifactDir/' +
+      '${sylphDevice.name}-${sylphDevice.model}-${sylphDevice.os}'
+          .replaceAll(' ', '_');
+  return downloadDir;
 }

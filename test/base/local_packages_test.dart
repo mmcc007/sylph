@@ -1,13 +1,13 @@
 //import 'dart:io';
 
 import 'package:sylph/src/context_runner.dart';
-import 'package:sylph/src/local_packages.dart';
-import 'package:sylph/src/utils.dart';
+import 'package:sylph/src/base/local_packages.dart';
+import 'package:sylph/src/base/utils.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_base_test/tool_base_test.dart';
 
-import 'src/common.dart';
+import '../src/common.dart';
 
 main() {
   group('local package manager', () {
