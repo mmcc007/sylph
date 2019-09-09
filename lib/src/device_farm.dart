@@ -286,7 +286,7 @@ List<DeviceFarmDevice> getDeviceFarmDevices() {
   for (final _deviceFarmDevice in _deviceFarmDevices) {
     deviceFarmDevices.add(loadDeviceFarmDevice(_deviceFarmDevice));
   }
-  deviceFarmDevices.sort();
+  if (!platform.isWindows) deviceFarmDevices.sort();
   return deviceFarmDevices;
 }
 
