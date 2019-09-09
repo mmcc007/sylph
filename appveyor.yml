@@ -22,7 +22,7 @@ install:
   - which pip
 #  - where pip3
   - where aws
-  - which aws | exit 0
+  - which aws
   - which java
   - which curl
   - which 7z
@@ -39,6 +39,7 @@ install:
 #  - sc query intelhaxm
 #  - systeminfo
   - java -version
+  - aws --version
   - dir
 
   # install aws
@@ -50,8 +51,8 @@ install:
 #  - where aws
 #  - where c:\ aws
 #  - where /R c:\ aws
-  - aws --version & exit 0
   - move .aws %USERPROFILE%
+  - aws devicefarm list-projects
 
   # install android SDK
   - echo Install Android SDK
