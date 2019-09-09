@@ -67,7 +67,7 @@ https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
 ## Test AWS CLI
 Confirm AWS CLI is installed and configured correctly by running an AWS command. For example, the following command should generate output:
 ```
-aws devicefarm list-devices
+aws devicefarm list-projects
 ```
 
 # Configuration
