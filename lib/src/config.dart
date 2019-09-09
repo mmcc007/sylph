@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:sylph/src/utils.dart';
+import 'package:tool_base/tool_base.dart';
 
 import 'devices.dart';
 
@@ -115,6 +116,7 @@ class Config {
         poolNames.add(poolName);
       }
     }
+    poolNames = poolNames.toSet().toList(); // remove duplicates
 
     final List<SylphDevice> devicesInSuite = [];
 
@@ -127,6 +129,22 @@ class Config {
       }
     }
     return devicesInSuite;
+  }
+
+  /// Check that pool types are valid.
+  bool isValidPoolTypes() {
+    bool isInValidPoolType = false;
+    for (final devicePool in _configInfo['device_pools']) {
+      final poolType = devicePool['pool_type'];
+      try {
+        stringToEnum(DeviceType.values, poolType);
+      } catch (e) {
+        printError(
+            'Error: \'${devicePool['pool_name']}\' has an invalid pool type: \'$poolType\'.');
+        isInValidPoolType = isInValidPoolType || true;
+      }
+    }
+    return !isInValidPoolType;
   }
 
   List<String> _processList(List list) {

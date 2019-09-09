@@ -1,6 +1,7 @@
 import 'package:sylph/src/config.dart';
 import 'package:sylph/src/devices.dart';
 import 'package:test/test.dart';
+import 'package:tool_base_test/tool_base_test.dart';
 import 'package:version/version.dart';
 
 main() {
@@ -171,6 +172,22 @@ main() {
             DeviceType.android)
       ];
       expect(config.getDevicesInSuite(suiteName), equals(expected));
+    });
+  });
+
+  group('in context', () {
+    testUsingContext('isInvalidPoolType', () {
+      final configStr = '''
+        device_pools:
+          - pool_name: android pool 1
+            pool_type: androidxx
+            devices:
+              - name: Google Pixel 2
+                model: Google Pixel 2
+                os: 8.0.0
+      ''';
+      final config = Config(configStr: configStr);
+      expect(config.isValidPoolTypes(), isFalse);
     });
   });
 
