@@ -2,8 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:isolate/isolate.dart';
+import 'package:sylph/src/config.dart';
 import 'package:sylph/src/context_runner.dart';
-import 'package:tool_base/tool_base.dart';
+import 'package:tool_base/tool_base.dart' hide Config;
 
 import 'sylph_run.dart';
 
@@ -42,8 +43,8 @@ class ConcurrentJobs {
 /// Function signature must match [JobFunction].
 Future<Map> runSylphJobInIsolate(Map args) async {
   // unpack args
-  final testSuite = jsonDecode(args['test_suite']);
-  final config = jsonDecode(args['config']);
+  final testSuite = args['test_suite'];
+  final config = args['config'];
   final poolName = args['pool_name'];
   final projectArn = args['projectArn'];
   final sylphRunName = args['sylph_run_name'];
@@ -72,16 +73,16 @@ Future<Map> runSylphJobInIsolate(Map args) async {
 
 /// Pack [runSylphJob] args into [Map].
 Map<String, dynamic> packArgs(
-    Map testSuite,
-    Map config,
+    TestSuite testSuite,
+    Config config,
     poolName,
     String projectArn,
     String sylphRunName,
     int sylphRunTimeout,
     bool jobVerbose) {
   return {
-    'test_suite': jsonEncode(testSuite),
-    'config': jsonEncode(config),
+    'test_suite': testSuite,
+    'config': config,
     'pool_name': poolName,
     'projectArn': projectArn,
     'sylph_run_name': sylphRunName,

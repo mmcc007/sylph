@@ -4,6 +4,7 @@ import 'package:path/path.dart' as p;
 import 'package:sprintf/sprintf.dart';
 import 'package:tool_base/tool_base.dart';
 
+import 'config.dart';
 import 'devices.dart';
 import 'utils.dart';
 
@@ -39,9 +40,9 @@ String setupProject(String projectName, int jobTimeoutMinutes) {
 
 /// Set up a device pool if named pool does not exist.
 /// Returns the device pool ARN as [String].
-String setupDevicePool(Map devicePoolInfo, String projectArn) {
-  final poolName = devicePoolInfo['pool_name'];
-  final devices = getSylphDevices(devicePoolInfo);
+String setupDevicePool(DevicePool devicePool, String projectArn) {
+  final poolName = devicePool.name;
+  final devices = devicePool.devices;
   // check for existing pool
   final pools = deviceFarmCmd([
     'list-device-pools',

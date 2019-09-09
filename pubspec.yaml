@@ -19,6 +19,7 @@ dependencies:
   yamlicious: ^0.1.0
   tool_base: ^1.9.5+1
   process: ^3.0.9
+  collection: ^1.14.12
 
 dev_dependencies:
   test: ^1.0.0

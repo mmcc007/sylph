@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:sylph/src/bundle.dart';
 import 'package:sylph/src/concurrent_jobs.dart';
+import 'package:sylph/src/config.dart';
 import 'package:sylph/src/device_farm.dart';
 import 'package:sylph/src/devices.dart';
 import 'package:sylph/src/resources.dart';
@@ -150,12 +151,12 @@ void main() {
       final poolName = 'ios pool 1';
       final configFilePath = 'test/sylph_test.yaml';
 
-      Map config = await parseYamlFile(configFilePath);
+      final config = Config(configPath: configFilePath);
 
-      Map devicePoolInfo = getDevicePoolInfo(config['device_pools'], poolName);
+      final devicePool = config.getDevicePool(poolName);
 
       // check for existing pool
-      final result = setupDevicePool(devicePoolInfo, projectArn);
+      final result = setupDevicePool(devicePool, projectArn);
       final expected =
           'arn:aws:devicefarm:us-west-2:122621792560:devicepool:e1c97f71-f534-432b-9e86-3bd7529e327b/d1a72830-e094-4280-b8b9-3b800ba76a31';
       expect(result, expected);
@@ -174,11 +175,11 @@ void main() {
       // note: requires certain env vars to be defined
       final filePath = 'test/sylph_test.yaml';
 //    final filePath = 'example/sylph.yaml';
-      final config = await parseYamlFile(filePath);
+      final config = Config(configPath: filePath);
       // change directory to app
       final origDir = Directory.current;
       Directory.current = 'example';
-      await unpackResources(config['tmp_dir'], true);
+      await unpackResources(config.tmpDir, true);
       final bundleSize = await bundleFlutterTests(config);
       expect(bundleSize, 5);
       // change back for tests to continue
@@ -187,10 +188,10 @@ void main() {
 
     test('iterate thru test suites', () async {
       final filePath = 'test/sylph_test.yaml';
-      final config = await parseYamlFile(filePath);
-//    print('config=$config');
+      final config = Config(configPath: filePath);
+      //    print('config=$config');
 
-      final List testSuites = config['test_suites'];
+      final testSuites = config.testSuites;
       final expectedSuites = [
         {
           'tests': [
@@ -215,19 +216,18 @@ void main() {
       ];
       expect(testSuites, expectedSuites);
       for (var testSuite in testSuites) {
-        print('Running ${testSuite['test_suite']} ...');
-        final List devicePools = testSuite['pool_names'];
+        print('Running ${testSuite.name} ...');
+        final List devicePools = testSuite.poolNames;
         for (var poolName in devicePools) {
 //        print('poolType=$poolType, poolName=$poolName');
-          final List tests = testSuite['tests'];
+          final List tests = testSuite.tests;
           for (var test in tests) {
             // lookup device pool
-            Map devicePool =
-                getDevicePoolInfo(config['device_pools'], poolName);
+            final devicePool = config.getDevicePool(poolName);
             if (devicePool == null) {
               throw 'Exception: device pool $poolName not found';
             }
-            final poolType = devicePool['pool_type'];
+            final poolType = devicePool.deviceType;
             print(
                 'running test: $test on $poolType devices in device pool $poolName');
           }
@@ -236,10 +236,9 @@ void main() {
     });
     test('lookup device pool', () async {
       final filePath = 'test/sylph_test.yaml';
-      final config = await parseYamlFile(filePath);
-
+      final config = Config(configPath: filePath);
       final poolName = 'android pool 1';
-      Map devicePool = getDevicePoolInfo(config['device_pools'], poolName);
+      final devicePool = config.getDevicePool(poolName);
       final expected = {
         'pool_type': 'android',
         'devices': [
@@ -254,10 +253,10 @@ void main() {
 
     test('check pool type', () async {
       final filePath = 'test/sylph_test.yaml';
-      final config = await parseYamlFile(filePath);
+      final config = Config(configPath: filePath);
       final poolName = 'android pool 1';
-      Map devicePoolInfo = getDevicePoolInfo(config['device_pools'], poolName);
-      expect(devicePoolInfo['pool_type'], enumToStr(DeviceType.android));
+      final devicePoolInfo = config.getDevicePool(poolName);
+      expect(devicePoolInfo.deviceType, enumToStr(DeviceType.android));
     });
 
     test('download artifacts by run', () {
@@ -331,10 +330,9 @@ void main() {
     test('get first device in pool', () async {
       final filePath = 'test/sylph_test.yaml';
       final poolName = 'android pool 1';
-      final config = await parseYamlFile(filePath);
-      final devicePoolInfo =
-          getDevicePoolInfo(config['device_pools'], poolName);
-      final devices = devicePoolInfo['devices'];
+      final config=Config(configPath:  filePath);
+      final devicePoolInfo = config.getDevicePool(poolName);
+      final devices = devicePoolInfo.devices;
       final expected = {
         'model': 'Pixel',
         'name': 'Google Pixel',
@@ -425,7 +423,7 @@ void main() {
 
     test('check all sylph devices found', () async {
       // get all sylph devices from sylph.yaml
-      final config = await parseYamlFile('example/sylph.yaml');
+      final config = Config(configPath: 'example/sylph.yaml');
       // for this test change directory
       final origDir = Directory.current;
       Directory.current = 'example';
