@@ -12,12 +12,6 @@ main() {
       final deviceModel = 'Google Pixel 2';
       final deviceOs = '8.0.0';
       final configStr = '''
-        tmp_dir: /tmp/sylph
-        artifacts_dir: /tmp/sylph_artifacts
-        sylph_timeout: 720 
-        concurrent_runs: true
-        project_name: test concurrent runs
-        default_job_timeout: 10 
         device_pools:
           - pool_name: $poolName
             pool_type: android
@@ -25,6 +19,30 @@ main() {
               - name: $deviceName
                 model: $deviceModel
                 os: $deviceOs
+      ''';
+      final expectedDevices = <SylphDevice>[
+        SylphDevice(deviceName, deviceModel, Version.parse(deviceOs),
+            DeviceType.android)
+      ];
+      final config = Config(configStr: configStr);
+      expect(config.getPoolDevices(poolName), equals(expectedDevices));
+    });
+
+    test('isActivePoolType', () {
+      final configStr = '''
+        tmp_dir: /tmp/sylph
+        artifacts_dir: /tmp/sylph_artifacts
+        sylph_timeout: 720 
+        concurrent_runs: true
+        project_name: test concurrent runs
+        default_job_timeout: 10 
+        device_pools:
+          - pool_name: android pool 1
+            pool_type: android
+            devices:
+              - name: Google Pixel 2
+                model: Google Pixel 2
+                os: 8.0.0
           - pool_name: ios pool 1
             pool_type: ios
             devices:
@@ -38,15 +56,12 @@ main() {
               - test_driver/main_test.dart
             pool_names:
               - android pool 1
-              - ios pool 1
+              # - ios pool 1
             job_timeout: 15
       ''';
-      final expectedDevices = <SylphDevice>[
-        SylphDevice(deviceName, deviceModel, Version.parse(deviceOs),
-            DeviceType.android)
-      ];
       final config = Config(configStr: configStr);
-      expect(config.getPoolDevices(poolName), equals(expectedDevices));
+      expect(config.isPoolTypeActive(DeviceType.android), isTrue);
+      expect(config.isPoolTypeActive(DeviceType.ios), isFalse);
     });
   });
 

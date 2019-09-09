@@ -51,7 +51,30 @@ class Config {
 
   /// Check for active pool type.
   /// Active pools can only be one of [DeviceType].
-  bool isPoolTypeActive(DeviceType poolType) => null;
+  bool isPoolTypeActive(DeviceType poolType) => _isPoolTypeActive(poolType);
+
+  bool _isPoolTypeActive(DeviceType poolType) {
+    // get active pool names
+    List poolNames = [];
+    for (final testSuite in _configInfo['test_suites']) {
+      for (var poolName in testSuite['pool_names']) {
+        poolNames.add(poolName);
+      }
+    }
+    poolNames = poolNames.toSet().toList(); // remove dups
+
+    // get active pool types
+    List poolTypes = [];
+    for (final poolName in poolNames) {
+      poolTypes.add(stringToEnum(
+          DeviceType.values,
+          getDevicePoolInfo(
+              _configInfo['device_pools'], poolName)['pool_type']));
+    }
+
+    // test for requested pool type
+    return poolTypes.contains(poolType);
+  }
 
   DeviceType getPoolType(String poolName) => null;
 }
