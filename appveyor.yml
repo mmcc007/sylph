@@ -21,6 +21,8 @@ install:
   - which python
   - which pip
 #  - where pip3
+  - where aws
+  - which aws | exit 0
   - which java
   - which curl
   - which 7z
@@ -43,11 +45,11 @@ install:
   #  - curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
   #  - unzip awscli-bundle.zip
   #  - sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
-  - pip install awscli
+#  - pip install awscli
 #  - SET PATH=$MAGICK_HOME;%PATH%
-  - where aws
-  - where c:\ aws
-  - where /R c:\ aws
+#  - where aws
+#  - where c:\ aws
+#  - where /R c:\ aws
   - aws --version & exit 0
   - move .aws %USERPROFILE%
 
