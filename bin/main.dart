@@ -27,7 +27,7 @@ main(List<String> arguments) async {
         valueHelp: 'sylph.yaml')
     ..addOption(devicesArg,
         abbr: 'd',
-        help: 'List available devices.',
+        help: 'List devices available in cloud.',
         allowed: ['all', 'android', 'ios'],
         valueHelp: 'all|android|ios')
     ..addFlag(verboseArg,
