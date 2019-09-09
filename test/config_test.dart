@@ -173,6 +173,21 @@ main() {
       ];
       expect(config.getDevicesInSuite(suiteName), equals(expected));
     });
+
+    test('getDevicePool', () {
+      final poolName = 'android pool 1';
+      final configStr = '''
+        device_pools:
+          - pool_name: $poolName
+            pool_type: android
+            devices:
+              - name: Google Pixel 2
+                model: Google Pixel 2
+                os: 8.0.0      
+      ''';
+      final config = Config(configStr: configStr);
+      expect(config.getDevicePool(poolName).name, equals(poolName));
+    });
   });
 
   group('in context', () {

@@ -31,6 +31,12 @@ class Config {
 //  SylphDevice getDevice(String deviceName) => devices.firstWhere(
 //          (device) => device.name == deviceName,
 //      orElse: () => throw 'Error: no device configured for \'$deviceName\'');
+  int get sylphTimeout => _configInfo['sylph_timeout'];
+  String get projectName => _configInfo['project_name'];
+  int get defaultJobTimeout => _configInfo['default_job_timeout'];
+  String get tmpDir => _configInfo['tmp_dir'];
+  bool get concurrentRuns => _configInfo['concurrent_runs'];
+  String get artifactsDir => _configInfo['artifacts_dir'];
 
   List<SylphDevice> getPoolDevices(String poolName) =>
       _getSylphDevices(_getPoolInfo(poolName));
@@ -73,12 +79,19 @@ class Config {
     for (final poolName in poolNames) {
       poolTypes.add(stringToEnum(
           DeviceType.values,
-          getDevicePoolInfo(
+          _getDevicePoolInfo(
               _configInfo['device_pools'], poolName)['pool_type']));
     }
 
     // test for requested pool type
     return poolTypes.contains(poolType);
+  }
+
+  /// Gets device pool from config file.
+  /// Returns as [Map].
+  Map _getDevicePoolInfo(List devicePools, String poolName) {
+    return devicePools.firstWhere((pool) => pool['pool_name'] == poolName,
+        orElse: () => throw 'Error: device pool $poolName not found');
   }
 
   DeviceType getPoolType(String poolName) =>
@@ -147,6 +160,14 @@ class Config {
     return !isInValidPoolType;
   }
 
+  DevicePool getDevicePool(String poolName) {
+    final poolInfo = _getPoolInfo(poolName);
+    return DevicePool(
+        poolInfo['pool_name'],
+        stringToEnum(DeviceType.values, poolInfo['pool_type']),
+        _getSylphDevices(poolInfo));
+  }
+
   List<String> _processList(List list) {
     return list.map((item) {
       return item.toString();
@@ -176,6 +197,15 @@ class TestSuite {
   @override
   String toString() =>
       'name: $name, main: $main, tests: $tests, poolNames: $poolNames, jobTimeout: $jobTimeout';
+}
+
+/// Describe a device pool
+class DevicePool {
+  final String name;
+  final DeviceType deviceType;
+  final List<SylphDevice> devices;
+
+  DevicePool(this.name, this.deviceType, this.devices);
 }
 
 Function eq = const ListEquality().equals;
