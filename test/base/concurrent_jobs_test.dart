@@ -14,7 +14,7 @@ main() {
           {'n': 10, 'verbose': true},
           {'n': 20, 'verbose': false}
         ];
-        List results = await runJobs(squareInContext, jobArgs);
+        List results = await concurrentJobs.runJobs(squareInContext, jobArgs);
         for (int i = 0; i < results.length; i++) {
           expect(results[i], await squareInContext(jobArgs[i]));
         }
@@ -34,7 +34,7 @@ main() {
           {'n': 10},
           {'n': 20}
         ];
-        List results = await runJobs(square, jobArgs);
+        List results = await concurrentJobs.runJobs(square, jobArgs);
         for (int i = 0; i < results.length; i++) {
           expect(results[i], await square(jobArgs[i]));
         }

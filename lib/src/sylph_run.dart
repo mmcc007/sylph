@@ -93,7 +93,7 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
           printStatus('Running tests concurrently on Android pools...');
         }
       }
-      final results = await runJobs(
+      final results = await concurrentJobs.runJobs(
         runSylphJobInIsolate,
         jobArgs,
       );

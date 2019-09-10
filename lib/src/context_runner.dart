@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:process/process.dart';
+import 'package:sylph/src/base/concurrent_jobs.dart';
 import 'package:tool_base/tool_base.dart';
 
 Future<T> runInContext<T>(
@@ -13,6 +14,7 @@ Future<T> runInContext<T>(
     overrides: overrides,
     fallbacks: <Type, Generator>{
       BotDetector: () => const BotDetector(),
+      ConcurrentJobs: () => ConcurrentJobs(),
       Config: () => Config(),
       Logger: () => platform.isWindows ? WindowsStdoutLogger() : StdoutLogger(),
       OperatingSystemUtils: () => OperatingSystemUtils(),
