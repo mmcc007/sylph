@@ -90,7 +90,8 @@ jobs:
 #          tags: true
 
 
-    - stage: Run Sylph on Linux
+#    - stage: Run Sylph on Linux
+    - stage: Run tests
       env: Run Sylph on AWS Device Farms
       os: linux
       # only build on tag releases
