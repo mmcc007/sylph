@@ -20,7 +20,7 @@ import 'package:yamlicious/yamlicious.dart';
 /// ```
 class LocalPackageManager {
   LocalPackageManager(this.packageDir, {this.isAppPackage = false}) {
-    printTrace('LocalPackageManager(${this.packageDir}, ${this.isAppPackage})');
+//    printTrace('LocalPackageManager(${this.packageDir}, ${this.isAppPackage})');
     assert(packageDir != null);
     assert(isAppPackage != null);
     _pubSpec = fs.file('$packageDir/$kPubSpecYamlName');
@@ -47,16 +47,16 @@ class LocalPackageManager {
     } else {
       dstDir = path.dirname(packageDir);
     }
-    printTrace(
-        'copyLocalPackages:\n\tsrcDir=$srcDir\n\tdstDir=$dstDir\n\tisAppPackage=$isAppPackage');
+//    printTrace(
+//        'copyLocalPackages:\n\tsrcDir=$srcDir\n\tdstDir=$dstDir\n\tisAppPackage=$isAppPackage');
     _processPubSpec(srcDir: srcDir, dstDir: dstDir);
     _cleanupPubSpec();
   }
 
   // set paths to dependent local packages
   void _cleanupPubSpec() {
-    printTrace(
-        '_cleanupPubSpec:\n\tisAppPackage=$isAppPackage\n\tpath=${_pubSpec.path}');
+//    printTrace(
+//        '_cleanupPubSpec:\n\tisAppPackage=$isAppPackage\n\tpath=${_pubSpec.path}');
 //     set path to local dependencies
     _processPubSpec(setPkgPath: true);
     // convert map to json, to string, parse as yaml, convert to yaml string and save
@@ -67,9 +67,9 @@ class LocalPackageManager {
   // scan pubSpec for local packages and adjust local paths.
   void _processPubSpec(
       {String srcDir, String dstDir, bool setPkgPath = false}) {
-    if (!setPkgPath && (srcDir == null || dstDir == null)) {
-      throw 'Error: cannot process ${_pubSpec.path}\nsrcDir=$srcDir\ndstDir=$dstDir\nsetPackagePath=$setPkgPath';
-    }
+//    if (!setPkgPath && (srcDir == null || dstDir == null)) {
+//      throw 'Error: cannot process ${_pubSpec.path}\nsrcDir=$srcDir\ndstDir=$dstDir\nsetPackagePath=$setPkgPath';
+//    }
     _pubSpecMap.forEach((k, v) {
       if (k == kDependencies || k == kDevDependencies) {
         v?.forEach((pkgName, pkgInfo) {
@@ -101,7 +101,7 @@ class LocalPackageManager {
 
   /// Copy dir. Assumes path syntax is specific to current platform.
   static copy(String srcDir, String dstDir, {bool force = false}) {
-    printTrace('LocalPackageManager: copy($srcDir, $dstDir, force: $force)');
+//    printTrace('LocalPackageManager: copy($srcDir, $dstDir, force: $force)');
     // do not copy if package already exists
     if (!fs.directory(dstDir).existsSync() || force) {
 //      if (platform.isWindows) {
