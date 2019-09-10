@@ -93,6 +93,7 @@ jobs:
 #    - stage: Run Sylph on Linux
     - stage: Run tests
       env: Run Sylph on AWS Device Farms
+      dist: trusty # defaults to java 1.8
       os: linux
       # only build on tag releases
 #      if: tag IS present
@@ -105,7 +106,7 @@ jobs:
           fi
 
         # Add missing java module used by sdkmanager, etc...
-        - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
+#        - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
 
         # Install android tools
         - export ANDROID_HOME=~/android-sdk
