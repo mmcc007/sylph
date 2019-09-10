@@ -52,6 +52,13 @@ void copyFile(String srcPath, String dstDir) {
   fs.file(srcPath).copySync('$dstDir/${p.basename(srcPath)}');
 }
 
+/// Recursively copies `srcDir` to `destDir`.
+///
+/// Creates `destDir` if needed.
+void copyDir(String from, String to) {
+  copyDirectorySync(fs.directory(from), fs.directory(to));
+}
+
 /// Creates a directory at [dirPath].
 /// Creates path recursively if necessary.
 void createDir(String dirPath) {
@@ -64,6 +71,25 @@ void deleteDir(String dirPath) {
   if (fs.directory(dirPath).existsSync()) {
     fs.directory(dirPath).deleteSync(recursive: true);
   }
+}
+
+void zip(String from, String to) {
+//  printTrace('zipping from $from to $to');
+  if (platform.isWindows) {
+    // os.zip() does not work on windows (device farm re
+    // tried using windows built-in compression but did not work
+    // eg, powershell Compress-Archive -Path Z:\tmp\sylph\test_bundle -DestinationPath Z:\tmp\test_bundle_windows.zip
+    cmd(['7z', 'a', to, '$from/*']);
+  } else {
+    os.zip(fs.directory(from), fs.file(to));
+  }
+}
+
+void unzip(String from, String to) {
+//  printTrace('unzipping from $from to $to');
+//  cmd(['unzip', '-q', from, '-d', to]);
+  os.unzip(fs.file(from), fs.directory(to));
+//  runSync(<String>['unzip', '-o', '-q', from, '-d', to]);
 }
 
 /// Writes a file image to a path on disk.
@@ -139,7 +165,8 @@ T stringToEnum<T>(List<T> values, String value) {
 String runArtifactsDirPath(String downloadDirPrefix, String sylphRunName,
     String projectName, String poolName) {
   final downloadDir = '$downloadDirPrefix/' +
-      '${sylphRunName.replaceAll(':', '_')}/$projectName/$poolName'.replaceAll(' ', '_');
+      '${sylphRunName.replaceAll(':', '_')}/$projectName/$poolName'
+          .replaceAll(' ', '_');
   return downloadDir;
 }
 
