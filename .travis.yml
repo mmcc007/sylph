@@ -118,7 +118,7 @@ jobs:
         - mkdir -p ~/.android
         - touch ~/.android/repositories.cfg
         # Accept licenses before installing components, no need to echo y for each component
-        - yes | sdkmanager --licenses
+        - yes | sdkmanager --licenses > /dev/null
         - sdkmanager --list | head -15
         # Platform and build tools
         - sdkmanager "tools" "platform-tools" "platforms;android-${ANDROID_PLATFORM_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
