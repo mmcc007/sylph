@@ -22,7 +22,7 @@ import 'package:yamlicious/yamlicious.dart';
 /// ```
 class LocalPackageManager {
   LocalPackageManager(this.packageDir, {this.isAppPackage = false}) {
-    printTrace('LocalPackageManager(${this.packageDir}, ${this.isAppPackage})');
+//    printTrace('LocalPackageManager(${this.packageDir}, ${this.isAppPackage})');
     assert(packageDir != null);
     assert(isAppPackage != null);
     _pubSpec = fs.file('$packageDir/$kPubSpecYamlName');
