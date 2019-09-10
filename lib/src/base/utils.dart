@@ -55,11 +55,12 @@ void copyFile(String srcPath, String dstDir) {
 /// Recursively copies `srcDir` to `destDir`.
 ///
 /// Creates `destDir` if needed.
-void copyDir(String from, String to) {
-  copyDirectorySync(fs.directory(from), fs.directory(to));
+void copyDir(String srcDir, String destDir) {
+  copyDirectorySync(fs.directory(srcDir), fs.directory(destDir));
 }
 
 /// Creates a directory at [dirPath].
+///
 /// Creates path recursively if necessary.
 void createDir(String dirPath) {
   fs.directory(dirPath).createSync(recursive: true);
@@ -67,7 +68,6 @@ void createDir(String dirPath) {
 
 /// Deletes directory at [dirPath] if it exists.
 void deleteDir(String dirPath) {
-  printTrace('deleting dir $dirPath');
   if (fs.directory(dirPath).existsSync()) {
     fs.directory(dirPath).deleteSync(recursive: true);
   }
