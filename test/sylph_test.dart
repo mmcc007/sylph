@@ -355,7 +355,7 @@ void main() {
         {'n': 10},
         {'n': 20}
       ];
-      List results = await runJobs(squareFuture, jobArgs);
+      List results = await concurrentJobs.runJobs(squareFuture, jobArgs);
       for (int i = 0; i < results.length; i++) {
 //      print("squareFuture job #$i: job(${jobArgs[i]}) = ${results[i]}");
         expect(results[i], await squareFuture(jobArgs[i]));
@@ -411,7 +411,8 @@ void main() {
       Directory.current = 'example';
 
       // run
-      final result = await runJobs(runSylphJobInIsolate, [jobArgs]);
+      final result =
+          await concurrentJobs.runJobs(runSylphJobInIsolate, [jobArgs]);
       expect(result, [
         {'result': true}
       ]);
