@@ -37,11 +37,13 @@ main() {
       final projectArn =
           'arn:aws:devicefarm:us-west-2:122621792560:project:9796b48e-ad3d-4b3c-97a6-94d4e50b1792';
       final stagingDir = '/tmp/test_sylph_run';
+      final appiumTemplateZip = '$stagingDir/$kAppiumTemplateZip';
       final bundleDir = '$stagingDir/$kTestBundleDir';
-      final bundleZipName = '$stagingDir/$kTestBundleName';
-      final bundleAppDir = '$bundleDir/$kDefaultFlutterAppName';
+      final bundleZip = '$stagingDir/$kTestBundleZip';
+//      final bundleAppDir = '$bundleDir/$kDefaultFlutterAppName';
       final appDir = '.';
 
+      // copy app to memory file system
       copyDirFs(io.Directory('example'), fs.directory(appDir));
 
       fakeProcessManager.calls = [
@@ -121,21 +123,20 @@ main() {
                   }
                 }),
                 '')),
-        Call('chmod u+x $stagingDir/script/test_android.sh', null),
-        Call('chmod u+x $stagingDir/script/test_ios.sh', null),
-        Call('chmod u+x $stagingDir/script/local_utils.sh', null),
-        Call(
-            'unzip -q $stagingDir/appium_bundle.zip -d $stagingDir/test_bundle',
-            null),
-        Call('mkdir $bundleAppDir', null),
+//        Call('chmod u+x $stagingDir/script/test_android.sh', null),
+//        Call('chmod u+x $stagingDir/script/test_ios.sh', null),
+//        Call('chmod u+x $stagingDir/script/local_utils.sh', null),
+        Call('unzip -o -q $appiumTemplateZip -d $bundleDir', null),
+//        Call('mkdir $bundleAppDir', null),
 //        Call('cp -r $appDir $bundleAppDir', null),
-        Call('rm -rf $bundleAppDir/build', null),
-        Call('rm -rf $bundleAppDir/ios/Flutter/Flutter.framework', null),
-        Call('rm -rf $bundleAppDir/ios/Flutter/App.framework', null),
-        Call('cp -r $stagingDir/script $bundleAppDir', null),
-        Call('cp $stagingDir/build_to_os.txt $bundleAppDir', null),
-        Call('zip -rq $bundleZipName $bundleDir', null),
-        Call('stat -f%z $bundleZipName', ProcessResult(0, 0, '5000000', '')),
+//        Call('rm -rf $bundleAppDir/build', null),
+//        Call('rm -rf $bundleAppDir/ios/Flutter/Flutter.framework', null),
+//        Call('rm -rf $bundleAppDir/ios/Flutter/App.framework', null),
+//        Call('cp -r $stagingDir/script $bundleAppDir', null),
+//        Call('cp $stagingDir/build_to_os.txt $bundleAppDir', null),
+        Call('zip -r -q $bundleZip .', null,
+            sideEffects: () => fs.file(bundleZip).createSync(recursive: true)),
+//        Call('stat -f%z $bundleZipName', ProcessResult(0, 0, '5000000', '')),
         Call(
             'aws devicefarm list-device-pools --arn $projectArn --type PRIVATE',
             ProcessResult(
@@ -592,7 +593,7 @@ main() {
                 }),
                 '')),
         Call(
-            'wget -O /tmp/sylph_artifacts/sylph_run_name/test_sylph_run/android_pool_1/Apple_iPhone_X-A1865-11.4.0/Syslog_00000.syslog https://prod-us-west-2-results.s3-us-west-2.amazonaws.com/122621792560/908d123f-af8c-4d4b-9b86-65d3d51a0e49/5f484a00-5399-40ee-aae8-2d65196a5bcd/00000/00000/00000/2caf5715-3f3b-4dc3-bd7a-744d16759e37.syslog?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20190908T090151Z&X-Amz-SignedHeaders=host&X-Amz-Expires=259200&X-Amz-Credential=AKIAJSORV74ENYFBITRQ%2F20190908%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Signature=97ec48885b4bad3fb8bcd878d5fcaec03df2e53a08e6243156831f0c6b5b3578',
+            'curl https://prod-us-west-2-results.s3-us-west-2.amazonaws.com/122621792560/908d123f-af8c-4d4b-9b86-65d3d51a0e49/5f484a00-5399-40ee-aae8-2d65196a5bcd/00000/00000/00000/2caf5715-3f3b-4dc3-bd7a-744d16759e37.syslog?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20190908T090151Z&X-Amz-SignedHeaders=host&X-Amz-Expires=259200&X-Amz-Credential=AKIAJSORV74ENYFBITRQ%2F20190908%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Signature=97ec48885b4bad3fb8bcd878d5fcaec03df2e53a08e6243156831f0c6b5b3578 -o /tmp/sylph_artifacts/sylph_run_name/test_sylph_run/android_pool_1/Apple_iPhone_X-A1865-11.4.0/Syslog_00000.syslog',
             null),
       ];
 
@@ -638,8 +639,9 @@ main() {
       fakeProcessManager.verifyCalls();
     }, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
-//      Logger: () => VerboseLogger(StdoutLogger()),
+      Logger: () => VerboseLogger(StdoutLogger()),
       FileSystem: () => fs,
+      OperatingSystemUtils: () => OperatingSystemUtils(),
     });
   });
 }
