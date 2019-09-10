@@ -52,10 +52,12 @@ void copyFile(String srcPath, String dstDir) {
   fs.file(srcPath).copySync('$dstDir/${p.basename(srcPath)}');
 }
 
-/// Deletes directory at [dirPath].
+/// Deletes directory at [dirPath] if it exists.
 void deleteDir(String dirPath) {
   printTrace('deleting dir $dirPath');
-  fs.directory(dirPath).deleteSync(recursive: true);
+  if (fs.directory(dirPath).existsSync()) {
+    fs.directory(dirPath).deleteSync(recursive: true);
+  }
 }
 
 /// Writes a file image to a path on disk.
