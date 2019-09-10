@@ -129,7 +129,7 @@ Future<bool> runSylphJob(TestSuite testSuite, Config config, poolName,
   // Upload test suite (in 2 parts)
 
   // 1. Upload test package
-  final testBundlePath = '$tmpDir/$kTestBundleName';
+  final testBundlePath = '$tmpDir/$kTestBundleZip';
   printStatus('Uploading tests: $testBundlePath ...');
   String testPackageArn = await uploadFile(
       projectArn, testBundlePath, 'APPIUM_PYTHON_TEST_PACKAGE');
