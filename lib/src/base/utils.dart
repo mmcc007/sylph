@@ -52,6 +52,12 @@ void copyFile(String srcPath, String dstDir) {
   fs.file(srcPath).copySync('$dstDir/${p.basename(srcPath)}');
 }
 
+/// Creates a directory at [dirPath].
+/// Creates path recursively if necessary.
+void createDir(String dirPath) {
+  fs.directory(dirPath).createSync(recursive: true);
+}
+
 /// Deletes directory at [dirPath] if it exists.
 void deleteDir(String dirPath) {
   printTrace('deleting dir $dirPath');
@@ -133,7 +139,7 @@ T stringToEnum<T>(List<T> values, String value) {
 String runArtifactsDirPath(String downloadDirPrefix, String sylphRunName,
     String projectName, String poolName) {
   final downloadDir = '$downloadDirPrefix/' +
-      '$sylphRunName/$projectName/$poolName'.replaceAll(' ', '_');
+      '${sylphRunName.replaceAll(':', '_')}/$projectName/$poolName'.replaceAll(' ', '_');
   return downloadDir;
 }
 
