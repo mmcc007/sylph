@@ -44,7 +44,7 @@ install:
 
   # upgrade and configure aws
   - aws --version
-  - pip install --upgrade awscli
+  - pip install --upgrade awscli > nul
   - aws --version
   - move .aws %USERPROFILE%
 

@@ -11,6 +11,7 @@ import 'base/utils.dart';
 
 const kUploadTimeout = 5;
 const kUploadSucceeded = 'SUCCEEDED';
+const kUploadFailed = 'FAILED';
 const kCompletedRunStatus = 'COMPLETED';
 const kSuccessResult = 'PASSED';
 
@@ -222,17 +223,22 @@ Future<String> uploadFile(
   final uploadArn = upload['arn'];
 
   // 2. Upload file
-  cmd(['curl', '-T', filePath, uploadUrl]);
+  cmd(['curl', '-T', filePath, '$uploadUrl']);
 
   // 3. Wait until file upload complete
   for (int i = 0; i < kUploadTimeout; i++) {
     final upload = deviceFarmCmd(['get-upload', '--arn', uploadArn])['upload'];
     await Future.delayed(Duration(milliseconds: 1000));
-    if (upload['status'] == kUploadSucceeded) {
+    final uploadStatus = upload['status'];
+    if (uploadStatus == kUploadSucceeded) {
       return uploadArn;
     }
+    if (uploadStatus == kUploadFailed) {
+//      throw 'Error: upload of \'$filePath\' failed: ${upload['metadata']['errorMessage']}';
+      throw 'Error: upload of \'$filePath\' failed: ${upload['metadata']}';
+    }
   }
-  throw 'Error: file upload failed: file path = \'$filePath\'';
+  throw 'Error: upload of file \'$filePath\' timed out';
 }
 
 /// Downloads artifacts for each job generated during a run.
@@ -268,7 +274,7 @@ void downloadArtifacts(String arn, String artifactsDir) {
     // use last artifactID to make unique
     final fileName = '$name ${artifactIDs[3]}.$extension'.replaceAll(' ', '_');
     final filePath = '$artifactsDir/$fileName';
-    cmd(['wget', '-O', filePath, fileUrl]);
+    cmd(['curl', fileUrl, '-o', filePath]);
   }
 }
 

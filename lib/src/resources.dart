@@ -102,7 +102,7 @@ Future<void> unpackScripts(String dstDir) async {
 Future<void> unpackScript(String srcPath, String dstDir) async {
   await unpackFile(srcPath, dstDir);
   // make executable
-  cmd(['chmod', 'u+x', '$dstDir/$srcPath']);
+//  cmd(['chmod', 'u+x', '$dstDir/$srcPath']);
 }
 
 /// Unpack file from resources while optionally applying env vars
