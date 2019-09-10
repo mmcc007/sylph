@@ -1,11 +1,8 @@
 # Do not build feature branch with open Pull Requests
 skip_branch_with_pr: true
 
-#init:
-#  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-#
-on_finish:
-  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+# turn off MSBuild settings
+build: off
 
 install:
 
@@ -79,10 +76,17 @@ install:
   - echo Install sylph
   - pub global activate --source path .
 
-build: off
-
 test_script:
   # run sylph
   - echo Run sylph
   - cd example
   - sylph -c sylph_android.yaml -v
+
+# Allow Remote Desktop connection to session
+# (like ssh but for windows)
+#init:
+#  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+#
+#on_finish:
+#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
