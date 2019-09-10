@@ -1,6 +1,5 @@
 //import 'dart:io';
 
-import 'package:sylph/src/context_runner.dart';
 import 'package:sylph/src/base/local_packages.dart';
 import 'package:sylph/src/base/utils.dart';
 import 'package:test/test.dart';
@@ -18,24 +17,31 @@ main() {
     final appDstDir = '$dstDir/$appName';
     LocalPackageManager localPackageManager;
 
+    void runLocalPackageManager(String appSrcDir, String appDstDir) {
+      LocalPackageManager.copy(appSrcDir, appDstDir, force: true);
+      localPackageManager = LocalPackageManager(appDstDir, isAppPackage: true);
+      localPackageManager.installPackages(appSrcDir);
+    }
+
     setUp(() {
-      clearDirectory(dstDir);
-      runInContext<void>(() {
-        LocalPackageManager.copy(appSrcDir, appDstDir, force: true);
-        localPackageManager =
-            LocalPackageManager(appDstDir, isAppPackage: true);
-        localPackageManager.installPackages(appSrcDir);
-      }, overrides: <Type, Generator>{
-//        Logger: () => VerboseLogger(StdoutLogger()),
-      });
+      deleteDir(dstDir);
+      createDir(dstDir);
+//      runLocalPackageManager(appSrcDir, appDstDir);
+    });
+
+    tearDown(() {
+//      deleteDir(dstDir);
     });
 
     testUsingContext('copy app package', () {
+      runLocalPackageManager(appSrcDir, appDstDir);
       expect(fs.directory(appDstDir).existsSync(), isTrue);
+    }, overrides: <Type, Generator>{
+      Logger: () => VerboseLogger(StdoutLogger()),
     });
 
     testUsingContext('install local packages', () {
-//      localPackageManager.installPackages(appSrcDir);
+      runLocalPackageManager(appSrcDir, appDstDir);
       final expectedLocalPackage = 'local_package';
       final expectedSharedLocalPackage = 'shared_package';
       expect(fs.directory('$appDstDir/$expectedLocalPackage').existsSync(),
@@ -46,7 +52,7 @@ main() {
     });
 
     testUsingContext('cleanup apps pubspec.yaml', () {
-//      localPackageManager.installPackages(appSrcDir);
+      runLocalPackageManager(appSrcDir, appDstDir);
 
       final expectedPubSpec = '''
 name: "app"
@@ -61,7 +67,7 @@ dependencies:
     testUsingContext(
         'cleanup local dependencies of dependencies if at different directory levels',
         () {
-//      localPackageManager.installPackages(appSrcDir);
+      runLocalPackageManager(appSrcDir, appDstDir);
 
       final expectedPubSpecLocal = '''
 name: "local_package"
@@ -88,7 +94,7 @@ environment:
     });
 
     testUsingContext('get dependencies in new project', () {
-//      localPackageManager.installPackages(appSrcDir);
+      runLocalPackageManager(appSrcDir, appDstDir);
       expect(cmd(['flutter', 'packages', 'get'], workingDirectory: appDstDir),
           isNotEmpty);
     }, skip: isCI());
