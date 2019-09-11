@@ -1,7 +1,9 @@
+import 'dart:async';
+
 import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:file/memory.dart';
 import 'package:process/process.dart';
-import 'package:sylph/src/bundle.dart';
+import 'package:sylph/src/base/concurrent_jobs.dart';
 import 'package:sylph/src/device_farm.dart';
 import 'package:sylph/src/resources.dart';
 import 'package:sylph/src/sylph_run.dart';
@@ -21,6 +23,109 @@ const kFirstJobArn =
     'arn:aws:devicefarm:us-west-2:122621792560:job:908d123f-af8c-4d4b-9b86-65d3d51a0e49/5f484a00-5399-40ee-aae8-2d65196a5bcd/00000';
 
 main() {
+  final projectName = 'test sylph run';
+  final defaultJobTimeoutMinutes = '10';
+  final jobTimeoutMinutes = '15';
+  final projectArn =
+      'arn:aws:devicefarm:us-west-2:122621792560:project:9796b48e-ad3d-4b3c-97a6-94d4e50b1792';
+  final stagingDir = '/tmp/test_sylph_run';
+  final appiumTemplateZip = '$stagingDir/$kAppiumTemplateZip';
+  final bundleDir = '$stagingDir/$kTestBundleDir';
+  final bundleZip = '$stagingDir/$kTestBundleZip';
+
+  final startRunCalls = [
+    Call(
+        'aws devicefarm list-devices',
+        ProcessResult(
+            0,
+            0,
+            jsonEncode(
+              {
+                "devices": [
+                  {
+                    "arn":
+                        "arn:aws:devicefarm:us-west-2::device:70D5B22608A149568923E4A225EC5E04",
+                    "name": "Samsung Galaxy Note 4 SM-N910H",
+                    "manufacturer": "Samsung",
+                    "model": "Galaxy Note 4 SM-N910H",
+                    "modelId": "SM-N910H",
+                    "formFactor": "PHONE",
+                    "platform": "ANDROID",
+                    "os": "5.0.1",
+                    "cpu": {
+                      "frequency": "MHz",
+                      "architecture": "armeabi-v7a",
+                      "clock": 1300.0
+                    },
+                    "resolution": {"width": 1440, "height": 2560},
+                    "heapSize": 512000000,
+                    "memory": 32000000000,
+                    "image": "70D5B22608A149568923E4A225EC5E04",
+                    "remoteAccessEnabled": false,
+                    "remoteDebugEnabled": false,
+                    "fleetType": "PUBLIC",
+                    "availability": "AVAILABLE"
+                  },
+                  {
+                    "arn":
+                        "arn:aws:devicefarm:us-west-2::device:352FDCFAA36C43AC8228DC8F23355272",
+                    "name": "Apple iPhone 6 Plus",
+                    "manufacturer": "Apple",
+                    "model": "iPhone 6 Plus",
+                    "modelId": "A1522",
+                    "formFactor": "PHONE",
+                    "platform": "IOS",
+                    "os": "10.0.2",
+                    "cpu": {
+                      "frequency": "Hz",
+                      "architecture": "arm64",
+                      "clock": 0.0
+                    },
+                    "resolution": {"width": 1080, "height": 1920},
+                    "heapSize": 0,
+                    "memory": 16000000000,
+                    "image": "352FDCFAA36C43AC8228DC8F23355272",
+                    "remoteAccessEnabled": false,
+                    "remoteDebugEnabled": false,
+                    "fleetType": "PUBLIC",
+                    "availability": "HIGHLY_AVAILABLE"
+                  }
+                ]
+              },
+            ),
+            '')),
+    Call('aws devicefarm list-projects',
+        ProcessResult(0, 0, '{"projects":[]}', '')),
+    Call(
+        'aws devicefarm create-project --name $projectName --default-job-timeout-minutes $defaultJobTimeoutMinutes',
+        ProcessResult(
+            0,
+            0,
+            jsonEncode({
+              "project": {
+                "arn": "$projectArn",
+                "name": "$projectName",
+                "defaultJobTimeoutMinutes": defaultJobTimeoutMinutes,
+                "created": 1567902055.614
+              }
+            }),
+            '')),
+//        Call('chmod u+x $stagingDir/script/test_android.sh', null),
+//        Call('chmod u+x $stagingDir/script/test_ios.sh', null),
+//        Call('chmod u+x $stagingDir/script/local_utils.sh', null),
+    Call('unzip -o -q $appiumTemplateZip -d $bundleDir', null),
+//        Call('mkdir $bundleAppDir', null),
+//        Call('cp -r $appDir $bundleAppDir', null),
+//        Call('rm -rf $bundleAppDir/build', null),
+//        Call('rm -rf $bundleAppDir/ios/Flutter/Flutter.framework', null),
+//        Call('rm -rf $bundleAppDir/ios/Flutter/App.framework', null),
+//        Call('cp -r $stagingDir/script $bundleAppDir', null),
+//        Call('cp $stagingDir/build_to_os.txt $bundleAppDir', null),
+    Call('zip -r -q $bundleZip .', null,
+        sideEffects: () => fs.file(bundleZip).createSync(recursive: true)),
+//        Call('stat -f%z $bundleZipName', ProcessResult(0, 0, '5000000', '')),
+  ];
+
   group('sylph run', () {
     FakeProcessManager fakeProcessManager;
     MemoryFileSystem fs;
@@ -45,68 +150,68 @@ main() {
 
       // copy app to memory file system
       copyDirFs(io.Directory('example'), fs.directory(appDir));
-
-      fakeProcessManager.calls = [
-        Call(
-            'aws devicefarm list-devices',
-            ProcessResult(
-                0,
-                0,
-                jsonEncode(
-                  {
-                    "devices": [
-                      {
-                        "arn":
-                            "arn:aws:devicefarm:us-west-2::device:70D5B22608A149568923E4A225EC5E04",
-                        "name": "Samsung Galaxy Note 4 SM-N910H",
-                        "manufacturer": "Samsung",
-                        "model": "Galaxy Note 4 SM-N910H",
-                        "modelId": "SM-N910H",
-                        "formFactor": "PHONE",
-                        "platform": "ANDROID",
-                        "os": "5.0.1",
-                        "cpu": {
-                          "frequency": "MHz",
-                          "architecture": "armeabi-v7a",
-                          "clock": 1300.0
-                        },
-                        "resolution": {"width": 1440, "height": 2560},
-                        "heapSize": 512000000,
-                        "memory": 32000000000,
-                        "image": "70D5B22608A149568923E4A225EC5E04",
-                        "remoteAccessEnabled": false,
-                        "remoteDebugEnabled": false,
-                        "fleetType": "PUBLIC",
-                        "availability": "AVAILABLE"
+      final listDevicesCall = Call(
+          'aws devicefarm list-devices',
+          ProcessResult(
+              0,
+              0,
+              jsonEncode(
+                {
+                  "devices": [
+                    {
+                      "arn":
+                          "arn:aws:devicefarm:us-west-2::device:70D5B22608A149568923E4A225EC5E04",
+                      "name": "Samsung Galaxy Note 4 SM-N910H",
+                      "manufacturer": "Samsung",
+                      "model": "Galaxy Note 4 SM-N910H",
+                      "modelId": "SM-N910H",
+                      "formFactor": "PHONE",
+                      "platform": "ANDROID",
+                      "os": "5.0.1",
+                      "cpu": {
+                        "frequency": "MHz",
+                        "architecture": "armeabi-v7a",
+                        "clock": 1300.0
                       },
-                      {
-                        "arn":
-                            "arn:aws:devicefarm:us-west-2::device:352FDCFAA36C43AC8228DC8F23355272",
-                        "name": "Apple iPhone 6 Plus",
-                        "manufacturer": "Apple",
-                        "model": "iPhone 6 Plus",
-                        "modelId": "A1522",
-                        "formFactor": "PHONE",
-                        "platform": "IOS",
-                        "os": "10.0.2",
-                        "cpu": {
-                          "frequency": "Hz",
-                          "architecture": "arm64",
-                          "clock": 0.0
-                        },
-                        "resolution": {"width": 1080, "height": 1920},
-                        "heapSize": 0,
-                        "memory": 16000000000,
-                        "image": "352FDCFAA36C43AC8228DC8F23355272",
-                        "remoteAccessEnabled": false,
-                        "remoteDebugEnabled": false,
-                        "fleetType": "PUBLIC",
-                        "availability": "HIGHLY_AVAILABLE"
-                      }
-                    ]
-                  },
-                ),
-                '')),
+                      "resolution": {"width": 1440, "height": 2560},
+                      "heapSize": 512000000,
+                      "memory": 32000000000,
+                      "image": "70D5B22608A149568923E4A225EC5E04",
+                      "remoteAccessEnabled": false,
+                      "remoteDebugEnabled": false,
+                      "fleetType": "PUBLIC",
+                      "availability": "AVAILABLE"
+                    },
+                    {
+                      "arn":
+                          "arn:aws:devicefarm:us-west-2::device:352FDCFAA36C43AC8228DC8F23355272",
+                      "name": "Apple iPhone 6 Plus",
+                      "manufacturer": "Apple",
+                      "model": "iPhone 6 Plus",
+                      "modelId": "A1522",
+                      "formFactor": "PHONE",
+                      "platform": "IOS",
+                      "os": "10.0.2",
+                      "cpu": {
+                        "frequency": "Hz",
+                        "architecture": "arm64",
+                        "clock": 0.0
+                      },
+                      "resolution": {"width": 1080, "height": 1920},
+                      "heapSize": 0,
+                      "memory": 16000000000,
+                      "image": "352FDCFAA36C43AC8228DC8F23355272",
+                      "remoteAccessEnabled": false,
+                      "remoteDebugEnabled": false,
+                      "fleetType": "PUBLIC",
+                      "availability": "HIGHLY_AVAILABLE"
+                    }
+                  ]
+                },
+              ),
+              ''));
+      fakeProcessManager.calls = [
+        listDevicesCall,
         Call('aws devicefarm list-projects',
             ProcessResult(0, 0, '{"projects":[]}', '')),
         Call(
@@ -139,40 +244,62 @@ main() {
 //        Call('stat -f%z $bundleZipName', ProcessResult(0, 0, '5000000', '')),
         Call(
             'aws devicefarm list-device-pools --arn $projectArn --type PRIVATE',
+            ProcessResult(0, 0, jsonEncode({"devicePools": []}), '')),
+
+//        Call(
+//            'aws devicefarm list-device-pools --arn $projectArn --type PRIVATE',
+//            ProcessResult(
+//                0,
+//                0,
+//                jsonEncode({
+//                  "devicePools": [
+//                    {
+//                      "arn": "$projectArn/eb91a358-91ae-4e0f-9e77-1c7309363b18",
+//                      "name": "android pool 1",
+//                      "type": "PRIVATE",
+//                      "rules": [
+//                        {
+//                          "attribute": "ARN",
+//                          "operator": "IN",
+//                          "value":
+//                              "[\"arn:aws:devicefarm:us-west-2::device:70D5B22608A149568923E4A225EC5E04\"]"
+//                        }
+//                      ]
+//                    },
+//                    {
+//                      "arn": "$projectArn/eef401d8-9dc4-41d4-ac2f-d86c85c76e40",
+//                      "name": "ios pool 1",
+//                      "type": "PRIVATE",
+//                      "rules": [
+//                        {
+//                          "attribute": "ARN",
+//                          "operator": "IN",
+//                          "value":
+//                              "[\"arn:aws:devicefarm:us-west-2::device:352FDCFAA36C43AC8228DC8F23355272\"]"
+//                        }
+//                      ]
+//                    }
+//                  ]
+//                }),
+//                '')),
+        listDevicesCall,
+
+        Call(
+            'aws devicefarm create-device-pool --name android pool 1 --project-arn arn:aws:devicefarm:us-west-2:122621792560:project:9796b48e-ad3d-4b3c-97a6-94d4e50b1792 --rules [{"attribute": "ARN", "operator": "IN","value": "[\\"arn:aws:devicefarm:us-west-2::device:70D5B22608A149568923E4A225EC5E04\\"]"}]',
             ProcessResult(
                 0,
                 0,
                 jsonEncode({
-                  "devicePools": [
-                    {
-                      "arn": "$projectArn/eb91a358-91ae-4e0f-9e77-1c7309363b18",
-                      "name": "android pool 1",
-                      "type": "PRIVATE",
-                      "rules": [
-                        {
-                          "attribute": "ARN",
-                          "operator": "IN",
-                          "value":
-                              "[\"arn:aws:devicefarm:us-west-2::device:70D5B22608A149568923E4A225EC5E04\"]"
-                        }
-                      ]
-                    },
-                    {
-                      "arn": "$projectArn/eef401d8-9dc4-41d4-ac2f-d86c85c76e40",
-                      "name": "ios pool 1",
-                      "type": "PRIVATE",
-                      "rules": [
-                        {
-                          "attribute": "ARN",
-                          "operator": "IN",
-                          "value":
-                              "[\"arn:aws:devicefarm:us-west-2::device:352FDCFAA36C43AC8228DC8F23355272\"]"
-                        }
-                      ]
-                    }
-                  ]
+                  "devicePool": {
+                    "arn": "$projectArn/eb91a358-91ae-4e0f-9e77-1c7309363b18",
+                    "name": "ios pool xxx",
+                    "type": "PRIVATE",
+                    "rules":
+                        "[{attribute: ARN, operator: IN, value: [\"arn:aws:devicefarm:us-west-2::device:5F1B162C265B4F34804B7D0DC2CDBE40\"]}]})"
+                  }
                 }),
                 '')),
+
         Call('flutter build apk -t test_driver/main.dart --debug',
             ProcessResult(0, 0, 'output from build', '')),
         Call(
@@ -644,4 +771,91 @@ main() {
       OperatingSystemUtils: () => OperatingSystemUtils(),
     });
   });
+
+  group('concurrent run', () {
+    final appDir = '.';
+
+    FakeProcessManager fakeProcessManager;
+    MemoryFileSystem fs;
+
+    setUp(() async {
+      fakeProcessManager = FakeProcessManager();
+      fs = MemoryFileSystem();
+      // copy app to memory file system
+      copyDirFs(io.Directory('example'), fs.directory(appDir));
+    });
+
+    testUsingContext('job', () async {
+      final projectName = 'test sylph run';
+      final defaultJobTimeoutMinutes = '10';
+      final jobTimeoutMinutes = '15';
+      final stagingDir = '/tmp/test_sylph_run';
+
+      fakeProcessManager.calls = [...startRunCalls];
+
+      final configStr = '''
+        tmp_dir: $stagingDir
+        artifacts_dir: /tmp/sylph_artifacts
+        sylph_timeout: 720 
+        concurrent_runs: true
+        project_name: $projectName
+        default_job_timeout: $defaultJobTimeoutMinutes 
+        device_pools:
+          - pool_name: android pool 1
+            pool_type: android
+            devices:
+              - name: Samsung Galaxy Note 4 SM-N910H
+                model: SM-N910H
+                os: 5.0.1
+          - pool_name: ios pool 1
+            pool_type: ios
+            devices:
+              - name: Apple iPhone 6 Plus
+                model: A1522
+                os: 10.0.2
+        test_suites:
+          - test_suite: example tests 1
+            main: test_driver/main.dart
+            tests:
+              - test_driver/main_test.dart
+            pool_names:
+              - android pool 1
+            job_timeout: $jobTimeoutMinutes
+      ''';
+      final configFilePath = null;
+      final sylphRunName = 'sylph run name';
+      final sylphRunTimestamp = DateTime(1);
+      final jobVerbose = true;
+      final result = await sylphRun(
+          configFilePath, sylphRunName, sylphRunTimestamp, jobVerbose,
+          configStr: configStr);
+      expect(result, isTrue);
+      fakeProcessManager.verifyCalls();
+    }, overrides: <Type, Generator>{
+      ProcessManager: () => fakeProcessManager,
+//      Logger: () => VerboseLogger(StdoutLogger()),
+      FileSystem: () => fs,
+      OperatingSystemUtils: () => OperatingSystemUtils(),
+      ConcurrentJobs: () => FakeConcurrentJobs(),
+    });
+  });
+
+  group('not in context', () {
+    test('sylphRuntimeFormatted', () {
+      expect(
+          sylphRuntimeFormatted(DateTime.now(), DateTime.now()), equals('0ms'));
+    });
+    test('sylphTimestamp', () {
+      expect(DateTime.now().isAfter(sylphTimestamp()), isTrue);
+    });
+  });
+}
+
+class FakeConcurrentJobs implements ConcurrentJobs {
+  @override
+  Future<List<Map>> runJobs(job, List<Map> jobArgs) {
+    return Future.value([
+      {'result': true}
+    ]);
+  }
 }
