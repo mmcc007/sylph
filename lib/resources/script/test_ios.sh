@@ -104,11 +104,11 @@ run_driver() {
   flutter packages get
 
   if [[ -z "$test_path" ]]; then
-    echo "Running flutter drive --no-build $debug_app_path"
-    flutter drive --no-build "$debug_app_path"
+    echo "Running flutter -v drive --no-build $debug_app_path"
+    flutter -v drive --no-build "$debug_app_path"
   else
-    echo "Running flutter drive --no-build -t $debug_app_path --driver $test_path"
-    flutter drive --no-build "$debug_app_path" -t "$debug_app_path" --driver "$test_path"
+    echo "Running flutter -v drive --no-build -t $debug_app_path --driver $test_path"
+    flutter -v drive --no-build "$debug_app_path" -t "$debug_app_path" --driver "$test_path"
   fi
 }
 
