@@ -1,11 +1,7 @@
 //import 'dart:io';
 
-import 'package:fake_process_manager/fake_process_manager.dart';
-import 'package:process/process.dart';
 import 'package:sylph/src/bundle.dart';
 import 'package:sylph/src/config.dart';
-import 'package:sylph/src/context_runner.dart';
-import 'package:sylph/src/base/local_packages.dart';
 import 'package:sylph/src/resources.dart';
 import 'package:sylph/src/base/utils.dart';
 import 'package:test/test.dart';
@@ -14,52 +10,23 @@ import 'package:tool_base_test/tool_base_test.dart';
 
 main() {
   group('bundle', () {
-    final appDir = 'test/resources/test_local_pkgs/apps/app';
-    final stagingDir = '/tmp/screenshots_test_bundle';
-    final bundleDir = '$stagingDir/$kTestBundleDir';
-    final bundleZipName = '$stagingDir/$kTestBundleName';
-    final bundleAppDir = '$bundleDir/$kDefaultFlutterAppName';
-
-    FakeProcessManager fakeProcessManager;
-
-    setUp(() {
-      fakeProcessManager = FakeProcessManager();
-      clearDirectory(bundleDir);
-      // create fake app in bundle
-//      copyFiles(appDir, bundleAppDir);
-      runInContext<void>(() {
-        LocalPackageManager.copy(appDir, bundleAppDir, force: true);
-        final localPackageManager =
-            LocalPackageManager(bundleAppDir, isAppPackage: true);
-        localPackageManager.installPackages(appDir);
-      });
-    });
-
-    testUsingContext('bundle flutter tests', () {
-      fakeProcessManager.calls = [
-        Call(
-            'unzip -q $stagingDir/appium_bundle.zip -d $stagingDir/test_bundle',
-            null),
-        Call('mkdir $bundleAppDir', null),
-        Call('rm -rf $bundleAppDir/build', null),
-        Call('rm -rf $bundleAppDir/ios/Flutter/Flutter.framework', null),
-        Call('rm -rf $bundleAppDir/ios/Flutter/App.framework', null),
-        Call('cp -r $stagingDir/script $bundleAppDir', null),
-        Call('cp $stagingDir/build_to_os.txt $bundleAppDir', null),
-        Call('zip -rq $bundleZipName $bundleDir', null),
-        Call('stat -f%z $bundleZipName', ProcessResult(0, 0, '5000000', '')),
-      ];
+    testUsingContext('bundleFlutterTests', () async {
+      final appDir = 'test/resources/test_local_pkgs/apps/app';
+      final stagingDir = '/tmp/sylph_test_bundle';
       final configStr = '''
         tmp_dir: $stagingDir
       ''';
       final config = Config(configStr: configStr);
+      clearDirectory(stagingDir);
+      await unpackResources(stagingDir, false, appDir: 'example');
       final result = bundleFlutterTests(config, appDir: appDir);
-      expect(result, equals(5));
-      fakeProcessManager.verifyCalls();
+      expect(result, equals('4.7MB'));
     }, overrides: <Type, Generator>{
-      ProcessManager: () => fakeProcessManager,
+      OperatingSystemUtils: () => OperatingSystemUtils(),
 //      Logger: () => VerboseLogger(StdoutLogger()),
     });
+  });
+}
 
 //    testUsingContext('flutter', () async {
 //      final flutterVersion = 'v1.7.8+hotfix.4';
@@ -117,5 +84,3 @@ main() {
 //    }, skip: true, overrides: <Type, Generator>{
 //      Logger: () => VerboseLogger(StdoutLogger()),
 //    });
-  });
-}

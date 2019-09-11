@@ -1,3 +1,11 @@
+env:
+  global:
+    - FLUTTER_CHANNEL=stable
+    - FLUTTER_VERSION=1.7.8+hotfix.4-${FLUTTER_CHANNEL}
+    - ANDROID_SDK_TOOLS=4333796 # android-28
+    - ANDROID_PLATFORM_SDK=28
+    - ANDROID_BUILD_TOOLS=28.0.3
+
 jobs:
   include:
     - stage: Run tests
@@ -12,8 +20,8 @@ jobs:
         - script/code_coverage.sh
       after_success: bash <(curl -s https://codecov.io/bash) -f coverage/lcov.info
 
-    - stage: Run Sylph
-      env: Run Sylph on AWS Device Farms
+    - stage: Run sylph
+      env: Run Sylph on Mac
       os: osx
       # only build on tag releases
       if: tag IS present
@@ -23,9 +31,6 @@ jobs:
       - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
 
       # Install android tools
-      - ANDROID_SDK_TOOLS=4333796 # android-28
-      - ANDROID_PLATFORM_SDK=28
-      - ANDROID_BUILD_TOOLS=28.0.3
       - export ANDROID_HOME=~/android-sdk
       - wget -q "https://dl.google.com/android/repository/sdk-tools-darwin-$ANDROID_SDK_TOOLS.zip" -O android-sdk-tools.zip
       - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
@@ -53,8 +58,6 @@ jobs:
 #      - brew link --overwrite cocoapods
 
       # install pre-compiled flutter
-      - FLUTTER_CHANNEL=stable
-      - FLUTTER_VERSION=1.7.8+hotfix.4-${FLUTTER_CHANNEL}
       - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
       - export PATH="$PATH":"$HOME/.pub-cache/bin"
       - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
@@ -85,3 +88,57 @@ jobs:
         file: /tmp/sylph_artifacts.zip
         on:
           tags: true
+
+
+    - stage: Run sylph
+      env: Run Sylph on linux
+      dist: trusty # defaults to java 1.8
+      os: linux
+      # only build on tag releases
+      if: tag IS present
+      before_install:
+        - |
+          if ! git diff --name-only $TRAVIS_COMMIT_RANGE | grep -qvE '(.md)|^(LICENSE)|^(appveyor.yml)'
+          then
+            echo "Not running CI since only docs were changed."
+            exit
+          fi
+
+        # Add missing java module used by sdkmanager, etc...
+#        - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
+
+        # Install android tools
+        - export ANDROID_HOME=~/android-sdk
+        - wget -q "https://dl.google.com/android/repository/sdk-tools-linux-$ANDROID_SDK_TOOLS.zip" -O android-sdk-tools.zip
+        - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
+        - rm android-sdk-tools.zip
+        - PATH=${PATH}:${ANDROID_HOME}/emulator:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
+        # Silence warning.
+        - mkdir -p ~/.android
+        - touch ~/.android/repositories.cfg
+        # Accept licenses before installing components, no need to echo y for each component
+        - yes | sdkmanager --licenses > /dev/null
+        - sdkmanager --list | head -15
+        # Platform and build tools
+        - sdkmanager "tools" "platform-tools" "platforms;android-${ANDROID_PLATFORM_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
+        - sdkmanager --list | head -15
+
+        # install pre-compiled flutter
+#        - sudo apt-get install -y --no-install-recommends lib32stdc++6 libstdc++6 > /dev/null
+        - wget --quiet --output-document=flutter.tar.xz https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/linux/flutter_linux_v${FLUTTER_VERSION}.tar.xz && tar xf flutter.tar.xz > /dev/null && rm flutter.tar.xz
+        - export PATH="$PATH":"$HOME/.pub-cache/bin"
+        - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
+        - flutter doctor -v
+
+        # install aws
+        - curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+        - unzip awscli-bundle.zip
+        - sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+        - aws --version
+        - cp -r .aws ~
+
+        # install most current (released or unreleased) version of Sylph
+        - pub global activate --source path .
+
+      script:
+        - cd example; sylph -c sylph_android.yaml -v

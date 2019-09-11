@@ -6,10 +6,10 @@ import 'package:tool_base/tool_base.dart';
 
 // resource consts
 const kResourcesUri = 'package:sylph/resources';
-const kAppiumTemplateName = 'appium_bundle.zip';
+const kAppiumTemplateZip = 'appium_bundle.zip';
 const kAppiumTestSpecName = 'test_spec.yaml';
 const kTestBundleDir = 'test_bundle';
-const kTestBundleName = '$kTestBundleDir.zip';
+const kTestBundleZip = '$kTestBundleDir.zip';
 const kBuildToOsMapFileName = 'build_to_os.txt';
 
 // env vars
@@ -39,8 +39,8 @@ Future<void> unpackResources(String tmpDir, bool isIosPoolTypeActive,
   clearDirectory(tmpDir);
 
   // unpack Appium template
-  await writeFileImage(await readResourceImage(kAppiumTemplateName),
-      '$tmpDir/$kAppiumTemplateName');
+  await writeFileImage(await readResourceImage(kAppiumTemplateZip),
+      '$tmpDir/$kAppiumTemplateZip');
 
   // unpack Appium test spec
   await unpackFile(kAppiumTestSpecName, tmpDir);
@@ -102,7 +102,7 @@ Future<void> unpackScripts(String dstDir) async {
 Future<void> unpackScript(String srcPath, String dstDir) async {
   await unpackFile(srcPath, dstDir);
   // make executable
-  cmd(['chmod', 'u+x', '$dstDir/$srcPath']);
+  if (platform.isMacOS) cmd(['chmod', 'u+x', '$dstDir/$srcPath']);
 }
 
 /// Unpack file from resources while optionally applying env vars

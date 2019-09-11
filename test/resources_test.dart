@@ -10,8 +10,7 @@ main() {
         final stagingDir = '/tmp/sylph_test_unpack';
         // note: expects certain env vars to be defined
         await unpackResources(stagingDir, true, appDir: 'example');
-        expect(
-            fs.file('$stagingDir/$kAppiumTemplateName').existsSync(), isTrue);
+        expect(fs.file('$stagingDir/$kAppiumTemplateZip').existsSync(), isTrue);
       }, overrides: <Type, Generator>{
         Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
           ..environment = {kCIEnvVar: 'true', 'TEAM_ID': 'team_id'},

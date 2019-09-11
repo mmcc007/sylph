@@ -1,0 +1,93 @@
+# turn off MSBuild settings
+build: off
+# Do not build feature branch with open Pull Requests
+skip_branch_with_pr: true
+# only build on tagged releases
+skip_non_tags: true
+
+install:
+
+  # examine env
+  - echo Examine environment
+  - echo %USERPROFILE%
+  - pwd
+  - echo %CD%
+#  - set
+#  - hostname
+#  - SET /?
+
+  - which python
+  - which pip
+#  - where pip3
+  - where aws
+  - which aws
+  - which java
+  - which curl
+  - which 7z
+  - which mkdir
+  - which touch
+  - which yes
+#  - which no
+  - which head
+  - which start
+  - which sc
+  - which systeminfo
+#  - sc query state= all
+
+#  - sc query intelhaxm
+#  - systeminfo
+  - java -version
+  - aws --version
+  - dir
+
+  # upgrade and configure aws
+  - aws --version
+  - pip install --upgrade awscli > nul
+  - aws --version
+  - move .aws %USERPROFILE%
+
+  # install android SDK
+  - echo Install Android SDK
+  - SET ANDROID_HOME=c:\android-sdk-windows
+  - SET ANDROID_SDK_ROOT=%ANDROID_HOME%
+  - SET ANDROID_TOOLS=4333796 # android-28
+  - SET ANDROID_PLATFORM_SDK=28
+  - SET ANDROID_BUILD_TOOLS=28.0.3
+
+  - curl https://dl.google.com/android/repository/sdk-tools-windows-%ANDROID_TOOLS%.zip -o android-sdk-tools.zip
+  - 7z x android-sdk-tools.zip -o%ANDROID_HOME% > nul
+  - del android-sdk-tools.zip
+#  - dir %ANDROID_HOME%
+  - SET PATH=%ANDROID_HOME%/emulator;%ANDROID_HOME%/tools/bin;%ANDROID_HOME%/platform-tools;%PATH%
+  # silence warning
+  - touch %USERPROFILE%/.android/repositories.cfg
+  # install components
+  - yes | sdkmanager --licenses > nul
+  - sdkmanager "tools" "platform-tools" "platforms;android-${ANDROID_PLATFORM_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
+  - sdkmanager --list | head -15
+
+  # install flutter
+  - echo Install Flutter
+  - git clone -b stable https://github.com/flutter/flutter.git
+  - SET PATH=%CD%\flutter\bin;%CD%\flutter\bin\cache\dart-sdk\bin;%APPDATA%\Pub\Cache\bin;%PATH%
+  - flutter precache
+  - flutter doctor -v
+
+  # install sylph
+  - echo Install sylph
+  - pub global activate --source path .
+
+test_script:
+  # run sylph
+  - echo Run sylph
+  - cd example
+  - sylph -c sylph_android.yaml -v
+
+# Allow Remote Desktop connection to session
+# (like ssh but for windows)
+#init:
+#  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+#
+#on_finish:
+#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+

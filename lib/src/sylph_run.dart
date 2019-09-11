@@ -93,7 +93,7 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
           printStatus('Running tests concurrently on Android pools...');
         }
       }
-      final results = await runJobs(
+      final results = await concurrentJobs.runJobs(
         runSylphJobInIsolate,
         jobArgs,
       );
@@ -129,7 +129,7 @@ Future<bool> runSylphJob(TestSuite testSuite, Config config, poolName,
   // Upload test suite (in 2 parts)
 
   // 1. Upload test package
-  final testBundlePath = '$tmpDir/$kTestBundleName';
+  final testBundlePath = '$tmpDir/$kTestBundleZip';
   printStatus('Uploading tests: $testBundlePath ...');
   String testPackageArn = await uploadFile(
       projectArn, testBundlePath, 'APPIUM_PYTHON_TEST_PACKAGE');
