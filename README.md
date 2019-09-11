@@ -9,7 +9,9 @@ _A sylph is a mythological invisible being of the air._
 [Wikipedia](https://en.wikipedia.org/wiki/Sylph)
 
 # _Sylph_
-_Sylph_ is a command line utility for running Flutter integration and end-to-end tests on pools of real iOS and Android devices in the cloud. _Sylph_ runs on a developer mac or in a CI environment.
+_Sylph_ is a command line utility for running Flutter integration and end-to-end tests on pools of real iOS and Android devices in the cloud. _Sylph_ runs on mac, linux and windows and also in a CI environment. 
+
+_Sylph_ works with AWS Device Farm for up to hundreds of Android and iOS devices in a single run.
 
 # Installation
 ```
@@ -44,11 +46,19 @@ sample usage: sylph
 # Dependencies
 ## AWS CLI
 Install AWS Command Line Interface (AWS CLI)
+
+MacOS/Linux:
 ```
 curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
 unzip awscli-bundle.zip
 sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
 ``` 
+
+Windows:
+```
+pip install  awscli 
+```
+
 For alternative install options see:  
 https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html
 
@@ -90,7 +100,7 @@ sylph_timeout: 720 # seconds approx
 concurrent_runs: true
 
 # device farm config
-project_name: test concurrent runs
+project_name: App Integration Tests
 default_job_timeout: 10 # minutes, set at project creation
 
 device_pools:
@@ -124,6 +134,8 @@ test_suites:
 Multiple test suites, consisting of multiple tests, can be run on each device in each device pool. The 'main' app must include a call to `enableFlutterDriverExtension()`. 
 
 Device pools can consist of multiple devices. Devices in a device pool must be of the same type, iOS or Android.
+
+Note: If running on linux or windows, tests can only be run on Android devices. To run tests on both Android and iOS use a mac CI provider.
 
 ## Building an iOS debug app
 To build a testable iOS app locally, that can run on any real device in the cloud, the following environment variable must be present:
@@ -205,12 +217,15 @@ pub global list
 # Live demo
 To see _Sylph_ in action in a CI environment, a  demo of the [example](example) app is available.  
 
-The log of the live run is here:  
+The log of the live run on mac and linux is here:  
 https://travis-ci.com/mmcc007/sylph
 
 The resulting artifacts are here:  
 https://github.com/mmcc007/sylph/releases  
 (includes a video of test running on device)
+
+To view a similar run on windows:  
+https://ci.appveyor.com/project/mmcc007/sylph
 
 # Contributing
 When contributing to this repository, please feel free to discuss via issue or pull request.
