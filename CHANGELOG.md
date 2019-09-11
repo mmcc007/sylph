@@ -1,3 +1,7 @@
+## 0.6.0
+- Added verbose mode #56 #66
+- Added support for linux and windows #50 #69
+
 ## 0.5.0
 - Added support for bundling local packages #59
 - Added code coverage #53
