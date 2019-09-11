@@ -20,8 +20,8 @@ jobs:
         - script/code_coverage.sh
       after_success: bash <(curl -s https://codecov.io/bash) -f coverage/lcov.info
 
-    - stage: Run Sylph on MacOS
-      env: Run Sylph on AWS Device Farms
+    - stage: Run sylph
+      env: Run Sylph on Mac
       os: osx
       # only build on tag releases
       if: tag IS present
@@ -90,9 +90,8 @@ jobs:
           tags: true
 
 
-#    - stage: Run Sylph on Linux
-    - stage: Run tests
-      env: Run Sylph on AWS Device Farms
+    - stage: Run sylph
+      env: Run Sylph on linux
       dist: trusty # defaults to java 1.8
       os: linux
       # only build on tag releases
