@@ -148,10 +148,18 @@ void main() {
       // 'test artifacts download'
       final projectArn =
           'arn:aws:devicefarm:us-west-2:122621792560:project:e1c97f71-f534-432b-9e86-3bd7529e327b';
-      final poolName = 'ios pool 1';
-      final configFilePath = 'test/sylph_test.yaml';
+      final poolName = 'ios pool xxx';
+      final configStr = '''
+        device_pools:
+          - pool_name: $poolName
+            pool_type: ios
+            devices:
+              - name: Apple iPhone X
+                model: A1865
+                os: 11.4      
+      ''';
 
-      final config = Config(configPath: configFilePath);
+      final config = Config(configStr: configStr);
 
       final devicePool = config.getDevicePool(poolName);
 
