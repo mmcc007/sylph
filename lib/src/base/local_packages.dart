@@ -85,8 +85,10 @@ class LocalPackageManager {
                   pkgInfo[kLocalDependencyPath] = pkgPath;
                 } else {
                   // copy local package
-                  final pkgSrcDir =
-                      path.joinAll([srcDir, path.joinAll(v.split('/'))]);
+                  // if we have a global path for our local packages, remove the first "."
+                  final auxSrcDir = v.contains("/Users/") ? "/" : srcDir;
+                  path.joinAll([srcDir, path.joinAll(v.split('/'))]);
+                  final pkgSrcDir = path.joinAll([auxSrcDir, path.joinAll(v.split('/'))]);
                   final pkgDstDir = path.join(dstDir, pkgName);
                   copy(pkgSrcDir, pkgDstDir);
                   // install any local packages within this local package
