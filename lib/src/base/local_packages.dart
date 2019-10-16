@@ -1,8 +1,6 @@
 import 'dart:convert';
 //import 'dart:io';
 
-import 'package:sylph/src/base/utils.dart';
-
 import 'copy_path.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:yaml/yaml.dart';
@@ -69,14 +67,11 @@ class LocalPackageManager {
   // scan pubSpec for local packages and adjust local paths.
   void _processPubSpec(
       {String srcDir, String dstDir, bool setPkgPath = false}) {
-//    if (!setPkgPath && (srcDir == null || dstDir == null)) {
-//      throw 'Error: cannot process ${_pubSpec.path}\nsrcDir=$srcDir\ndstDir=$dstDir\nsetPackagePath=$setPkgPath';
-//    }
     _pubSpecMap.forEach((k, v) {
       if (k == kDependencies || k == kDevDependencies) {
         v?.forEach((pkgName, pkgInfo) {
           if (pkgInfo is Map) {
-            pkgInfo.forEach((k, v) {
+            pkgInfo.forEach((k, localPath) {
               if (k == kLocalDependencyPath) {
                 // found a local package
                 if (setPkgPath) {
@@ -85,8 +80,12 @@ class LocalPackageManager {
                   pkgInfo[kLocalDependencyPath] = pkgPath;
                 } else {
                   // copy local package
-                  final pkgSrcDir =
-                      path.joinAll([srcDir, path.joinAll(v.split('/'))]);
+                  String pkgSrcDir;
+                  if (path.isAbsolute(localPath)) {
+                    pkgSrcDir = localPath;
+                  } else {
+                    pkgSrcDir = path.joinAll([srcDir, localPath]);
+                  }
                   final pkgDstDir = path.join(dstDir, pkgName);
                   copy(pkgSrcDir, pkgDstDir);
                   // install any local packages within this local package
@@ -106,14 +105,7 @@ class LocalPackageManager {
 //    printTrace('LocalPackageManager: copy($srcDir, $dstDir, force: $force)');
     // do not copy if package already exists
     if (!fs.directory(dstDir).existsSync() || force) {
-//      if (platform.isWindows) {
-//        cmd(['xcopy', '$srcDir', '$dstDir', '/e', '/i', '/q']);
-//      } else {
-//        cmd(['cp', '-r', '$srcDir', '$dstDir']);
-//      }
-//      print('copyFiles($srcDir, $dstDir)');
       fs.directory(dstDir).createSync();
-//      copyDir(srcDir, dstDir);
       copyPathSync(srcDir, dstDir);
     }
   }
