@@ -23,19 +23,13 @@ class LocalPackageManager {
 //    printTrace('LocalPackageManager(${this.packageDir}, ${this.isAppPackage})');
     assert(packageDir != null);
     assert(isAppPackage != null);
-    _pubSpec = fs.file('$packageDir/$kPubSpecYamlName');
+    _pubSpec = fs.file('$packageDir/pubspec.yaml');
     _pubSpecMap = jsonDecode(jsonEncode(loadYaml(_pubSpec.readAsStringSync())));
   }
   final String packageDir;
   final bool isAppPackage;
   File _pubSpec;
   Map _pubSpecMap;
-
-  // pubspec.yaml constants
-  final kPubSpecYamlName = 'pubspec.yaml';
-  final kDependencies = 'dependencies';
-  final kDevDependencies = 'dev_dependencies';
-  final kLocalDependencyPath = 'path';
 
   /// Install any local packages from [srcDir] and their local packages.
   /// All local packages end-up at the same level in new project.
@@ -67,24 +61,25 @@ class LocalPackageManager {
   // scan pubSpec for local packages and adjust local paths.
   void _processPubSpec(
       {String srcDir, String dstDir, bool setPkgPath = false}) {
-    _pubSpecMap.forEach((k, v) {
-      if (k == kDependencies || k == kDevDependencies) {
-        v?.forEach((pkgName, pkgInfo) {
+    _pubSpecMap.forEach((pubSpecKey, pubSpecVal) {
+      if (pubSpecKey == 'dependencies' || pubSpecKey == 'dev_dependencies') {
+        pubSpecVal?.forEach((pkgName, pkgInfo) {
           if (pkgInfo is Map) {
-            pkgInfo.forEach((k, localPath) {
-              if (k == kLocalDependencyPath) {
+            pkgInfo.forEach((pkgParamKey, localPath) {
+              const localDependencyPath = 'path';
+              if (pkgParamKey == localDependencyPath) {
                 // found a local package
                 if (setPkgPath) {
                   // update local package path
-                  final pkgPath = isAppPackage ? pkgName : '../$pkgName';
-                  pkgInfo[kLocalDependencyPath] = pkgPath;
+                  pkgInfo[localDependencyPath] =
+                      isAppPackage ? pkgName : '../$pkgName';
                 } else {
                   // copy local package
                   String pkgSrcDir;
                   if (path.isAbsolute(localPath)) {
                     pkgSrcDir = localPath;
                   } else {
-                    pkgSrcDir = path.joinAll([srcDir, localPath]);
+                    pkgSrcDir = path.join(srcDir, localPath);
                   }
                   final pkgDstDir = path.join(dstDir, pkgName);
                   copy(pkgSrcDir, pkgDstDir);
