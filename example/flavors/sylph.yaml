@@ -15,8 +15,6 @@ concurrent_runs: true
 
 # flavor config
 flavor: paid
-android_package_name: com.yourcompany.flavors
-android_app_id: com.id.dev
 
 # device farm config
 project_name: test flavor runs
