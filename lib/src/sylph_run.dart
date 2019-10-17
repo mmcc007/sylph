@@ -124,7 +124,7 @@ Future<bool> runSylphJob(TestSuite testSuite, Config config, poolName,
 
   // Build debug app for pool type and upload
   final appArn = await _buildUploadApp(
-      projectArn, devicePool.deviceType, testSuite.main, tmpDir);
+      projectArn, devicePool.deviceType, testSuite.main, tmpDir, config.flavor);
 
   // Upload test suite (in 2 parts)
 
@@ -161,14 +161,23 @@ Future<bool> runSylphJob(TestSuite testSuite, Config config, poolName,
 /// Builds and uploads debug app (.ipa or .apk) for current pool type.
 /// Returns debug app ARN as [String].
 Future<String> _buildUploadApp(String projectArn, DeviceType poolType,
-    String mainPath, String tmpDir) async {
+    String mainPath, String tmpDir, String flavor) async {
   String appArn;
   if (poolType == DeviceType.android) {
-    printStatus('Building debug .apk from $mainPath...');
-    await streamCmd(['flutter', 'build', 'apk', '-t', mainPath, '--debug']);
+    printStatus(
+        'Building debug .apk from $mainPath${isEmpty(flavor) ? '' : ' with flavor $flavor'}...');
+    final command = ['flutter', 'build', 'apk', '-t', mainPath, '--debug'];
+    if (!isEmpty(flavor)) {
+      command.addAll(['--flavor', flavor]);
+    }
+    await streamCmd(command);
+
     // Upload apk
-    printStatus('Uploading debug android app: $kDebugApkPath ...');
-    appArn = await uploadFile(projectArn, kDebugApkPath, 'ANDROID_APP');
+    String debugApkPath = isEmpty(flavor)
+        ? kDebugApkPath
+        : 'build/app/outputs/apk/$flavor/debug/app-$flavor-debug.apk';
+    printStatus('Uploading debug android app: ${debugApkPath} ...');
+    appArn = await uploadFile(projectArn, debugApkPath, 'ANDROID_APP');
   } else {
     printStatus('Building debug .ipa from $mainPath...');
     if (platform.environment['CI'] == 'true') {
