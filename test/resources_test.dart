@@ -9,7 +9,7 @@ main() {
       testUsingContext('unpack all', () async {
         final stagingDir = '/tmp/sylph_test_unpack';
         // note: expects certain env vars to be defined
-        await unpackResources(stagingDir, true, appDir: 'example');
+        await unpackResources(stagingDir, true, appDir: 'example/default_app');
         expect(fs.file('$stagingDir/$kAppiumTemplateZip').existsSync(), isTrue);
       }, overrides: <Type, Generator>{
         Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
@@ -51,7 +51,9 @@ main() {
         final envVars = ['TEAM_ID'];
         final filePaths = ['fastlane/Appfile', 'exportOptions.plist'];
         final dstDir = '/tmp/test_env_files';
-        final nameVals = {kAppIdentifier: getAppIdentifier('example')};
+        final nameVals = {
+          kAppIdentifier: getAppIdentifier('example/default_app')
+        };
 
         for (final srcPath in filePaths) {
           await unpackFile(srcPath, dstDir,
@@ -64,7 +66,7 @@ main() {
 
       test('find APP_IDENTIFIER', () {
         final expected = 'com.orbsoft.counter';
-        String appIdentifier = getAppIdentifier('example');
+        String appIdentifier = getAppIdentifier('example/default_app');
         expect(appIdentifier, expected);
       });
     });

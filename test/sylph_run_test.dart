@@ -33,67 +33,129 @@ main() {
   final bundleDir = '$stagingDir/$kTestBundleDir';
   final bundleZip = '$stagingDir/$kTestBundleZip';
 
-  final startRunCalls = [
-    Call(
-        'aws devicefarm list-devices',
-        ProcessResult(
-            0,
-            0,
-            jsonEncode(
-              {
-                "devices": [
-                  {
-                    "arn":
-                        "arn:aws:devicefarm:us-west-2::device:70D5B22608A149568923E4A225EC5E04",
-                    "name": "Samsung Galaxy Note 4 SM-N910H",
-                    "manufacturer": "Samsung",
-                    "model": "Galaxy Note 4 SM-N910H",
-                    "modelId": "SM-N910H",
-                    "formFactor": "PHONE",
-                    "platform": "ANDROID",
-                    "os": "5.0.1",
-                    "cpu": {
-                      "frequency": "MHz",
-                      "architecture": "armeabi-v7a",
-                      "clock": 1300.0
-                    },
-                    "resolution": {"width": 1440, "height": 2560},
-                    "heapSize": 512000000,
-                    "memory": 32000000000,
-                    "image": "70D5B22608A149568923E4A225EC5E04",
-                    "remoteAccessEnabled": false,
-                    "remoteDebugEnabled": false,
-                    "fleetType": "PUBLIC",
-                    "availability": "AVAILABLE"
+  final listDevicesCall = Call(
+      'aws devicefarm list-devices',
+      ProcessResult(
+          0,
+          0,
+          jsonEncode(
+            {
+              "devices": [
+                {
+                  "arn":
+                      "arn:aws:devicefarm:us-west-2::device:70D5B22608A149568923E4A225EC5E04",
+                  "name": "Samsung Galaxy Note 4 SM-N910H",
+                  "manufacturer": "Samsung",
+                  "model": "Galaxy Note 4 SM-N910H",
+                  "modelId": "SM-N910H",
+                  "formFactor": "PHONE",
+                  "platform": "ANDROID",
+                  "os": "5.0.1",
+                  "cpu": {
+                    "frequency": "MHz",
+                    "architecture": "armeabi-v7a",
+                    "clock": 1300.0
                   },
-                  {
-                    "arn":
-                        "arn:aws:devicefarm:us-west-2::device:352FDCFAA36C43AC8228DC8F23355272",
-                    "name": "Apple iPhone 6 Plus",
-                    "manufacturer": "Apple",
-                    "model": "iPhone 6 Plus",
-                    "modelId": "A1522",
-                    "formFactor": "PHONE",
-                    "platform": "IOS",
-                    "os": "10.0.2",
-                    "cpu": {
-                      "frequency": "Hz",
-                      "architecture": "arm64",
-                      "clock": 0.0
-                    },
-                    "resolution": {"width": 1080, "height": 1920},
-                    "heapSize": 0,
-                    "memory": 16000000000,
-                    "image": "352FDCFAA36C43AC8228DC8F23355272",
-                    "remoteAccessEnabled": false,
-                    "remoteDebugEnabled": false,
-                    "fleetType": "PUBLIC",
-                    "availability": "HIGHLY_AVAILABLE"
-                  }
-                ]
-              },
-            ),
-            '')),
+                  "resolution": {"width": 1440, "height": 2560},
+                  "heapSize": 512000000,
+                  "memory": 32000000000,
+                  "image": "70D5B22608A149568923E4A225EC5E04",
+                  "remoteAccessEnabled": false,
+                  "remoteDebugEnabled": false,
+                  "fleetType": "PUBLIC",
+                  "availability": "AVAILABLE"
+                },
+                {
+                  "arn":
+                      "arn:aws:devicefarm:us-west-2::device:352FDCFAA36C43AC8228DC8F23355272",
+                  "name": "Apple iPhone 6 Plus",
+                  "manufacturer": "Apple",
+                  "model": "iPhone 6 Plus",
+                  "modelId": "A1522",
+                  "formFactor": "PHONE",
+                  "platform": "IOS",
+                  "os": "10.0.2",
+                  "cpu": {
+                    "frequency": "Hz",
+                    "architecture": "arm64",
+                    "clock": 0.0
+                  },
+                  "resolution": {"width": 1080, "height": 1920},
+                  "heapSize": 0,
+                  "memory": 16000000000,
+                  "image": "352FDCFAA36C43AC8228DC8F23355272",
+                  "remoteAccessEnabled": false,
+                  "remoteDebugEnabled": false,
+                  "fleetType": "PUBLIC",
+                  "availability": "HIGHLY_AVAILABLE"
+                }
+              ]
+            },
+          ),
+          ''));
+
+  final startRunCalls = [
+//    Call(
+//        'aws devicefarm list-devices',
+//        ProcessResult(
+//            0,
+//            0,
+//            jsonEncode(
+//              {
+//                "devices": [
+//                  {
+//                    "arn":
+//                        "arn:aws:devicefarm:us-west-2::device:70D5B22608A149568923E4A225EC5E04",
+//                    "name": "Samsung Galaxy Note 4 SM-N910H",
+//                    "manufacturer": "Samsung",
+//                    "model": "Galaxy Note 4 SM-N910H",
+//                    "modelId": "SM-N910H",
+//                    "formFactor": "PHONE",
+//                    "platform": "ANDROID",
+//                    "os": "5.0.1",
+//                    "cpu": {
+//                      "frequency": "MHz",
+//                      "architecture": "armeabi-v7a",
+//                      "clock": 1300.0
+//                    },
+//                    "resolution": {"width": 1440, "height": 2560},
+//                    "heapSize": 512000000,
+//                    "memory": 32000000000,
+//                    "image": "70D5B22608A149568923E4A225EC5E04",
+//                    "remoteAccessEnabled": false,
+//                    "remoteDebugEnabled": false,
+//                    "fleetType": "PUBLIC",
+//                    "availability": "AVAILABLE"
+//                  },
+//                  {
+//                    "arn":
+//                        "arn:aws:devicefarm:us-west-2::device:352FDCFAA36C43AC8228DC8F23355272",
+//                    "name": "Apple iPhone 6 Plus",
+//                    "manufacturer": "Apple",
+//                    "model": "iPhone 6 Plus",
+//                    "modelId": "A1522",
+//                    "formFactor": "PHONE",
+//                    "platform": "IOS",
+//                    "os": "10.0.2",
+//                    "cpu": {
+//                      "frequency": "Hz",
+//                      "architecture": "arm64",
+//                      "clock": 0.0
+//                    },
+//                    "resolution": {"width": 1080, "height": 1920},
+//                    "heapSize": 0,
+//                    "memory": 16000000000,
+//                    "image": "352FDCFAA36C43AC8228DC8F23355272",
+//                    "remoteAccessEnabled": false,
+//                    "remoteDebugEnabled": false,
+//                    "fleetType": "PUBLIC",
+//                    "availability": "HIGHLY_AVAILABLE"
+//                  }
+//                ]
+//              },
+//            ),
+//            '')),
+    listDevicesCall,
     Call('aws devicefarm list-projects',
         ProcessResult(0, 0, '{"projects":[]}', '')),
     Call(
@@ -110,9 +172,9 @@ main() {
               }
             }),
             '')),
-//        Call('chmod u+x $stagingDir/script/test_android.sh', null),
-//        Call('chmod u+x $stagingDir/script/test_ios.sh', null),
-//        Call('chmod u+x $stagingDir/script/local_utils.sh', null),
+    Call('chmod u+x $stagingDir/script/test_android.sh', null),
+    Call('chmod u+x $stagingDir/script/test_ios.sh', null),
+    Call('chmod u+x $stagingDir/script/local_utils.sh', null),
     Call('unzip -o -q $appiumTemplateZip -d $bundleDir', null),
 //        Call('mkdir $bundleAppDir', null),
 //        Call('cp -r $appDir $bundleAppDir', null),
@@ -149,99 +211,41 @@ main() {
       final appDir = '.';
 
       // copy app to memory file system
-      copyDirFs(io.Directory('example'), fs.directory(appDir));
-      final listDevicesCall = Call(
-          'aws devicefarm list-devices',
-          ProcessResult(
-              0,
-              0,
-              jsonEncode(
-                {
-                  "devices": [
-                    {
-                      "arn":
-                          "arn:aws:devicefarm:us-west-2::device:70D5B22608A149568923E4A225EC5E04",
-                      "name": "Samsung Galaxy Note 4 SM-N910H",
-                      "manufacturer": "Samsung",
-                      "model": "Galaxy Note 4 SM-N910H",
-                      "modelId": "SM-N910H",
-                      "formFactor": "PHONE",
-                      "platform": "ANDROID",
-                      "os": "5.0.1",
-                      "cpu": {
-                        "frequency": "MHz",
-                        "architecture": "armeabi-v7a",
-                        "clock": 1300.0
-                      },
-                      "resolution": {"width": 1440, "height": 2560},
-                      "heapSize": 512000000,
-                      "memory": 32000000000,
-                      "image": "70D5B22608A149568923E4A225EC5E04",
-                      "remoteAccessEnabled": false,
-                      "remoteDebugEnabled": false,
-                      "fleetType": "PUBLIC",
-                      "availability": "AVAILABLE"
-                    },
-                    {
-                      "arn":
-                          "arn:aws:devicefarm:us-west-2::device:352FDCFAA36C43AC8228DC8F23355272",
-                      "name": "Apple iPhone 6 Plus",
-                      "manufacturer": "Apple",
-                      "model": "iPhone 6 Plus",
-                      "modelId": "A1522",
-                      "formFactor": "PHONE",
-                      "platform": "IOS",
-                      "os": "10.0.2",
-                      "cpu": {
-                        "frequency": "Hz",
-                        "architecture": "arm64",
-                        "clock": 0.0
-                      },
-                      "resolution": {"width": 1080, "height": 1920},
-                      "heapSize": 0,
-                      "memory": 16000000000,
-                      "image": "352FDCFAA36C43AC8228DC8F23355272",
-                      "remoteAccessEnabled": false,
-                      "remoteDebugEnabled": false,
-                      "fleetType": "PUBLIC",
-                      "availability": "HIGHLY_AVAILABLE"
-                    }
-                  ]
-                },
-              ),
-              ''));
+      copyDirFs(io.Directory('example/default_app'), fs.directory(appDir));
+
       fakeProcessManager.calls = [
-        listDevicesCall,
-        Call('aws devicefarm list-projects',
-            ProcessResult(0, 0, '{"projects":[]}', '')),
-        Call(
-            'aws devicefarm create-project --name $projectName --default-job-timeout-minutes $defaultJobTimeoutMinutes',
-            ProcessResult(
-                0,
-                0,
-                jsonEncode({
-                  "project": {
-                    "arn": "$projectArn",
-                    "name": "$projectName",
-                    "defaultJobTimeoutMinutes": defaultJobTimeoutMinutes,
-                    "created": 1567902055.614
-                  }
-                }),
-                '')),
+//        listDevicesCall,
+//        Call('aws devicefarm list-projects',
+//            ProcessResult(0, 0, '{"projects":[]}', '')),
+//        Call(
+//            'aws devicefarm create-project --name $projectName --default-job-timeout-minutes $defaultJobTimeoutMinutes',
+//            ProcessResult(
+//                0,
+//                0,
+//                jsonEncode({
+//                  "project": {
+//                    "arn": "$projectArn",
+//                    "name": "$projectName",
+//                    "defaultJobTimeoutMinutes": defaultJobTimeoutMinutes,
+//                    "created": 1567902055.614
+//                  }
+//                }),
+//                '')),
 //        Call('chmod u+x $stagingDir/script/test_android.sh', null),
 //        Call('chmod u+x $stagingDir/script/test_ios.sh', null),
 //        Call('chmod u+x $stagingDir/script/local_utils.sh', null),
-        Call('unzip -o -q $appiumTemplateZip -d $bundleDir', null),
-//        Call('mkdir $bundleAppDir', null),
-//        Call('cp -r $appDir $bundleAppDir', null),
-//        Call('rm -rf $bundleAppDir/build', null),
-//        Call('rm -rf $bundleAppDir/ios/Flutter/Flutter.framework', null),
-//        Call('rm -rf $bundleAppDir/ios/Flutter/App.framework', null),
-//        Call('cp -r $stagingDir/script $bundleAppDir', null),
-//        Call('cp $stagingDir/build_to_os.txt $bundleAppDir', null),
-        Call('zip -r -q $bundleZip .', null,
-            sideEffects: () => fs.file(bundleZip).createSync(recursive: true)),
-//        Call('stat -f%z $bundleZipName', ProcessResult(0, 0, '5000000', '')),
+//        Call('unzip -o -q $appiumTemplateZip -d $bundleDir', null),
+////        Call('mkdir $bundleAppDir', null),
+////        Call('cp -r $appDir $bundleAppDir', null),
+////        Call('rm -rf $bundleAppDir/build', null),
+////        Call('rm -rf $bundleAppDir/ios/Flutter/Flutter.framework', null),
+////        Call('rm -rf $bundleAppDir/ios/Flutter/App.framework', null),
+////        Call('cp -r $stagingDir/script $bundleAppDir', null),
+////        Call('cp $stagingDir/build_to_os.txt $bundleAppDir', null),
+//        Call('zip -r -q $bundleZip .', null,
+//            sideEffects: () => fs.file(bundleZip).createSync(recursive: true)),
+////        Call('stat -f%z $bundleZipName', ProcessResult(0, 0, '5000000', '')),
+        ...startRunCalls,
         Call(
             'aws devicefarm list-device-pools --arn $projectArn --type PRIVATE',
             ProcessResult(0, 0, jsonEncode({"devicePools": []}), '')),
@@ -782,7 +786,7 @@ main() {
       fakeProcessManager = FakeProcessManager();
       fs = MemoryFileSystem();
       // copy app to memory file system
-      copyDirFs(io.Directory('example'), fs.directory(appDir));
+      copyDirFs(io.Directory('example/default_app'), fs.directory(appDir));
     });
 
     testUsingContext('job', () async {
@@ -791,7 +795,7 @@ main() {
       final jobTimeoutMinutes = '15';
       final stagingDir = '/tmp/test_sylph_run';
 
-      fakeProcessManager.calls = [...startRunCalls];
+      fakeProcessManager.calls = startRunCalls;
 
       final configStr = '''
         tmp_dir: $stagingDir
