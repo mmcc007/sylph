@@ -74,7 +74,7 @@ jobs:
       - pub global activate --source path .
 
       script:
-      - cd example; sylph
+      - cd example/default_app; sylph
 
       # publish artifacts to GitHub
       before_deploy:
