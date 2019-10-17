@@ -26,6 +26,10 @@ class Config {
   String get tmpDir => _configInfo['tmp_dir'];
   bool get concurrentRuns => _configInfo['concurrent_runs'];
   String get artifactsDir => _configInfo['artifacts_dir'];
+  String get projectFlavor => _configInfo['flavor'];
+  String get androidPackageName => _configInfo['android_package_name'];
+  String get iosAppId => _configInfo['ios_app_id'];
+  String get androidAppId => _configInfo['android_app_id'];
 
   List<SylphDevice> getPoolDevices(String poolName) =>
       _getSylphDevices(_getPoolInfo(poolName));
