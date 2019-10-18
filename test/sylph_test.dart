@@ -376,6 +376,7 @@ void main() {
         tmp_dir: /tmp/sylph
         artifacts_dir: /tmp/sylph_artifacts
         sylph_timeout: 720 
+        flavor: dev
         concurrent_runs: true
         project_name: test concurrent runs
         default_job_timeout: 10 
@@ -411,8 +412,9 @@ void main() {
       final projectArn = kTestProjectArn;
       final sylphRunName = 'dummy sylph run $timestamp';
       final sylphRunTimeout = config['sylph_timeout'];
+      final flavor = config['flavor'];
       final jobArgs = packArgs(testSuite, config, poolName, projectArn,
-          sylphRunName, sylphRunTimeout, true);
+          sylphRunName, sylphRunTimeout, true, flavor);
 
       // for this test change directory
       final origDir = Directory.current;
@@ -465,7 +467,7 @@ void main() {
       - TESTS='$expectedTestsEnvVal'
       - cd flutter_app
 ''';
-      setTestSpecEnv(test_suite, testSpecPath);
+      setTestSpecEnv(test_suite, testSpecPath, null, null);
       expect(File(testSpecPath).readAsStringSync(), expected);
       // restore modified test spec test
       cmd(['git', 'checkout', testSpecPath]);

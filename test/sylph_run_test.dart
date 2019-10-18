@@ -769,6 +769,8 @@ main() {
 //      Logger: () => VerboseLogger(StdoutLogger()),
       FileSystem: () => fs,
       OperatingSystemUtils: () => OperatingSystemUtils(),
+      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+        ..operatingSystem = 'macos',
     });
   });
 
@@ -837,6 +839,8 @@ main() {
       FileSystem: () => fs,
       OperatingSystemUtils: () => OperatingSystemUtils(),
       ConcurrentJobs: () => FakeConcurrentJobs(),
+      Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+        ..operatingSystem = 'macos',
     });
   });
 
