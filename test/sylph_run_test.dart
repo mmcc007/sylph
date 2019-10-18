@@ -304,10 +304,10 @@ main() {
                 }),
                 '')),
 
-        Call('flutter build apk -t test_driver/main.dart --debug',
+        Call('flutter build apk -t test_driver/main.dart --debug --flavor dev',
             ProcessResult(0, 0, 'output from build', '')),
         Call(
-            'aws devicefarm create-upload --project-arn $projectArn --name app-debug.apk --type ANDROID_APP',
+            'aws devicefarm create-upload --project-arn $projectArn --name app-dev-debug.apk --type ANDROID_APP',
             ProcessResult(
                 0,
                 0,
@@ -326,7 +326,7 @@ main() {
                 }),
                 '')),
         Call(
-            'curl -T build/app/outputs/apk/debug/app-debug.apk https://prod-us-west-2-uploads.s3-us-west-2.amazonaws.com/arn%3Aaws%3Adevicefarm%3Aus-west-2%3A122621792560%3Aproject%3A9796b48e-ad3d-4b3c-97a6-94d4e50b1792/uploads/arn%3Aaws%3Adevicefarm%3Aus-west-2%3A122621792560%3Aupload%3A9796b48e-ad3d-4b3c-97a6-94d4e50b1792/94210aaa-5b94-4fe4-8535-80f2c6b8a847/app-debug.apk?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20190908T075401Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Credential=AKIAJSORV74ENYFBITRQ%2F20190908%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Signature=61fb88da24ce54caa7f8466c6afadb8daade120b974e05692ff3f5dfef6c76af',
+            'curl -T build/app/outputs/apk/dev/debug/app-dev-debug.apk https://prod-us-west-2-uploads.s3-us-west-2.amazonaws.com/arn%3Aaws%3Adevicefarm%3Aus-west-2%3A122621792560%3Aproject%3A9796b48e-ad3d-4b3c-97a6-94d4e50b1792/uploads/arn%3Aaws%3Adevicefarm%3Aus-west-2%3A122621792560%3Aupload%3A9796b48e-ad3d-4b3c-97a6-94d4e50b1792/94210aaa-5b94-4fe4-8535-80f2c6b8a847/app-debug.apk?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20190908T075401Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Credential=AKIAJSORV74ENYFBITRQ%2F20190908%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Signature=61fb88da24ce54caa7f8466c6afadb8daade120b974e05692ff3f5dfef6c76af',
             ProcessResult(0, 0, 'output from curl', '')),
 //        "status": "INITIALIZED",
         Call(
@@ -733,6 +733,9 @@ main() {
         artifacts_dir: /tmp/sylph_artifacts
         sylph_timeout: 720 
         concurrent_runs: false
+        flavor: dev
+        android_package_name: com.app.package
+        android_app_id: com.id.dev
         project_name: $projectName
         default_job_timeout: $defaultJobTimeoutMinutes 
         device_pools:
