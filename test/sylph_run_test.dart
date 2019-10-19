@@ -141,59 +141,7 @@ main() {
       // copy app to memory file system
       copyDirFs(io.Directory('example/default_app'), fs.directory(appDir));
 
-      fakeProcessManager.calls = [
-        ...startRunCalls,
-        Call(
-            'aws devicefarm list-device-pools --arn $projectArn --type PRIVATE',
-            ProcessResult(0, 0, jsonEncode({"devicePools": []}), '')),
-        listDevicesCall,
-//        Call(
-//            'aws devicefarm create-device-pool --name android pool 1 --project-arn arn:aws:devicefarm:us-west-2:122621792560:project:fake-project-id --rules [{"attribute": "ARN", "operator": "IN","value": "[\\"arn:aws:devicefarm:us-west-2::device:70D5B22608A149568923E4A225EC5E04\\"]"}]',
-        Call(
-            'aws devicefarm create-device-pool --name ios pool 1 --project-arn arn:aws:devicefarm:us-west-2:122621792560:project:fake-project-id --rules [{"attribute": "ARN", "operator": "IN","value": "[\\"arn:aws:devicefarm:us-west-2::device:352FDCFAA36C43AC8228DC8F23355272\\"]"}]',
-            ProcessResult(
-                0,
-                0,
-                jsonEncode({
-                  "devicePool": {
-                    "arn": "$projectArn/eb91a358-91ae-4e0f-9e77-1c7309363b18",
-                    "name": "ios pool xxx",
-                    "type": "PRIVATE",
-                    "rules":
-                        "[{attribute: ARN, operator: IN, value: [\"arn:aws:devicefarm:us-west-2::device:5F1B162C265B4F34804B7D0DC2CDBE40\"]}]})"
-                  }
-                }),
-                '')),
-
-//        Call('flutter build apk -t test_driver/main.dart --debug --flavor dev',
-//            ProcessResult(0, 0, 'output from build', '')),
-        Call(
-            '/tmp/test_sylph_run/script/local_utils.sh --build-debug-ipa --flavor dev',
-            ProcessResult(0, 0, 'output from build', '')),
-//        Call(
-//            'aws devicefarm create-upload --project-arn $projectArn --name app-dev-debug.apk --type ANDROID_APP',
-        Call(
-            'aws devicefarm create-upload --project-arn arn:aws:devicefarm:us-west-2:122621792560:project:fake-project-id --name Debug_Runner.ipa --type IOS_APP',
-            ProcessResult(
-                0,
-                0,
-                jsonEncode({
-                  "upload": {
-                    "arn":
-                        "arn:aws:devicefarm:us-west-2:122621792560:upload:fake-project-id/94210aaa-5b94-4fe4-8535-80f2c6b8a847",
-                    "name": "app-debug.apk",
-                    "created": 1567929241.253,
-                    "type": "ANDROID_APP",
-                    "status": "INITIALIZED",
-                    "url": "https://fake-url",
-                    "category": "PRIVATE"
-                  }
-                }),
-                '')),
-        Call(
-//            'curl -T build/app/outputs/apk/dev/debug/app-dev-debug.apk https://fake-url',
-            'curl -T build/ios/Debug-iphoneos/Debug_Runner.ipa https://fake-url',
-            ProcessResult(0, 0, 'output from curl', '')),
+      final mainRunCalls = [
         Call(
             'aws devicefarm get-upload --arn arn:aws:devicefarm:us-west-2:122621792560:upload:fake-project-id/94210aaa-5b94-4fe4-8535-80f2c6b8a847',
             ProcessResult(
@@ -486,8 +434,110 @@ main() {
                   ]
                 }),
                 '')),
+      ];
+
+      final androidCalls = [
         Call(
-//            'curl https://fake-url -o /tmp/sylph_artifacts/sylph_run_name/test_sylph_run/android_pool_1/Apple_iPhone_X-A1865-11.4.0/Syslog_00000.syslog',
+            'aws devicefarm create-device-pool --name android pool 1 --project-arn arn:aws:devicefarm:us-west-2:122621792560:project:fake-project-id --rules [{"attribute": "ARN", "operator": "IN","value": "[\\"arn:aws:devicefarm:us-west-2::device:70D5B22608A149568923E4A225EC5E04\\"]"}]',
+            ProcessResult(
+                0,
+                0,
+                jsonEncode({
+                  "devicePool": {
+                    "arn": "$projectArn/eb91a358-91ae-4e0f-9e77-1c7309363b18",
+                    "name": "ios pool xxx",
+                    "type": "PRIVATE",
+                    "rules":
+                        "[{attribute: ARN, operator: IN, value: [\"arn:aws:devicefarm:us-west-2::device:5F1B162C265B4F34804B7D0DC2CDBE40\"]}]})"
+                  }
+                }),
+                '')),
+        Call('flutter build apk -t test_driver/main.dart --debug --flavor dev',
+            ProcessResult(0, 0, 'output from build', '')),
+        Call(
+            'aws devicefarm create-upload --project-arn $projectArn --name app-dev-debug.apk --type ANDROID_APP',
+            ProcessResult(
+                0,
+                0,
+                jsonEncode({
+                  "upload": {
+                    "arn":
+                        "arn:aws:devicefarm:us-west-2:122621792560:upload:fake-project-id/94210aaa-5b94-4fe4-8535-80f2c6b8a847",
+                    "name": "app-debug.apk",
+                    "created": 1567929241.253,
+                    "type": "ANDROID_APP",
+                    "status": "INITIALIZED",
+                    "url": "https://fake-url",
+                    "category": "PRIVATE"
+                  }
+                }),
+                '')),
+        Call(
+            'curl -T build/app/outputs/apk/dev/debug/app-dev-debug.apk https://fake-url',
+            ProcessResult(0, 0, 'output from curl', '')),
+      ];
+
+      final iosCalls = [
+        Call(
+            'aws devicefarm create-device-pool --name ios pool 1 --project-arn arn:aws:devicefarm:us-west-2:122621792560:project:fake-project-id --rules [{"attribute": "ARN", "operator": "IN","value": "[\\"arn:aws:devicefarm:us-west-2::device:352FDCFAA36C43AC8228DC8F23355272\\"]"}]',
+            ProcessResult(
+                0,
+                0,
+                jsonEncode({
+                  "devicePool": {
+                    "arn": "$projectArn/eb91a358-91ae-4e0f-9e77-1c7309363b18",
+                    "name": "ios pool xxx",
+                    "type": "PRIVATE",
+                    "rules":
+                        "[{attribute: ARN, operator: IN, value: [\"arn:aws:devicefarm:us-west-2::device:5F1B162C265B4F34804B7D0DC2CDBE40\"]}]})"
+                  }
+                }),
+                '')),
+
+        Call(
+            '/tmp/test_sylph_run/script/local_utils.sh --build-debug-ipa --flavor dev',
+            ProcessResult(0, 0, 'output from build', '')),
+        Call(
+            'aws devicefarm create-upload --project-arn arn:aws:devicefarm:us-west-2:122621792560:project:fake-project-id --name Debug_Runner.ipa --type IOS_APP',
+            ProcessResult(
+                0,
+                0,
+                jsonEncode({
+                  "upload": {
+                    "arn":
+                        "arn:aws:devicefarm:us-west-2:122621792560:upload:fake-project-id/94210aaa-5b94-4fe4-8535-80f2c6b8a847",
+                    "name": "app-debug.apk",
+                    "created": 1567929241.253,
+                    "type": "ANDROID_APP",
+                    "status": "INITIALIZED",
+                    "url": "https://fake-url",
+                    "category": "PRIVATE"
+                  }
+                }),
+                '')),
+        Call(
+            'curl -T build/ios/Debug-iphoneos/Debug_Runner.ipa https://fake-url',
+            ProcessResult(0, 0, 'output from curl', '')),
+      ];
+
+      fakeProcessManager.calls = [
+        ...startRunCalls,
+        Call(
+            'aws devicefarm list-device-pools --arn $projectArn --type PRIVATE',
+            ProcessResult(0, 0, jsonEncode({"devicePools": []}), '')),
+        listDevicesCall,
+        ...androidCalls,
+        ...mainRunCalls,
+        Call(
+            'curl https://fake-url -o /tmp/sylph_artifacts/sylph_run_name/test_sylph_run/android_pool_1/Apple_iPhone_X-A1865-11.4.0/Syslog_00000.syslog',
+            null),
+        Call(
+            'aws devicefarm list-device-pools --arn $projectArn --type PRIVATE',
+            ProcessResult(0, 0, jsonEncode({"devicePools": []}), '')),
+        listDevicesCall,
+        ...iosCalls,
+        ...mainRunCalls,
+        Call(
             'curl https://fake-url -o /tmp/sylph_artifacts/sylph_run_name/test_sylph_run/ios_pool_1/Apple_iPhone_X-A1865-11.4.0/Syslog_00000.syslog',
             null),
       ];
@@ -521,10 +571,10 @@ main() {
             tests:
               - test_driver/main_test.dart
             pool_names:
+              - android pool 1
               - ios pool 1
             job_timeout: $jobTimeoutMinutes
       ''';
-//      - ios pool 1
 
       final configFilePath = null;
       final sylphRunName = 'sylph run name';
