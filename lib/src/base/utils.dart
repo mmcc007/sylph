@@ -180,3 +180,6 @@ String formatArns(List arns) {
   // remove last char
   return formatted.substring(0, formatted.length - 1);
 }
+
+/// tests for empty [string].
+bool isEmpty(String string) => !(string != null && string.isNotEmpty);

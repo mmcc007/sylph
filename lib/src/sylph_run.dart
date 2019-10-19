@@ -111,8 +111,14 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
 }
 
 /// Run sylph tests on a pool of devices using a device farm run.
-Future<bool> runSylphJob(TestSuite testSuite, Config config, poolName,
-    String projectArn, String sylphRunName, int sylphRunTimeout, String flavor) async {
+Future<bool> runSylphJob(
+    TestSuite testSuite,
+    Config config,
+    poolName,
+    String projectArn,
+    String sylphRunName,
+    int sylphRunTimeout,
+    String flavor) async {
   printStatus(
       'Running test suite \'${testSuite.name}\'  in project \'${config.projectName}\' on pool \'$poolName\' with flavor ${flavor ?? "N/A"}...');
   final devicePool = config.getDevicePool(poolName);
@@ -137,7 +143,8 @@ Future<bool> runSylphJob(TestSuite testSuite, Config config, poolName,
   // 2. Upload custom test spec yaml
   final testSpecPath = '$tmpDir/$kAppiumTestSpecName';
   // Substitute MAIN and TESTS for actual debug main and tests from test suite.
-  setTestSpecEnv(testSuite, testSpecPath, config.androidPackageName, config.androidAppId);
+  setTestSpecEnv(
+      testSuite, testSpecPath, config.androidPackageName, config.androidAppId);
   printStatus('Uploading test specification: $testSpecPath ...');
   String testSpecArn =
       await uploadFile(projectArn, testSpecPath, 'APPIUM_PYTHON_TEST_SPEC');
@@ -163,33 +170,37 @@ Future<bool> runSylphJob(TestSuite testSuite, Config config, poolName,
 Future<String> _buildUploadApp(String projectArn, DeviceType poolType,
     String mainPath, String tmpDir, String flavor) async {
   String appArn;
-  var androidPath = kDebugApkPath;
-  var iosPath = kDebugIpaPath;
-  if (flavor != null && flavor.isNotEmpty) {
-    androidPath = _getAndroidPathWithFlavor(flavor);
-  }
-  
-  if (poolType == DeviceType.android) {
-    printStatus('Building debug .apk from $mainPath with flavor ${flavor ?? "N/A"}...');
-    var commands = ['flutter', 'build', 'apk', '-t', mainPath, '--debug'];
-    // if there is a flavor, add it to the command
-    if (flavor != null && flavor.isNotEmpty) {
-      commands.addAll(['--flavor', flavor]);
+  List<String> command;
+  final addFlavor = (String flavor) {
+    if (!isEmpty(flavor)) {
+      command.addAll(['--flavor', flavor]);
     }
-    await streamCmd(commands);
+  };
+  if (poolType == DeviceType.android) {
+    printStatus(
+        'Building debug .apk from $mainPath${isEmpty(flavor) ? '' : ' with flavor $flavor'}...');
+    command = ['flutter', 'build', 'apk', '-t', mainPath, '--debug'];
+    addFlavor(flavor);
+    await streamCmd(command);
+
     // Upload apk
-    printStatus('Uploading debug android app: $androidPath ...');
-    appArn = await uploadFile(projectArn, androidPath, 'ANDROID_APP');
+    String debugApkPath = isEmpty(flavor)
+        ? kDebugApkPath
+        : 'build/app/outputs/apk/$flavor/debug/app-$flavor-debug.apk';
+    printStatus('Uploading debug android app: ${debugApkPath} ...');
+    appArn = await uploadFile(projectArn, debugApkPath, 'ANDROID_APP');
   } else {
     printStatus('Building debug .ipa from $mainPath...');
     if (platform.environment['CI'] == 'true') {
       await streamCmd(
           ['$tmpDir/script/local_utils.sh', '--ci', fs.currentDirectory.path]);
     }
-    await streamCmd(['$tmpDir/script/local_utils.sh', '--build-debug-ipa']);
+    command = ['$tmpDir/script/local_utils.sh', '--build-debug-ipa'];
+    addFlavor(flavor);
+    await streamCmd(command);
     // Upload ipa
-    printStatus('Uploading debug iOS app: $iosPath ...');
-    appArn = await uploadFile(projectArn, iosPath, 'IOS_APP');
+    printStatus('Uploading debug iOS app: $kDebugIpaPath ...');
+    appArn = await uploadFile(projectArn, kDebugIpaPath, 'IOS_APP');
   }
   return appArn;
 }
@@ -257,12 +268,16 @@ void setTestSpecEnv(TestSuite test_suite, String testSpecPath,
       testSpecStr.replaceFirst(mainRegExp, '$kMainEnvName$mainEnvVal');
   testSpecStr =
       testSpecStr.replaceAll(testsRegExp, '$kTestsEnvName\'$testsEnvVal\'');
-  if ((androidPackageName?.isNotEmpty ?? false) || (androidAppId?.isNotEmpty ?? false)) {
+  if ((androidPackageName?.isNotEmpty ?? false) ||
+      (androidAppId?.isNotEmpty ?? false)) {
     const kAndroidTestScript = './script/test_android.sh --run-tests "\$TESTS"';
-    var arguments = (androidPackageName?.isNotEmpty ?? false) ? '--package $androidPackageName' : "";
-    arguments += (androidAppId?.isNotEmpty ?? false) ? '--appId $androidAppId' : "";
-    testSpecStr =
-        testSpecStr.replaceAll(kAndroidTestScript, '$kAndroidTestScript $arguments');
+    var arguments = (androidPackageName?.isNotEmpty ?? false)
+        ? '--package $androidPackageName '
+        : "";
+    arguments +=
+        (androidAppId?.isNotEmpty ?? false) ? '--appId $androidAppId' : "";
+    testSpecStr = testSpecStr.replaceAll(
+        kAndroidTestScript, '$kAndroidTestScript $arguments');
   }
   fs.file(testSpecPath).writeAsStringSync(testSpecStr);
 }
@@ -318,9 +333,6 @@ Map<String, dynamic> packArgs(
     'sylph_run_name': sylphRunName,
     'sylph_run_timeout': sylphRunTimeout,
     'jobVerbose': jobVerbose,
-    'flavor' : flavor
+    'flavor': flavor
   };
 }
-
-// gets correct file paths with flavor
-String _getAndroidPathWithFlavor(String flavor) => "build/app/outputs/apk/$flavor/debug/app-$flavor-debug.apk";
