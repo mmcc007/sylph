@@ -493,6 +493,8 @@ main() {
                   }
                 }),
                 '')),
+        Call('/tmp/test_sylph_run/script/local_utils.sh --ci /',
+            ProcessResult(0, 0, 'output from setting-up ci', '')),
         Call(
             '/tmp/test_sylph_run/script/local_utils.sh --build-debug-ipa --flavor dev',
             ProcessResult(0, 0, 'output from build', '')),
@@ -590,7 +592,18 @@ main() {
       FileSystem: () => fs,
       OperatingSystemUtils: () => OperatingSystemUtils(),
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
-        ..operatingSystem = 'macos',
+        ..operatingSystem = 'macos'
+        ..environment = {
+          kCIEnvVar: 'true',
+          'TEAM_ID': 'team_id',
+          'PUBLISHING_MATCH_CERTIFICATE_REPO':
+              'PUBLISHING_MATCH_CERTIFICATE_REPO',
+          'MATCH_PASSWORD': 'MATCH_PASSWORD',
+          'SSH_SERVER': 'SSH_SERVER',
+          'SSH_SERVER_PORT': 'SSH_SERVER_PORT',
+          'AWS_ACCESS_KEY_ID': 'AWS_ACCESS_KEY_ID',
+          'AWS_SECRET_ACCESS_KEY': 'AWS_SECRET_ACCESS_KEY',
+        },
     });
   });
 
