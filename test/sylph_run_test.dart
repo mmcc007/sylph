@@ -530,15 +530,15 @@ main() {
         Call(
             'curl https://fake-url -o /tmp/sylph_artifacts/sylph_run_name/test_sylph_run/android_pool_1/Apple_iPhone_X-A1865-11.4.0/Syslog_00000.syslog',
             null),
-//        Call(
-//            'aws devicefarm list-device-pools --arn $projectArn --type PRIVATE',
-//            ProcessResult(0, 0, jsonEncode({"devicePools": []}), '')),
-//        listDevicesCall,
-//        ...iosCalls,
-//        ...mainRunCalls,
-//        Call(
-//            'curl https://fake-url -o /tmp/sylph_artifacts/sylph_run_name/test_sylph_run/ios_pool_1/Apple_iPhone_X-A1865-11.4.0/Syslog_00000.syslog',
-//            null),
+        Call(
+            'aws devicefarm list-device-pools --arn $projectArn --type PRIVATE',
+            ProcessResult(0, 0, jsonEncode({"devicePools": []}), '')),
+        listDevicesCall,
+        ...iosCalls,
+        ...mainRunCalls,
+        Call(
+            'curl https://fake-url -o /tmp/sylph_artifacts/sylph_run_name/test_sylph_run/ios_pool_1/Apple_iPhone_X-A1865-11.4.0/Syslog_00000.syslog',
+            null),
       ];
 
       final configStr = '''
@@ -571,6 +571,7 @@ main() {
               - test_driver/main_test.dart
             pool_names:
               - android pool 1
+              - ios pool 1
             job_timeout: $jobTimeoutMinutes
       ''';
 
