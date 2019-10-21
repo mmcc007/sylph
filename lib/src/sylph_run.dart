@@ -14,7 +14,7 @@ import 'device_farm.dart';
 import 'base/devices.dart';
 import 'base/utils.dart';
 
-const kDebugApkPath = 'build/app/outputs/apk/debug/app-debug.apk';
+const kDebugApkPath = 'build/app/outputs/apk/app.apk';
 const kDebugIpaPath = 'build/ios/Debug-iphoneos/Debug_Runner.ipa';
 
 /// Processes config file (subject to change).
@@ -143,7 +143,7 @@ Future<bool> runSylphJob(
   // 2. Upload custom test spec yaml
   final testSpecPath = '$tmpDir/$kAppiumTestSpecName';
   // Substitute MAIN and TESTS for actual debug main and tests from test suite.
-  setTestSpecEnv(
+  setTestSpecVars(
       testSuite, testSpecPath, config.androidPackageName, config.androidAppId);
   printStatus('Uploading test specification: $testSpecPath ...');
   String testSpecArn =
@@ -184,11 +184,11 @@ Future<String> _buildUploadApp(String projectArn, DeviceType poolType,
     await streamCmd(command);
 
     // Upload apk
-    String debugApkPath = isEmpty(flavor)
-        ? kDebugApkPath
-        : 'build/app/outputs/apk/$flavor/debug/app-$flavor-debug.apk';
-    printStatus('Uploading debug android app: ${debugApkPath} ...');
-    appArn = await uploadFile(projectArn, debugApkPath, 'ANDROID_APP');
+//    String debugApkPath = isEmpty(flavor)
+//        ? kDebugApkPath
+//        : 'build/app/outputs/apk/$flavor/debug/app-$flavor-debug.apk';
+    printStatus('Uploading debug android app: $kDebugApkPath ...');
+    appArn = await uploadFile(projectArn, kDebugApkPath, 'ANDROID_APP');
   } else {
     printStatus('Building debug .ipa from $mainPath...');
     if (platform.environment['CI'] == 'true') {
@@ -254,8 +254,8 @@ DateTime sylphTimestamp() {
   return timestamp;
 }
 
-/// Set MAIN and TESTS env vars in test spec.
-void setTestSpecEnv(TestSuite test_suite, String testSpecPath,
+/// Set MAIN and TESTS vars in test spec.
+void setTestSpecVars(TestSuite test_suite, String testSpecPath,
     String androidPackageName, String androidAppId) {
   const kMainEnvName = 'MAIN=';
   const kTestsEnvName = 'TESTS=';
@@ -268,17 +268,17 @@ void setTestSpecEnv(TestSuite test_suite, String testSpecPath,
       testSpecStr.replaceFirst(mainRegExp, '$kMainEnvName$mainEnvVal');
   testSpecStr =
       testSpecStr.replaceAll(testsRegExp, '$kTestsEnvName\'$testsEnvVal\'');
-  if ((androidPackageName?.isNotEmpty ?? false) ||
-      (androidAppId?.isNotEmpty ?? false)) {
-    const kAndroidTestScript = './script/test_android.sh --run-tests "\$TESTS"';
-    var arguments = (androidPackageName?.isNotEmpty ?? false)
-        ? '--package $androidPackageName '
-        : "";
-    arguments +=
-        (androidAppId?.isNotEmpty ?? false) ? '--appId $androidAppId' : "";
-    testSpecStr = testSpecStr.replaceAll(
-        kAndroidTestScript, '$kAndroidTestScript $arguments');
-  }
+//  if ((androidPackageName?.isNotEmpty ?? false) ||
+//      (androidAppId?.isNotEmpty ?? false)) {
+//    const kAndroidTestScript = './script/test_android.sh --run-tests "\$TESTS"';
+//    var arguments = (androidPackageName?.isNotEmpty ?? false)
+//        ? '--package $androidPackageName '
+//        : "";
+//    arguments +=
+//        (androidAppId?.isNotEmpty ?? false) ? '--appId $androidAppId' : "";
+//    testSpecStr = testSpecStr.replaceAll(
+//        kAndroidTestScript, '$kAndroidTestScript $arguments');
+//  }
   fs.file(testSpecPath).writeAsStringSync(testSpecStr);
 }
 

@@ -18,7 +18,8 @@ main() {
         ;;
     --run-tests)
         if [[ -z $2 ]]; then show_help; fi
-        run_tests "$2" "$4" "$6"
+#        run_tests "$2" "$4" "$6"
+        run_tests "$2"
         ;;
     --run-driver)
         if [[ -z $2 ]]; then show_help; fi
@@ -58,11 +59,14 @@ where:
 }
 
 run_tests() {
-  while IFS=',' read -ra tests; do
+  local test_paths=$1 # comma-delimited list of test paths
+
+  while IFS=',' read -ra tests; do # parse comma-delimited list into real list of [tests]
     for test in "${tests[@]}"; do
-        custom_test_runner "$test" "$2" "$3"
+#        custom_test_runner "$test" "$2" "$3"
+        custom_test_runner "$test"
     done
-  done <<< "$1"
+  done <<< "$test_paths"
 }
 
 # note: assumes debug apk installed on device
@@ -74,23 +78,23 @@ custom_test_runner() {
 
     local app_id
     app_id=$(grep applicationId android/app/build.gradle | awk '{print $2}' | tr -d '"')
-    local package
-    package=app_id
+#    local package
+#    package=app_id
 
-    if [ -z "$2" ]
-      then
-        echo "null package name"
-      else
-        echo "package name: $2"
-        package=$2
-    fi
-
-    if [ -z "$3" ]
-      then
-        echo "null app id"
-      else
-        app_id=$3
-    fi
+#    if [ -z "$2" ]
+#      then
+#        echo "null package name"
+#      else
+#        echo "package name: $2"
+#        package=$2
+#    fi
+#
+#    if [ -z "$3" ]
+#      then
+#        echo "null app id"
+#      else
+#        app_id=$3
+#    fi
 
     echo "Starting Flutter app $app_id in debug mode..."
 
@@ -106,7 +110,7 @@ custom_test_runner() {
     adb logcat -c
 
     # start app on device
-    adb shell am start -a android.intent.action.RUN -f 0x20000000 --ez enable-background-compilation true --ez enable-dart-profiling true --ez enable-checked-mode true --ez verify-entry-points true --ez start-paused true "$app_id/$package.MainActivity"
+    adb shell am start -a android.intent.action.RUN -f 0x20000000 --ez enable-background-compilation true --ez enable-dart-profiling true --ez enable-checked-mode true --ez verify-entry-points true --ez start-paused true "$app_id/.MainActivity"
 
     # wait for observatory startup on device and get port number
     obs_str=$( (adb logcat -v time &) | grep -m 1 "Observatory listening on")
@@ -138,17 +142,17 @@ custom_test_runner() {
 }
 
 # get app id from .apk
-# assumes .apk available on Device Farm host
+# (assumes a built .apk is available locally)
 # dev
 getAppIdFromApk() {
   local apk_path="$1"
 
   # regular expression (required)
   # shellcheck disable=SC2089
-  local re="^\"L.*/MainActivity;"
+  local re="L.*/MainActivity.*;"
   # sed substitute expression
   # shellcheck disable=SC2089
-  local se="s:^\"L\(.*\)/MainActivity;:\1:p"
+  local se="s:L\(.*\)/MainActivity;:\1:p"
   # tr expression
   local te=" / .";
 

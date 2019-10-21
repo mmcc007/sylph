@@ -4,11 +4,12 @@ import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:file/memory.dart';
 import 'package:process/process.dart';
 import 'package:sylph/src/base/concurrent_jobs.dart';
+import 'package:sylph/src/config.dart';
 import 'package:sylph/src/device_farm.dart';
 import 'package:sylph/src/resources.dart';
 import 'package:sylph/src/sylph_run.dart';
 import 'package:test/test.dart';
-import 'package:tool_base/tool_base.dart';
+import 'package:tool_base/tool_base.dart' hide Config;
 import 'package:tool_base_test/tool_base_test.dart';
 import 'dart:io' as io;
 
@@ -674,6 +675,37 @@ main() {
       ConcurrentJobs: () => FakeConcurrentJobs(),
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
         ..operatingSystem = 'macos',
+    });
+  });
+
+  group('run utils', () {
+    MemoryFileSystem fs;
+
+    setUp(() async {
+      fs = MemoryFileSystem();
+    });
+
+    testUsingContext(
+        'substitute MAIN and TESTS for actual debug main and tests', () async {
+      // init setup test files in memory file system
+      copyFileFs(io.File('example/flavors/sylph.yaml'), fs.directory('.'));
+      final testSpecPath = './test_spec.yaml';
+      final testSpecFile = fs.file(testSpecPath);
+      testSpecFile.createSync();
+      testSpecFile.writeAsStringSync('MAIN=xxx\nTESTS=yyy\n');
+
+      final config = Config(configPath: './sylph.yaml');
+      final test_suite = config.testSuites[0];
+      final expectedMainEnvVal = test_suite.main;
+      final expectedTestsEnvVal = test_suite.tests.join(",");
+      final expected =
+          'MAIN=$expectedMainEnvVal\nTESTS=\'$expectedTestsEnvVal\'\n';
+
+      setTestSpecVars(test_suite, testSpecPath, null, null);
+      expect(testSpecFile.readAsStringSync(), expected);
+    }, overrides: <Type, Generator>{
+//      Logger: () => VerboseLogger(StdoutLogger()),
+      FileSystem: () => fs,
     });
   });
 
