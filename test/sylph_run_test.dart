@@ -152,7 +152,7 @@ main() {
                   "upload": {
                     "arn":
                         "arn:aws:devicefarm:us-west-2:122621792560:upload:fake-project-id/94210aaa-5b94-4fe4-8535-80f2c6b8a847",
-                    "name": "app-debug.apk",
+                    "name": "app.apk",
                     "created": 1567929241.253,
                     "type": "ANDROID_APP",
                     "status": "$kUploadSucceeded",
@@ -456,7 +456,7 @@ main() {
         Call('flutter build apk -t test_driver/main.dart --debug --flavor dev',
             ProcessResult(0, 0, 'output from build', '')),
         Call(
-            'aws devicefarm create-upload --project-arn $projectArn --name app-dev-debug.apk --type ANDROID_APP',
+            'aws devicefarm create-upload --project-arn $projectArn --name app.apk --type ANDROID_APP',
             ProcessResult(
                 0,
                 0,
@@ -473,8 +473,7 @@ main() {
                   }
                 }),
                 '')),
-        Call(
-            'curl -T build/app/outputs/apk/dev/debug/app-dev-debug.apk https://fake-url',
+        Call('curl -T build/app/outputs/apk/app.apk https://fake-url',
             ProcessResult(0, 0, 'output from curl', '')),
       ];
 
