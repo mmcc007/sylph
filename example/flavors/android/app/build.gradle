@@ -22,7 +22,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.yourcompany.flavors"
+        applicationId "com.yourcompany.productionpackage"
         minSdkVersion 16
         targetSdkVersion 28
         versionCode 1
@@ -47,8 +47,12 @@ android {
     flavorDimensions "mode"
 
     productFlavors {
-        free {}
-        paid {}
+        free {
+            applicationIdSuffix ".free"
+        }
+        paid {
+            applicationIdSuffix ".paid"
+        }
     }
 }
 
