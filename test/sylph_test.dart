@@ -376,6 +376,7 @@ void main() {
         tmp_dir: /tmp/sylph
         artifacts_dir: /tmp/sylph_artifacts
         sylph_timeout: 720 
+        flavor: dev
         concurrent_runs: true
         project_name: test concurrent runs
         default_job_timeout: 10 
@@ -411,8 +412,15 @@ void main() {
       final projectArn = kTestProjectArn;
       final sylphRunName = 'dummy sylph run $timestamp';
       final sylphRunTimeout = config['sylph_timeout'];
-      final jobArgs = packArgs(testSuite, config, poolName, projectArn,
-          sylphRunName, sylphRunTimeout, true);
+      final jobArgs = packArgs(
+        testSuite,
+        config,
+        poolName,
+        projectArn,
+        sylphRunName,
+        sylphRunTimeout,
+        true,
+      );
 
       // for this test change directory
       final origDir = Directory.current;
@@ -450,25 +458,6 @@ void main() {
       String durationFormatted = sylphRuntimeFormatted(startTime, endTime);
       // rounds to milliseconds
       expect(durationFormatted.contains(RegExp(r'15m:34s:12.ms')), true);
-    });
-
-    test('substitute MAIN and TESTS for actual debug main and tests', () async {
-      final filePath = 'test/sylph_test.yaml';
-      final config = await parseYamlFile(filePath);
-      final test_suite = config['test_suites'][0];
-      final expectedMainEnvVal = test_suite['main'];
-      final expectedTestsEnvVal = test_suite['tests'].join(",");
-      final testSpecPath = 'test/test_spec_test.yaml';
-      final expected = '''
-      # - bin/py.test tests/ --junit-xml \$DEVICEFARM_LOG_DIR/junitreport.xml
-      - MAIN=$expectedMainEnvVal
-      - TESTS='$expectedTestsEnvVal'
-      - cd flutter_app
-''';
-      setTestSpecEnv(test_suite, testSpecPath);
-      expect(File(testSpecPath).readAsStringSync(), expected);
-      // restore modified test spec test
-      cmd(['git', 'checkout', testSpecPath]);
     });
   });
 }
