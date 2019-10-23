@@ -412,9 +412,15 @@ void main() {
       final projectArn = kTestProjectArn;
       final sylphRunName = 'dummy sylph run $timestamp';
       final sylphRunTimeout = config['sylph_timeout'];
-      final flavor = config['flavor'];
-      final jobArgs = packArgs(testSuite, config, poolName, projectArn,
-          sylphRunName, sylphRunTimeout, true, flavor);
+      final jobArgs = packArgs(
+        testSuite,
+        config,
+        poolName,
+        projectArn,
+        sylphRunName,
+        sylphRunTimeout,
+        true,
+      );
 
       // for this test change directory
       final origDir = Directory.current;

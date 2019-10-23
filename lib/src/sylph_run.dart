@@ -26,9 +26,13 @@ const kDebugIpaPath = 'build/ios/Debug-iphoneos/Debug_Runner.ipa';
 ///    1. Run tests on each device in device pool.
 ///    2. Report and collect artifacts for each device.
 /// Returns [Future<bool>] for pass or fail.
-Future<bool> sylphRun(String configFilePath, String sylphRunName,
-    DateTime sylphRunTimestamp, bool jobVerbose,
-    {String configStr}) async {
+Future<bool> sylphRun(
+  String configFilePath,
+  String sylphRunName,
+  DateTime sylphRunTimestamp,
+  bool jobVerbose, {
+  String configStr,
+}) async {
   bool sylphRunSucceeded = true;
 
   Config config;
@@ -70,11 +74,24 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
       bool runTestsSucceeded = false;
       if (isConcurrentRun()) {
         // gather job args
-        jobArgs.add(packArgs(testSuite, config, poolName, projectArn,
-            sylphRunName, sylphRunTimeout, jobVerbose, config.projectFlavor));
+        jobArgs.add(packArgs(
+          testSuite,
+          config,
+          poolName,
+          projectArn,
+          sylphRunName,
+          sylphRunTimeout,
+          jobVerbose,
+        ));
       } else {
-        runTestsSucceeded = await runSylphJob(testSuite, config, poolName,
-            projectArn, sylphRunName, sylphRunTimeout, config.projectFlavor);
+        runTestsSucceeded = await runSylphJob(
+          testSuite,
+          config,
+          poolName,
+          projectArn,
+          sylphRunName,
+          sylphRunTimeout,
+        );
         // track sylph run success
         if (sylphRunSucceeded & !runTestsSucceeded) {
           sylphRunSucceeded = false;
@@ -112,15 +129,15 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
 
 /// Run sylph tests on a pool of devices using a device farm run.
 Future<bool> runSylphJob(
-    TestSuite testSuite,
-    Config config,
-    poolName,
-    String projectArn,
-    String sylphRunName,
-    int sylphRunTimeout,
-    String flavor) async {
+  TestSuite testSuite,
+  Config config,
+  poolName,
+  String projectArn,
+  String sylphRunName,
+  int sylphRunTimeout,
+) async {
   printStatus(
-      'Running test suite \'${testSuite.name}\'  in project \'${config.projectName}\' on pool \'$poolName\' with flavor ${flavor ?? "N/A"}...');
+      'Running test suite \'${testSuite.name}\'  in project \'${config.projectName}\' on pool \'$poolName\' ${isEmpty(config.flavor) ? '' : ' with flavor ${config.flavor}'}...');
   final devicePool = config.getDevicePool(poolName);
 
   // Setup device pool
@@ -130,7 +147,12 @@ Future<bool> runSylphJob(
 
   // Build debug app for pool type and upload
   final appArn = await _buildUploadApp(
-      projectArn, devicePool.deviceType, testSuite.main, tmpDir, flavor);
+    projectArn,
+    devicePool.deviceType,
+    testSuite.main,
+    tmpDir,
+    config.flavor,
+  );
 
   // Upload test suite (in 2 parts)
 
@@ -143,8 +165,7 @@ Future<bool> runSylphJob(
   // 2. Upload custom test spec yaml
   final testSpecPath = '$tmpDir/$kAppiumTestSpecName';
   // Substitute MAIN and TESTS for actual debug main and tests from test suite.
-  setTestSpecVars(
-      testSuite, testSpecPath, config.androidPackageName, config.androidAppId);
+  setTestSpecVars(testSuite, testSpecPath);
   printStatus('Uploading test specification: $testSpecPath ...');
   String testSpecArn =
       await uploadFile(projectArn, testSpecPath, 'APPIUM_PYTHON_TEST_SPEC');
@@ -182,15 +203,12 @@ Future<String> _buildUploadApp(String projectArn, DeviceType poolType,
     command = ['flutter', 'build', 'apk', '-t', mainPath, '--debug'];
     addFlavor(flavor);
     await streamCmd(command);
-
     // Upload apk
-//    String debugApkPath = isEmpty(flavor)
-//        ? kDebugApkPath
-//        : 'build/app/outputs/apk/$flavor/debug/app-$flavor-debug.apk';
     printStatus('Uploading debug android app: $kDebugApkPath ...');
     appArn = await uploadFile(projectArn, kDebugApkPath, 'ANDROID_APP');
   } else {
-    printStatus('Building debug .ipa from $mainPath...');
+    printStatus(
+        'Building debug .ipa from $mainPath${isEmpty(flavor) ? '' : ' with flavor $flavor'}...');
     if (platform.environment['CI'] == 'true') {
       await streamCmd(
           ['$tmpDir/script/local_utils.sh', '--ci', fs.currentDirectory.path]);
@@ -255,8 +273,7 @@ DateTime sylphTimestamp() {
 }
 
 /// Set MAIN and TESTS vars in test spec.
-void setTestSpecVars(TestSuite test_suite, String testSpecPath,
-    String androidPackageName, String androidAppId) {
+void setTestSpecVars(TestSuite test_suite, String testSpecPath) {
   const kMainEnvName = 'MAIN=';
   const kTestsEnvName = 'TESTS=';
   final mainEnvVal = test_suite.main;
@@ -268,17 +285,6 @@ void setTestSpecVars(TestSuite test_suite, String testSpecPath,
       testSpecStr.replaceFirst(mainRegExp, '$kMainEnvName$mainEnvVal');
   testSpecStr =
       testSpecStr.replaceAll(testsRegExp, '$kTestsEnvName\'$testsEnvVal\'');
-//  if ((androidPackageName?.isNotEmpty ?? false) ||
-//      (androidAppId?.isNotEmpty ?? false)) {
-//    const kAndroidTestScript = './script/test_android.sh --run-tests "\$TESTS"';
-//    var arguments = (androidPackageName?.isNotEmpty ?? false)
-//        ? '--package $androidPackageName '
-//        : "";
-//    arguments +=
-//        (androidAppId?.isNotEmpty ?? false) ? '--appId $androidAppId' : "";
-//    testSpecStr = testSpecStr.replaceAll(
-//        kAndroidTestScript, '$kAndroidTestScript $arguments');
-//  }
   fs.file(testSpecPath).writeAsStringSync(testSpecStr);
 }
 
@@ -293,22 +299,33 @@ Future<Map> runSylphJobInIsolate(Map args) async {
   final sylphRunName = args['sylph_run_name'];
   final sylphRunTimeout = args['sylph_run_timeout'];
   final jobVerbose = args['jobVerbose'];
-  final flavor = args['flavor'];
 
   // run runSylphTests
   bool succeeded;
   if (jobVerbose) {
     succeeded = await runInContext<bool>(() {
-      return runSylphJob(testSuite, config, poolName, projectArn, sylphRunName,
-          sylphRunTimeout, flavor);
+      return runSylphJob(
+        testSuite,
+        config,
+        poolName,
+        projectArn,
+        sylphRunName,
+        sylphRunTimeout,
+      );
     }, overrides: <Type, Generator>{
       Logger: () => VerboseLogger(
           platform.isWindows ? WindowsStdoutLogger() : StdoutLogger()),
     });
   } else {
     succeeded = await runInContext<bool>(() {
-      return runSylphJob(testSuite, config, poolName, projectArn, sylphRunName,
-          sylphRunTimeout, flavor);
+      return runSylphJob(
+        testSuite,
+        config,
+        poolName,
+        projectArn,
+        sylphRunName,
+        sylphRunTimeout,
+      );
     });
   }
 
@@ -317,14 +334,14 @@ Future<Map> runSylphJobInIsolate(Map args) async {
 
 /// Pack [runSylphJob] args into [Map].
 Map<String, dynamic> packArgs(
-    TestSuite testSuite,
-    Config config,
-    poolName,
-    String projectArn,
-    String sylphRunName,
-    int sylphRunTimeout,
-    bool jobVerbose,
-    String flavor) {
+  TestSuite testSuite,
+  Config config,
+  poolName,
+  String projectArn,
+  String sylphRunName,
+  int sylphRunTimeout,
+  bool jobVerbose,
+) {
   return {
     'test_suite': testSuite,
     'config': config,
@@ -333,6 +350,6 @@ Map<String, dynamic> packArgs(
     'sylph_run_name': sylphRunName,
     'sylph_run_timeout': sylphRunTimeout,
     'jobVerbose': jobVerbose,
-    'flavor': flavor
+    'flavor': config.flavor
   };
 }

@@ -588,7 +588,7 @@ main() {
       fakeProcessManager.verifyCalls();
     }, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
-      Logger: () => VerboseLogger(StdoutLogger()),
+//      Logger: () => VerboseLogger(StdoutLogger()),
       FileSystem: () => fs,
       OperatingSystemUtils: () => OperatingSystemUtils(),
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
@@ -700,7 +700,7 @@ main() {
       final expected =
           'MAIN=$expectedMainEnvVal\nTESTS=\'$expectedTestsEnvVal\'\n';
 
-      setTestSpecVars(test_suite, testSpecPath, null, null);
+      setTestSpecVars(test_suite, testSpecPath);
       expect(testSpecFile.readAsStringSync(), expected);
     }, overrides: <Type, Generator>{
 //      Logger: () => VerboseLogger(StdoutLogger()),
