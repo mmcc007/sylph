@@ -257,7 +257,7 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
-		744E33D21F45D145007AB5E2 /* Debug Paid */ = {
+		744E33D21F45D145007AB5E2 /* Debug paid */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9740EEB21CF90195004384FC /* Debug.xcconfig */;
 			buildSettings = {
@@ -304,9 +304,9 @@
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
-			name = "Debug Paid";
+			name = "Debug paid";
 		};
-		744E33D31F45D145007AB5E2 /* Debug Paid */ = {
+		744E33D31F45D145007AB5E2 /* Debug paid */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9740EEB21CF90195004384FC /* Debug.xcconfig */;
 			buildSettings = {
@@ -326,9 +326,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.flavors;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
-			name = "Debug Paid";
+			name = "Debug paid";
 		};
-		744E33D41F45D159007AB5E2 /* Release Paid */ = {
+		744E33D41F45D159007AB5E2 /* Release paid */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
 			buildSettings = {
@@ -369,9 +369,9 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
-			name = "Release Paid";
+			name = "Release paid";
 		};
-		744E33D51F45D159007AB5E2 /* Release Paid */ = {
+		744E33D51F45D159007AB5E2 /* Release paid */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
 			buildSettings = {
@@ -391,9 +391,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.flavors;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
-			name = "Release Paid";
+			name = "Release paid";
 		};
-		97C147031CF9000F007C117D /* Debug Free */ = {
+		97C147031CF9000F007C117D /* Debug free */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9740EEB21CF90195004384FC /* Debug.xcconfig */;
 			buildSettings = {
@@ -440,9 +440,9 @@
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
-			name = "Debug Free";
+			name = "Debug free";
 		};
-		97C147041CF9000F007C117D /* Release Free */ = {
+		97C147041CF9000F007C117D /* Release free */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
 			buildSettings = {
@@ -483,9 +483,9 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
-			name = "Release Free";
+			name = "Release free";
 		};
-		97C147061CF9000F007C117D /* Debug Free */ = {
+		97C147061CF9000F007C117D /* Debug free */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9740EEB21CF90195004384FC /* Debug.xcconfig */;
 			buildSettings = {
@@ -505,9 +505,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.flavors;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
-			name = "Debug Free";
+			name = "Debug free";
 		};
-		97C147071CF9000F007C117D /* Release Free */ = {
+		97C147071CF9000F007C117D /* Release free */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
 			buildSettings = {
@@ -527,7 +527,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.flavors;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
-			name = "Release Free";
+			name = "Release free";
 		};
 /* End XCBuildConfiguration section */
 
@@ -535,24 +535,24 @@
 		97C146E91CF9000F007C117D /* Build configuration list for PBXProject "Runner" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				97C147031CF9000F007C117D /* Debug Free */,
-				744E33D21F45D145007AB5E2 /* Debug Paid */,
-				97C147041CF9000F007C117D /* Release Free */,
-				744E33D41F45D159007AB5E2 /* Release Paid */,
+				97C147031CF9000F007C117D /* Debug free */,
+				744E33D21F45D145007AB5E2 /* Debug paid */,
+				97C147041CF9000F007C117D /* Release free */,
+				744E33D41F45D159007AB5E2 /* Release paid */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = "Release Free";
+			defaultConfigurationName = "Release free";
 		};
 		97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				97C147061CF9000F007C117D /* Debug Free */,
-				744E33D31F45D145007AB5E2 /* Debug Paid */,
-				97C147071CF9000F007C117D /* Release Free */,
-				744E33D51F45D159007AB5E2 /* Release Paid */,
+				97C147061CF9000F007C117D /* Debug free */,
+				744E33D31F45D145007AB5E2 /* Debug paid */,
+				97C147071CF9000F007C117D /* Release free */,
+				744E33D51F45D159007AB5E2 /* Release paid */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = "Release Free";
+			defaultConfigurationName = "Release free";
 		};
 /* End XCConfigurationList section */
 	};

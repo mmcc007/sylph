@@ -8,7 +8,7 @@ set -e
 main(){
   case $1 in
     --build-debug-ipa)
-        build_debug_ipa $3
+        build_debug_ipa "$3"
         ;;
     --ci)
         if [[ -z $2 ]]; then show_help; fi
@@ -30,7 +30,7 @@ where:
         package a debug app as a .ipa
         (app must include 'enableFlutterDriverExtension()')
         --flavor <flavor name>
-            <flavor name> is name of flavor to build
+            <flavor name> is name of flavor to build (if any)
     --ci <staging dir>
         configure a CI build environment
     --help
@@ -77,12 +77,22 @@ build_debug_ipa() {
 #    echo "Building debug .ipa for upload to Device Farm..."
 
     flutter packages get > /dev/null # in case building from a different flutter repo
-    if [[ -z $flavor ]]; then
+
+    local build_config # designates the debug, profile or release build config when archiving
+    # note: build config is expected to use a conventional format described below.
+    #       eg, 'Debug' or 'Debug flavorname'
+    local app_name="Runner"
+    local scheme
+    if [[ -z "$flavor" ]]; then
         echo "Running flutter build ios -t test_driver/main.dart --debug..."
         flutter build ios -t test_driver/main.dart --debug
+        scheme="$app_name"
+        build_config="Debug"
     else
         echo "Running flutter build ios -t test_driver/main.dart --debug --flavor $flavor..."
-#        flutter build ios -t test_driver/main.dart --debug --flavor $flavor
+        flutter build ios -t test_driver/main.dart --debug --flavor $flavor
+        scheme="$flavor"
+        build_config="Debug $flavor"
     fi
 
     # enable cleanup on control-c
@@ -95,30 +105,17 @@ build_debug_ipa() {
     remove_archive_disabler
 
     local default_debug_ipa_name='Debug_Runner.ipa'
-
-    APP_NAME="Runner"
-    if [[ -z $flavor ]]; then
-        SCHEME=$APP_NAME
-    else
-        SCHEME=$flavor
-    fi
-
-#    IOS_BUILD_DIR=$PWD/build/ios/Release-iphoneos
-    IOS_BUILD_DIR=$PWD/build/ios/Debug-iphoneos
-#    CONFIGURATION=Release
-    CONFIGURATION="Debug Paid"
-#    export FLUTTER_BUILD_MODE=Release
-    export FLUTTER_BUILD_MODE=Debug
-    APP_COMMON_PATH="$IOS_BUILD_DIR/$APP_NAME"
-    ARCHIVE_PATH="$APP_COMMON_PATH.xcarchive"
+    local ios_build_dir="$PWD/build/ios/Debug-iphoneos"
+    local archive_path="$ios_build_dir/$app_name.xcarchive"
 
     echo "Generating debug archive..."
+    export FLUTTER_BUILD_MODE="${build_config}" # used by flutter's xcode_backend.sh
     xcodebuild archive \
-      -workspace ios/$APP_NAME.xcworkspace \
-      -scheme $SCHEME \
+      -workspace "ios/$app_name.xcworkspace" \
+      -scheme "${scheme}" \
       -sdk iphoneos \
-      -configuration "${CONFIGURATION}" \
-      -archivePath "$ARCHIVE_PATH" \
+      -configuration "${build_config}" \
+      -archivePath "$archive_path" \
       | xcpretty
 
      # checkout the xcode backend to recover disabler
@@ -127,17 +124,17 @@ build_debug_ipa() {
      # release signal traps
      remove_traps
 
-    echo "Generating debug .ipa at $IOS_BUILD_DIR/$APP_NAME.ipa..."
+    echo "Generating debug .ipa at $ios_build_dir/$app_name.ipa..."
     xcodebuild -exportArchive \
-      -archivePath "$ARCHIVE_PATH" \
+      -archivePath "${archive_path}" \
       -exportOptionsPlist ios/exportOptions.plist \
-      -exportPath "$IOS_BUILD_DIR" \
+      -exportPath "${ios_build_dir}" \
       | xcpretty
 
     # rename debug .ipa to standard name
-    mv "$IOS_BUILD_DIR/$SCHEME.ipa" "$IOS_BUILD_DIR/$default_debug_ipa_name"
+    mv "$ios_build_dir/$scheme.ipa" "$ios_build_dir/$default_debug_ipa_name"
 
-    echo "Debug .ipa successfully created in $IOS_BUILD_DIR/$default_debug_ipa_name"
+    echo "Debug .ipa successfully created in $ios_build_dir/$default_debug_ipa_name"
 }
 
 # temporarily remove debug .ipa archive disabler
