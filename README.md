@@ -161,6 +161,14 @@ The sylph.yaml is validated to confirm the devices are  available on Device Farm
 
 If running on an iOS pool, the iOS-related environment variables must be defined. 
 
+## Configuring Flavors
+A reference flavor app can be found in [example/flavors](example/flavors). It is taken from https://github.com/flutter/flutter/tree/master/dev/integration_tests/flavors and works for android and iOS. It is currently recommended that you follow this pattern when implementing flavors in your app.
+
+To enable testing on a flavor add the following to your sylph.yaml:
+```
+flavor: <name of flavor>
+```
+
 # Configuring a CI Environment for _Sylph_
 In addition to running from the command line, _Sylph_ also runs in a CI environment.
 

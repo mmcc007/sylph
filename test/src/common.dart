@@ -15,18 +15,13 @@ void copyDirFs(io.Directory srcDir, Directory dstDir) {
 
   final srcDirEntities = srcDir.listSync();
   if (srcDirEntities.isNotEmpty) {
-    if (!dstDir.existsSync()) {
-      dstDir.createSync(recursive: true);
-    }
+    createDirFs(dstDir);
     srcDirEntities.forEach((entity) {
 //      print(entity.runtimeType);
       if (entity is io.File) {
 //        print(
 //            'copying ${entity.path} to ${dstDir.path}/${p.basename(entity.path)}');
-        final content = io.File(entity.path).readAsBytesSync();
-        dstDir.fileSystem
-            .file('${dstDir.path}/${p.basename(entity.path)}')
-            .writeAsBytesSync(content);
+        copyFileFs(entity, dstDir);
       }
       if (entity is io.Directory) {
         copyDirFs(
@@ -36,6 +31,21 @@ void copyDirFs(io.Directory srcDir, Directory dstDir) {
       }
     });
   }
+}
+
+/// Creates [dir] if doesn't exist.
+void createDirFs(Directory dir) {
+  if (!dir.existsSync()) {
+    dir.createSync(recursive: true);
+  }
+}
+
+/// Copies [srcFile] to [dstDir] in another filesystem.
+void copyFileFs(io.File srcFile, Directory dstDir) {
+  final content = io.File(srcFile.path).readAsBytesSync();
+  dstDir.fileSystem
+      .file('${dstDir.path}/${p.basename(srcFile.path)}')
+      .writeAsBytesSync(content);
 }
 
 /// List entities in [dir].
