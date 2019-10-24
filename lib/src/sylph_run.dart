@@ -62,8 +62,8 @@ Future<bool> sylphRun(
   // Bundle tests
   bundleFlutterTests(config);
 
-  bool isConcurrentRun() => config.concurrentRuns ?? false;
   for (var testSuite in config.testSuites) {
+    bool isConcurrentRun() => config.concurrentRuns ?? false;
     printStatus('\nRunning \'${testSuite.name}\' test suite...\n');
 
     // gather job args
