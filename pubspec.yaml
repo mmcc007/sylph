@@ -5,7 +5,7 @@ homepage: https://github.com/mmcc007/sylph
 author: Maurice McCabe <mmcc007@gmail.com>
 
 environment:
-  sdk: '>=2.0.0 <3.0.0'
+  sdk: '>=2.2.2 <3.0.0'
 
 dependencies:
   path: ^1.6.2
@@ -17,9 +17,13 @@ dependencies:
   duration: ^2.0.8
   version: ^1.0.3
   yamlicious: ^0.1.0
-  tool_base: ^1.9.5+1
+  tool_base: ^1.9.5+2
+#  tool_base:
+#    path: ../tool_base
   process: ^3.0.9
   collection: ^1.14.12
+  usage: 3.4.1
+  completion: 0.2.1+1
 
 dev_dependencies:
   test: ^1.0.0
@@ -35,3 +39,4 @@ dev_dependencies:
 
 executables:
   sylph: main
+  sylph_tools: sylph_tools
