@@ -62,12 +62,12 @@ Future<bool> sylphRun(
   // Bundle tests
   bundleFlutterTests(config);
 
-  // gather job args
-  final jobArgs = <Map>[];
-
-  bool isConcurrentRun() => config.concurrentRuns ?? false;
   for (var testSuite in config.testSuites) {
+    bool isConcurrentRun() => config.concurrentRuns ?? false;
     printStatus('\nRunning \'${testSuite.name}\' test suite...\n');
+
+    // gather job args
+    final jobArgs = <Map>[];
 
     // Initialize device pools and run tests in each pool
     for (final poolName in testSuite.poolNames) {
