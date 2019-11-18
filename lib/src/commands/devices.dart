@@ -6,9 +6,10 @@
 import 'dart:async';
 
 import 'package:tool_base/tool_base.dart';
+
+import '../base/devices.dart';
 import '../base/runner/sylph_command.dart';
 import '../device_farm.dart';
-import '../base/devices.dart';
 
 class DevicesCommand extends SylphCommand {
   DevicesCommand() {
@@ -28,7 +29,7 @@ class DevicesCommand extends SylphCommand {
   List<String> get aliases => const <String>['dartfmt'];
 
   @override
-  final String description = 'List available devices.';
+  final String description = 'List available devices in cloud.';
 
   @override
   String get invocation => '${runner.executableName} $name <one or more paths>';
@@ -66,7 +67,8 @@ class DevicesCommand extends SylphCommand {
             exitCode: 1);
       else
         return deviceType;
-    }
+    } else
+      return deviceTypes.first; // default to 'all'
     throwToolExit('Unexpected');
     return null;
   }
