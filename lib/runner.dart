@@ -8,7 +8,7 @@ import 'package:args/command_runner.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:intl/intl_standalone.dart' as intl_standalone;
 import 'package:meta/meta.dart';
-import 'package:sylph/src/base/reporting/reporting.dart';
+import 'package:reporting/reporting.dart';
 import 'package:tool_base/tool_base.dart';
 
 import 'src/base/runner/sylph_command.dart';

@@ -1,5 +1,5 @@
 import 'package:mockito/mockito.dart';
-import 'package:sylph/src/base/reporting/reporting.dart';
+import 'package:reporting/reporting.dart';
 import 'package:tool_base/tool_base.dart';
 
 class FakeUsage implements Usage {

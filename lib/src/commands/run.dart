@@ -6,7 +6,6 @@ import 'dart:async';
 
 import 'package:sylph/src/base/custom_dimensions.dart';
 import 'package:tool_base/tool_base.dart';
-import '../base/reporting/reporting.dart';
 import '../sylph_run.dart';
 import '../base/runner/sylph_command.dart';
 

@@ -16,7 +16,6 @@ import 'package:args/command_runner.dart';
 //import 'package:flutter_tools/src/commands/config.dart';
 //import 'package:flutter_tools/src/version.dart';
 import 'package:mockito/mockito.dart';
-import 'package:sylph/src/base/reporting/reporting.dart';
 import 'package:sylph/src/commands/config.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';

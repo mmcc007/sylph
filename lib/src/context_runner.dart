@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:process/process.dart';
+import 'package:reporting/reporting.dart';
 import 'package:tool_base/tool_base.dart';
 
-import 'base/reporting/reporting.dart';
 import 'base/user_messages.dart';
 import 'base/concurrent_jobs.dart';
 

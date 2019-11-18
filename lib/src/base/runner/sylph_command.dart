@@ -8,9 +8,9 @@ import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:meta/meta.dart';
 import 'package:quiver/strings.dart';
+import 'package:reporting/reporting.dart';
 import 'package:tool_base/tool_base.dart';
 import '../custom_dimensions.dart';
-import '../reporting/reporting.dart';
 import '../user_messages.dart';
 import 'sylph_command_runner.dart';
 

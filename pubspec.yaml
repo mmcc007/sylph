@@ -24,6 +24,8 @@ dependencies:
   collection: ^1.14.12
   usage: 3.4.1
   completion: 0.2.1+1
+  reporting:
+    git: https://github.com/mmcc007/reporting.git
 
 dev_dependencies:
   test: ^1.0.0

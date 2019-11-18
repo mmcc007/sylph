@@ -19,7 +19,7 @@
 
 import 'package:file/memory.dart';
 import 'package:mockito/mockito.dart';
-import 'package:sylph/src/base/reporting/reporting.dart';
+import 'package:reporting/reporting.dart';
 import 'package:sylph/src/context_runner.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';

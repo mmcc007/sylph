@@ -5,7 +5,8 @@
  *  found in the LICENSE file.
  */
 
-import 'package:sylph/src/base/reporting/reporting.dart';
+
+import 'package:reporting/reporting.dart';
 
 CustomDimensions get customDimensions => CustomDimensions.instance;
 

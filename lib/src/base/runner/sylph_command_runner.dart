@@ -9,7 +9,7 @@ import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:completion/completion.dart';
 import 'package:file/file.dart';
-import 'package:sylph/src/base/reporting/reporting.dart';
+import 'package:reporting/reporting.dart';
 import 'package:tool_base/tool_base.dart';
 
 import '../user_messages.dart';
