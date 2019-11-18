@@ -21,7 +21,6 @@ import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_base_test/tool_base_test.dart';
 
-import '../base/reporting/analytics_test.dart';
 import '../src/common.dart';
 import '../src/mocks.dart';
 //import '../src/context.dart';
