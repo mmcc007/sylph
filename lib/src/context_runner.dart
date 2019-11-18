@@ -30,7 +30,7 @@ Future<T> runInContext<T>(
       SystemClock: () => const SystemClock(),
       TimeoutConfiguration: () => const TimeoutConfiguration(),
       Usage: () => Usage(kAnalyticsUA, kSettings),
-      UserMessages: () => UserMessages(),
+//      UserMessages: () => UserMessages(),
     },
   );
 }

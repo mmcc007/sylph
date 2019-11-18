@@ -4,7 +4,8 @@
 
 import 'package:tool_base/tool_base.dart';
 
-UserMessages get userMessages => context.get<UserMessages>();
+//UserMessages get userMessages => context.get<UserMessages>();
+UserMessages get userMessages => UserMessages();
 
 /// Class containing message strings that can be produced by Flutter tools.
 class UserMessages {
