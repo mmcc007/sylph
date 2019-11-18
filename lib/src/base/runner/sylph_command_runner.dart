@@ -9,6 +9,7 @@ import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:completion/completion.dart';
 import 'package:file/file.dart';
+import 'package:process/process.dart';
 import 'package:reporting/reporting.dart';
 import 'package:tool_base/tool_base.dart';
 
@@ -18,7 +19,7 @@ class SylphCommandRunner extends CommandRunner<void> {
   SylphCommandRunner({bool verboseHelp = false})
       : super(
           'sylph',
-          'Manage your integration testing with Sylph.\n'
+          'Runs Flutter integration tests on real devices in cloud.\n'
               '\n'
               'Common commands:\n'
               '\n'
@@ -208,7 +209,7 @@ class SylphCommandRunner extends CommandRunner<void> {
       recordTo = recordTo.trim();
       if (recordTo.isEmpty) throwToolExit(userMessages.runnerNoRecordTo);
       contextOverrides.addAll(<Type, dynamic>{
-//        ProcessManager: getRecordingProcessManager(recordTo),
+        ProcessManager: getRecordingProcessManager(recordTo),
         FileSystem: getRecordingFileSystem(recordTo),
         Platform: await getRecordingPlatform(recordTo),
       });
@@ -219,7 +220,7 @@ class SylphCommandRunner extends CommandRunner<void> {
       replayFrom = replayFrom.trim();
       if (replayFrom.isEmpty) throwToolExit(userMessages.runnerNoReplayFrom);
       contextOverrides.addAll(<Type, dynamic>{
-//        ProcessManager: await getReplayProcessManager(replayFrom),
+        ProcessManager: await getReplayProcessManager(replayFrom),
         FileSystem: getReplayFileSystem(replayFrom),
         Platform: await getReplayPlatform(replayFrom),
       });
