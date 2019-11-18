@@ -15,84 +15,84 @@ class UsageEvent {
   final String parameter;
 
   void send() {
-    flutterUsage.sendEvent(category, parameter);
+    sylphUsage.sendEvent(category, parameter);
   }
 }
 
-/// A usage event related to hot reload/restart.
-///
-/// On a successful hot reload, we collect stats that help understand scale of
-/// the update. For example, [syncedLibraryCount]/[finalLibraryCount] indicates
-/// how many libraries were affected by the hot reload request. Relation of
-/// [invalidatedSourcesCount] to [syncedLibraryCount] should help understand
-/// sync/transfer "overhead" of updating this number of source files.
-class HotEvent extends UsageEvent {
-  HotEvent(
-    String parameter, {
-    @required this.targetPlatform,
-    @required this.sdkName,
-    @required this.emulator,
-    @required this.fullRestart,
-    this.reason,
-    this.finalLibraryCount,
-    this.syncedLibraryCount,
-    this.syncedClassesCount,
-    this.syncedProceduresCount,
-    this.syncedBytes,
-    this.invalidatedSourcesCount,
-    this.transferTimeInMs,
-    this.overallTimeInMs,
-  }) : super('hot', parameter);
-
-  final String reason;
-  final String targetPlatform;
-  final String sdkName;
-  final bool emulator;
-  final bool fullRestart;
-  final int finalLibraryCount;
-  final int syncedLibraryCount;
-  final int syncedClassesCount;
-  final int syncedProceduresCount;
-  final int syncedBytes;
-  final int invalidatedSourcesCount;
-  final int transferTimeInMs;
-  final int overallTimeInMs;
-
-  @override
-  void send() {
-    final Map<String, String> parameters =
-        _useCdKeys(<CustomDimensions, String>{
-      CustomDimensions.hotEventTargetPlatform: targetPlatform,
-      CustomDimensions.hotEventSdkName: sdkName,
-      CustomDimensions.hotEventEmulator: emulator.toString(),
-      CustomDimensions.hotEventFullRestart: fullRestart.toString(),
-      if (reason != null) CustomDimensions.hotEventReason: reason,
-      if (finalLibraryCount != null)
-        CustomDimensions.hotEventFinalLibraryCount:
-            finalLibraryCount.toString(),
-      if (syncedLibraryCount != null)
-        CustomDimensions.hotEventSyncedLibraryCount:
-            syncedLibraryCount.toString(),
-      if (syncedClassesCount != null)
-        CustomDimensions.hotEventSyncedClassesCount:
-            syncedClassesCount.toString(),
-      if (syncedProceduresCount != null)
-        CustomDimensions.hotEventSyncedProceduresCount:
-            syncedProceduresCount.toString(),
-      if (syncedBytes != null)
-        CustomDimensions.hotEventSyncedBytes: syncedBytes.toString(),
-      if (invalidatedSourcesCount != null)
-        CustomDimensions.hotEventInvalidatedSourcesCount:
-            invalidatedSourcesCount.toString(),
-      if (transferTimeInMs != null)
-        CustomDimensions.hotEventTransferTimeInMs: transferTimeInMs.toString(),
-      if (overallTimeInMs != null)
-        CustomDimensions.hotEventOverallTimeInMs: overallTimeInMs.toString(),
-    });
-    flutterUsage.sendEvent(category, parameter, parameters: parameters);
-  }
-}
-
+///// A usage event related to hot reload/restart.
+/////
+///// On a successful hot reload, we collect stats that help understand scale of
+///// the update. For example, [syncedLibraryCount]/[finalLibraryCount] indicates
+///// how many libraries were affected by the hot reload request. Relation of
+///// [invalidatedSourcesCount] to [syncedLibraryCount] should help understand
+///// sync/transfer "overhead" of updating this number of source files.
+//class HotEvent extends UsageEvent {
+//  HotEvent(
+//    String parameter, {
+//    @required this.targetPlatform,
+//    @required this.sdkName,
+//    @required this.emulator,
+//    @required this.fullRestart,
+//    this.reason,
+//    this.finalLibraryCount,
+//    this.syncedLibraryCount,
+//    this.syncedClassesCount,
+//    this.syncedProceduresCount,
+//    this.syncedBytes,
+//    this.invalidatedSourcesCount,
+//    this.transferTimeInMs,
+//    this.overallTimeInMs,
+//  }) : super('hot', parameter);
+//
+//  final String reason;
+//  final String targetPlatform;
+//  final String sdkName;
+//  final bool emulator;
+//  final bool fullRestart;
+//  final int finalLibraryCount;
+//  final int syncedLibraryCount;
+//  final int syncedClassesCount;
+//  final int syncedProceduresCount;
+//  final int syncedBytes;
+//  final int invalidatedSourcesCount;
+//  final int transferTimeInMs;
+//  final int overallTimeInMs;
+//
+//  @override
+//  void send() {
+//    final Map<String, String> parameters =
+//        _useCdKeys(<CustomDimensions, String>{
+//      CustomDimensions.hotEventTargetPlatform: targetPlatform,
+//      CustomDimensions.hotEventSdkName: sdkName,
+//      CustomDimensions.hotEventEmulator: emulator.toString(),
+//      CustomDimensions.hotEventFullRestart: fullRestart.toString(),
+//      if (reason != null) CustomDimensions.hotEventReason: reason,
+//      if (finalLibraryCount != null)
+//        CustomDimensions.hotEventFinalLibraryCount:
+//            finalLibraryCount.toString(),
+//      if (syncedLibraryCount != null)
+//        CustomDimensions.hotEventSyncedLibraryCount:
+//            syncedLibraryCount.toString(),
+//      if (syncedClassesCount != null)
+//        CustomDimensions.hotEventSyncedClassesCount:
+//            syncedClassesCount.toString(),
+//      if (syncedProceduresCount != null)
+//        CustomDimensions.hotEventSyncedProceduresCount:
+//            syncedProceduresCount.toString(),
+//      if (syncedBytes != null)
+//        CustomDimensions.hotEventSyncedBytes: syncedBytes.toString(),
+//      if (invalidatedSourcesCount != null)
+//        CustomDimensions.hotEventInvalidatedSourcesCount:
+//            invalidatedSourcesCount.toString(),
+//      if (transferTimeInMs != null)
+//        CustomDimensions.hotEventTransferTimeInMs: transferTimeInMs.toString(),
+//      if (overallTimeInMs != null)
+//        CustomDimensions.hotEventOverallTimeInMs: overallTimeInMs.toString(),
+//    });
+//    sylphUsage.sendEvent(category, parameter, parameters: parameters);
+//  }
+//}
+//
 ///// An event that reports the result of a [DoctorValidator]
 //class DoctorResultEvent extends UsageEvent {
 //  DoctorResultEvent({
@@ -151,8 +151,4 @@ class HotEvent extends UsageEvent {
 //  }
 //}
 //
-/// An event that reports the result of a top-level command.
-class CommandResultEvent extends UsageEvent {
-  CommandResultEvent(String commandPath, SylphCommandResult result)
-      : super(commandPath, result?.toString() ?? 'unspecified');
-}
+

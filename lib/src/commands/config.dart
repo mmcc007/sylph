@@ -95,7 +95,7 @@ class ConfigCommand extends SylphCommand {
       values = '  No settings have been configured.';
     return
       '\nSettings:\n$values\n\n'
-      'Analytics reporting is currently ${flutterUsage.enabled ? 'enabled' : 'disabled'}.';
+      'Analytics reporting is currently ${sylphUsage.enabled ? 'enabled' : 'disabled'}.';
   }
 
   /// Return null to disable analytics recording of the `config` command.
@@ -120,7 +120,7 @@ class ConfigCommand extends SylphCommand {
 
     if (argResults.wasParsed('analytics')) {
       final bool value = argResults['analytics'];
-      flutterUsage.enabled = value;
+      sylphUsage.enabled = value;
       printStatus('Analytics reporting ${value ? 'enabled' : 'disabled'}.');
     }
 

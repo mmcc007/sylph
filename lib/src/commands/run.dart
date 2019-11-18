@@ -4,6 +4,7 @@
 
 import 'dart:async';
 
+import 'package:sylph/src/base/custom_dimensions.dart';
 import 'package:tool_base/tool_base.dart';
 import '../base/reporting/reporting.dart';
 import '../sylph_run.dart';
@@ -54,20 +55,20 @@ class RunCommand extends RunCommandBase {
   final String description = 'Run your Flutter app on an attached device.';
 
   @override
-  Future<Map<CustomDimensions, String>> get usageValues async {
+  Future<Map<String, String>> get usageValues async {
     String deviceType, deviceOsVersion;
     bool isEmulator;
 
     final List<String> hostLanguage = <String>[];
 
-    return <CustomDimensions, String>{
-      CustomDimensions.commandRunIsEmulator: '$isEmulator',
-      CustomDimensions.commandRunTargetName: deviceType,
-      CustomDimensions.commandRunTargetOsVersion: deviceOsVersion,
+    return <String, String>{
+      customDimensions.commandRunIsEmulator: '$isEmulator',
+      customDimensions.commandRunTargetName: deviceType,
+      customDimensions.commandRunTargetOsVersion: deviceOsVersion,
 //      CustomDimensions.commandRunModeName: modeName,
 //      CustomDimensions.commandRunProjectModule:
 //          '${FlutterProject.current().isModule}',
-      CustomDimensions.commandRunProjectHostLanguage: hostLanguage.join(','),
+      customDimensions.commandRunProjectHostLanguage: hostLanguage.join(','),
     };
   }
 

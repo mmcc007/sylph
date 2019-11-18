@@ -10,7 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:meta/meta.dart';
 import 'package:usage/usage_io.dart';
 import 'package:tool_base/tool_base.dart';
-import '../runner/sylph_command.dart';
+//import '../runner/sylph_command.dart';
 
 part 'crash_reporting.dart';
 part 'disabled_usage.dart';

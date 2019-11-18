@@ -7,6 +7,9 @@ import 'base/reporting/reporting.dart';
 import 'base/user_messages.dart';
 import 'base/concurrent_jobs.dart';
 
+const kAnalyticsUA=
+'UA-150933570-1';
+const kSettings='.sylph';
 Future<T> runInContext<T>(
   FutureOr<T> runner(), {
   Map<Type, Generator> overrides,
@@ -26,7 +29,7 @@ Future<T> runInContext<T>(
       Stdio: () => const Stdio(),
       SystemClock: () => const SystemClock(),
       TimeoutConfiguration: () => const TimeoutConfiguration(),
-      Usage: () => Usage(),
+      Usage: () => Usage(kAnalyticsUA, kSettings),
       UserMessages: () => UserMessages(),
     },
   );

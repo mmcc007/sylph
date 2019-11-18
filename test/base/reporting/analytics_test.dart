@@ -4,27 +4,15 @@
 
 import 'package:args/command_runner.dart';
 import 'package:file/memory.dart';
-//import 'package:flutter_tools/src/base/config.dart';
-//import 'package:flutter_tools/src/base/file_system.dart';
-//import 'package:flutter_tools/src/base/io.dart';
-//import 'package:flutter_tools/src/base/platform.dart';
-//import 'package:flutter_tools/src/base/time.dart';
-//import 'package:flutter_tools/src/cache.dart';
-//import 'package:flutter_tools/src/commands/build.dart';
-//import 'package:flutter_tools/src/commands/config.dart';
-//import 'package:flutter_tools/src/commands/doctor.dart';
-//import 'package:flutter_tools/src/doctor.dart';
-//import 'package:flutter_tools/src/features.dart';
-//import 'package:flutter_tools/src/reporting/reporting.dart';
-//import 'package:flutter_tools/src/runner/flutter_command.dart';
-//import 'package:flutter_tools/src/version.dart';
 import 'package:mockito/mockito.dart';
 import 'package:platform/platform.dart';
+import 'package:sylph/src/base/custom_dimensions.dart';
 import 'package:sylph/src/base/reporting/reporting.dart';
 import 'package:sylph/src/base/runner/sylph_command.dart';
 import 'package:sylph/src/base/runner/sylph_command_runner.dart';
 import 'package:sylph/src/base/user_messages.dart';
 import 'package:sylph/src/commands/devices.dart';
+import 'package:sylph/src/context_runner.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_base_test/tool_base_test.dart';
@@ -64,25 +52,25 @@ void main() {
     testUsingContext('doesn\'t send when disabled', () async {
       mockTimes = <int>[1000, 2000, 3000, 4000, 5000, 6000];
       int count = 0;
-      flutterUsage.onSend.listen((Map<String, dynamic> data) => count++);
+      sylphUsage.onSend.listen((Map<String, dynamic> data) => count++);
 
-      flutterUsage.enabled = false;
+      sylphUsage.enabled = false;
       await createProject(tempDir);
       expect(count, 0);
 
-      flutterUsage.enabled = true;
+      sylphUsage.enabled = true;
       await createProject(tempDir);
-      expect(count, flutterUsage.isFirstRun ? 0 : 1);
+      expect(count, sylphUsage.isFirstRun ? 0 : 1);
 
       count = 0;
-      flutterUsage.enabled = false;
+      sylphUsage.enabled = false;
       final DevicesCommand doctorCommand = DevicesCommand();
       final CommandRunner<void> runner = createTestCommandRunner(doctorCommand);
       await runner.run(<String>['devices', 'ios']);
       expect(count, 0);
     }, overrides: <Type, Generator>{
 //      FlutterVersion: () => FlutterVersion(const SystemClock()),
-      Usage: () => Usage(
+      Usage: () => Usage(kAnalyticsUA, kSettings,
           configDirOverride: tempDir.path,
           logFile: tempDir.childFile('analytics.log').path),
       SystemClock: () => mockClock,
@@ -117,12 +105,13 @@ void main() {
 
 //      when<bool>(mockFlutterConfig.getValue(flutterWebFeature.configSetting))
 //          .thenReturn(true);
-      final Usage usage = Usage();
-      usage.sendCommand('test');
+      final Usage usage = Usage(kAnalyticsUA, kSettings);
+      final String featuresKey = customDimensions.commandRunTargetOsVersion;
+      final osVersion='osVersion';
+      usage.sendCommand('test', parameters: {featuresKey:osVersion});
 
-      final String featuresKey = cdKey(CustomDimensions.sessionHostOsDetails);
       expect(fs.file('test').readAsStringSync(),
-          contains('$featuresKey: fake OS name and version'));
+          contains('$featuresKey: $osVersion'));
     }, overrides: <Type, Generator>{
 //      FlutterVersion: () => FlutterVersion(const SystemClock()),
       Config: () => mockFlutterConfig,
@@ -143,12 +132,15 @@ void main() {
 //          .thenReturn(true);
 //      when<bool>(mockFlutterConfig.getValue(flutterMacOSDesktopFeature.configSetting))
 //          .thenReturn(true);
-      final Usage usage = Usage();
-      usage.sendCommand('test');
+      final Usage usage = Usage(kAnalyticsUA, kSettings);
+      final String featuresKey = customDimensions.commandRunProjectHostLanguage;
+      final language = 'language';
+      usage.sendCommand('test', parameters: {featuresKey: language});
 
-      final String featuresKey = cdKey(CustomDimensions.sessionHostOsDetails);
-      expect(fs.file('test').readAsStringSync(),
-          contains('$featuresKey: fake OS name and version'));
+      expect(
+          fs.file('test').readAsStringSync(),
+//          contains('$featuresKey: fake OS name and version'));
+          contains('$featuresKey: $language'));
     }, overrides: <Type, Generator>{
 //      FlutterVersion: () => FlutterVersion(const SystemClock()),
       Config: () => mockFlutterConfig,
@@ -237,7 +229,8 @@ void main() {
       mockTimes = <int>[kMillis];
       // Since FLUTTER_ANALYTICS_LOG_FILE is set in the environment, analytics
       // will be written to a file.
-      final Usage usage = Usage(versionOverride: 'test');
+      final Usage usage =
+          Usage(kAnalyticsUA, kSettings, versionOverride: 'test');
       usage.suppressAnalytics = false;
       usage.enabled = true;
 
@@ -262,7 +255,8 @@ void main() {
       mockTimes = <int>[kMillis];
       // Since FLUTTER_ANALYTICS_LOG_FILE is set in the environment, analytics
       // will be written to a file.
-      final Usage usage = Usage(versionOverride: 'test');
+      final Usage usage =
+          Usage(kAnalyticsUA, kSettings, versionOverride: 'test');
       usage.suppressAnalytics = false;
       usage.enabled = true;
 
@@ -297,13 +291,14 @@ void main() {
 
     testUsingContext('don\'t send on bots', () async {
       int count = 0;
-      flutterUsage.onSend.listen((Map<String, dynamic> data) => count++);
+      sylphUsage.onSend.listen((Map<String, dynamic> data) => count++);
 
       await createTestCommandRunner().run(<String>['--version']);
       expect(count, 0);
     }, overrides: <Type, Generator>{
       Usage: () => Usage(
-            settingsName: 'flutter_bot_test',
+            kAnalyticsUA,
+            'flutter_bot_test',
             versionOverride: 'dev/unknown',
             configDirOverride: tempDir.path,
           ),
@@ -311,14 +306,15 @@ void main() {
 
     testUsingContext('don\'t send on bots even when opted in', () async {
       int count = 0;
-      flutterUsage.onSend.listen((Map<String, dynamic> data) => count++);
-      flutterUsage.enabled = true;
+      sylphUsage.onSend.listen((Map<String, dynamic> data) => count++);
+      sylphUsage.enabled = true;
 
       await createTestCommandRunner().run(<String>['--version']);
       expect(count, 0);
     }, overrides: <Type, Generator>{
       Usage: () => Usage(
-            settingsName: 'flutter_bot_test',
+            kAnalyticsUA,
+            'flutter_bot_test',
             versionOverride: 'dev/unknown',
             configDirOverride: tempDir.path,
           ),
@@ -327,7 +323,7 @@ void main() {
 }
 
 createProject(Directory tempDir) {
-  flutterUsage.sendCommand('version');
+  sylphUsage.sendCommand('version');
 }
 
 class MockUsage extends Mock implements Usage {}

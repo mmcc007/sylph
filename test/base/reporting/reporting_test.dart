@@ -20,6 +20,7 @@
 import 'package:file/memory.dart';
 import 'package:mockito/mockito.dart';
 import 'package:sylph/src/base/reporting/reporting.dart';
+import 'package:sylph/src/context_runner.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_base_test/tool_base_test.dart';
@@ -52,7 +53,7 @@ main() {
       mockTimes = <int>[kMillis];
       // Since FLUTTER_ANALYTICS_LOG_FILE is set in the environment, analytics
       // will be written to a file.
-      final Usage usage = Usage(versionOverride: 'test');
+      final Usage usage = Usage(kAnalyticsUA, kSettings,versionOverride: 'test');
       usage.suppressAnalytics = false;
       usage.enabled = true;
 

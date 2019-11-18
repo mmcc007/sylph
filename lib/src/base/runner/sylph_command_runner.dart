@@ -235,7 +235,7 @@ class SylphCommandRunner extends CommandRunner<void> {
         logger.quiet = topLevelResults['quiet'];
 
         if (topLevelResults['suppress-analytics'])
-          flutterUsage.suppressAnalytics = true;
+          sylphUsage.suppressAnalytics = true;
 
 //        if (topLevelResults['version']) {
 //          flutterUsage.sendCommand('version');

@@ -4,18 +4,18 @@
 
 part of reporting;
 
-/// Tells crash backend that the error is from the Sylph CLI.
-const String _kProductId = 'Sylph';
+///// Tells crash backend that the error is from the Sylph CLI.
+//const String _kProductId = 'Sylph';
 
 /// Tells crash backend that this is a Dart error as opposed to, say, Java.
 const String _kDartTypeId = 'DartError';
 
-/// Crash backend host.
+///// Crash backend host.
 //const String _kCrashServerHost = 'clients2.google.com';
-const String _kCrashServerHost = 'clients2.mauricemccabe.com';
-
-/// Path to the crash servlet.
-const String _kCrashEndpointPath = '/cr/report';
+//const String _kCrashServerHost = 'clients2.mauricemccabe.com';
+//
+///// Path to the crash servlet.
+//const String _kCrashEndpointPath = '/cr/report';
 
 /// The field corresponding to the multipart/form-data file attachment where
 /// crash backend expects to find the Dart stack trace.
@@ -27,33 +27,47 @@ const String _kStackTraceFileField = 'DartError';
 /// it must be supplied in the request.
 const String _kStackTraceFilename = 'stacktrace_file';
 
-/// Sends crash reports to Sylph.
+/// Sends crash reports to a REST API.
 ///
 /// There are two ways to override the behavior of this class:
 ///
 /// * Define a `SYLPH_CRASH_SERVER_BASE_URL` environment variable that points
 ///   to a custom crash reporting server. This is useful if your development
 ///   environment is behind a firewall and unable to send crash reports to
-///   Sylph, or when you wish to use your own server for collecting crash
-///   reports from Sylph.
+///   remote REST API, or when you wish to use your own server for collecting crash
+///   reports from an app.
 /// * In tests call [initializeWith] and provide a mock implementation of
 ///   [http.Client].
 class CrashReportSender {
-  CrashReportSender._(this._client);
+  CrashReportSender._(
+    this._client,
+    this._crashServerHost,
+    this._crashEndpointPath,
+    this._productId,
+  );
 
   static CrashReportSender _instance;
 
   static CrashReportSender get instance =>
-      _instance ?? CrashReportSender._(http.Client());
+      _instance ?? CrashReportSender._(http.Client(), '', '', '');
 
   /// Overrides the default [http.Client] with [client] for testing purposes.
   @visibleForTesting
-  static void initializeWith(http.Client client) {
-    _instance = CrashReportSender._(client);
+  static void initializeWith(
+    http.Client client,
+    String crashServerHost,
+    String crashEndpointPath,
+    String productId,
+  ) {
+    _instance = CrashReportSender._(
+        client, crashServerHost, crashEndpointPath, productId);
   }
 
   final http.Client _client;
   final Usage _usage = Usage.instance;
+  final String _crashServerHost;
+  final String _crashEndpointPath;
+  final String _productId;
 
   Uri get _baseUrl {
     final String overrideUrl =
@@ -65,10 +79,10 @@ class CrashReportSender {
     return Uri(
 //      scheme: 'https',
       scheme: 'http',
-      host: _kCrashServerHost,
+      host: _crashServerHost,
 //      port: 443,
       port: 8080,
-      path: _kCrashEndpointPath,
+      path: _crashEndpointPath,
     );
   }
 
@@ -94,14 +108,14 @@ class CrashReportSender {
 
       final Uri uri = _baseUrl.replace(
         queryParameters: <String, String>{
-          'product': _kProductId,
+          'product': _productId,
           'version': flutterVersion,
         },
       );
 
       final http.MultipartRequest req = http.MultipartRequest('POST', uri);
       req.fields['uuid'] = _usage.clientId;
-      req.fields['product'] = _kProductId;
+      req.fields['product'] = _productId;
       req.fields['version'] = flutterVersion;
       req.fields['osName'] = platform.operatingSystem;
       req.fields['osVersion'] = os.name; // this actually includes version

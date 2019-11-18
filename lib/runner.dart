@@ -111,7 +111,7 @@ Future<int> _handleToolError(
       return _exit(1);
     } else {
       // Report to both [Usage] and [CrashReportSender].
-      flutterUsage.sendException(error);
+      sylphUsage.sendException(error);
       await CrashReportSender.instance.sendReport(
         error: error,
         stackTrace: stackTrace,
@@ -194,13 +194,13 @@ Future<File> _createLocalCrashReport(
 }
 
 Future<int> _exit(int code) async {
-  if (flutterUsage.isFirstRun) flutterUsage.printWelcome();
+  if (sylphUsage.isFirstRun) sylphUsage.printWelcome();
 
   // Send any last analytics calls that are in progress without overly delaying
   // the tool's exit (we wait a maximum of 250ms).
-  if (flutterUsage.enabled) {
+  if (sylphUsage.enabled) {
     final Stopwatch stopwatch = Stopwatch()..start();
-    await flutterUsage.ensureAnalyticsSent();
+    await sylphUsage.ensureAnalyticsSent();
     printTrace('ensureAnalyticsSent: ${stopwatch.elapsedMilliseconds}ms');
   }
 

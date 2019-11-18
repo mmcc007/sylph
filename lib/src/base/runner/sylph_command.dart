@@ -9,6 +9,7 @@ import 'package:args/command_runner.dart';
 import 'package:meta/meta.dart';
 import 'package:quiver/strings.dart';
 import 'package:tool_base/tool_base.dart';
+import '../custom_dimensions.dart';
 import '../reporting/reporting.dart';
 import '../user_messages.dart';
 import 'sylph_command_runner.dart';
@@ -91,8 +92,8 @@ abstract class SylphCommand extends Command<void> {
   }
 
   /// Additional usage values to be sent with the usage ping.
-  Future<Map<CustomDimensions, String>> get usageValues async =>
-      const <CustomDimensions, String>{};
+  Future<Map<String, String>> get usageValues async =>
+      const <String, String>{};
 
   /// Runs this command.
   ///
@@ -108,8 +109,8 @@ abstract class SylphCommand extends Command<void> {
       name: 'command',
       overrides: <Type, Generator>{SylphCommand: () => this},
       body: () async {
-        if (flutterUsage.isFirstRun) {
-          flutterUsage.printWelcome();
+        if (sylphUsage.isFirstRun) {
+          sylphUsage.printWelcome();
         }
         final String commandPath = await usagePath;
         SylphCommandResult commandResult;
@@ -151,7 +152,7 @@ abstract class SylphCommand extends Command<void> {
 
     final String label =
         labels.where((String label) => !isBlank(label)).join('-');
-    flutterUsage.sendTiming(
+    sylphUsage.sendTiming(
       'flutter',
       name,
       // If the command provides its own end time, use it. Otherwise report
@@ -175,10 +176,10 @@ abstract class SylphCommand extends Command<void> {
     await validateCommand();
 
     if (commandPath != null) {
-      final Map<CustomDimensions, String> additionalUsageValues =
-          <CustomDimensions, String>{
+      final Map<String, String> additionalUsageValues =
+          <String, String>{
         ...?await usageValues,
-        CustomDimensions.commandHasTerminal:
+        CustomDimensions.instance.commandHasTerminal:
 //        io.stdout.hasTerminal ? 'true' : 'false',
             stdio.hasTerminal ? 'true' : 'false',
       };
@@ -196,4 +197,10 @@ abstract class SylphCommand extends Command<void> {
   @protected
   @mustCallSuper
   Future<void> validateCommand() async {}
+}
+
+/// An event that reports the result of a top-level command.
+class CommandResultEvent extends UsageEvent {
+  CommandResultEvent(String commandPath, SylphCommandResult result)
+      : super(commandPath, result?.toString() ?? 'unspecified');
 }

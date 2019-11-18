@@ -4,81 +4,118 @@
 
 part of reporting;
 
-const String _kFlutterUA = 'UA-150933570-1'; // test
+//const String _kFlutterUA = 'UA-150933570-1'; // test
+//
+///// The collection of custom dimensions understood by the analytics backend.
+///// When adding to this list, first ensure that the custom dimension is
+///// defined in the backend, or will be defined shortly after the relevent PR
+///// lands.
+//enum CustomDimensions {
+//  localTime, // cd33
+//  sessionHostOsDetails, // cd1
+//  enabledFlutterFeatures, // cd32
+//  testCustomDimension, //cd4
+//  sessionChannelName, // cd2
+//  commandRunIsEmulator, // cd3
+//  commandRunTargetName, // cd4
+//  hotEventReason, // cd5
+//  hotEventFinalLibraryCount, // cd6
+//  hotEventSyncedLibraryCount, // cd7
+//  hotEventSyncedClassesCount, // cd8
+//  hotEventSyncedProceduresCount, // cd9
+//  hotEventSyncedBytes, // cd10
+//  hotEventInvalidatedSourcesCount, // cd11
+//  hotEventTransferTimeInMs, // cd12
+//  hotEventOverallTimeInMs, // cd13
+//  commandRunProjectType, // cd14
+//  commandRunProjectHostLanguage, // cd15
+//  commandCreateAndroidLanguage, // cd16
+//  commandCreateIosLanguage, // cd17
+//  commandRunProjectModule, // cd18
+//  commandCreateProjectType, // cd19
+//  commandPackagesNumberPlugins, // cd20
+//  commandPackagesProjectModule, // cd21
+//  commandRunTargetOsVersion, // cd22
+//  commandRunModeName, // cd23
+//  commandBuildBundleTargetPlatform, // cd24
+//  commandBuildBundleIsModule, // cd25
+//  commandResult, // cd26
+//  hotEventTargetPlatform, // cd27
+//  hotEventSdkName, // cd28
+//  hotEventEmulator, // cd29
+//  hotEventFullRestart, // cd30
+//  commandHasTerminal, // cd31
+//  commandBuildAarTargetPlatform, // cd34
+//  commandBuildAarProjectType, // cd35
+//  buildEventCommand, // cd36
+//  buildEventSettings, // cd37
+//  commandBuildApkTargetPlatform, // cd38
+//  commandBuildApkBuildMode, // cd39
+//  commandBuildApkSplitPerAbi, // cd40
+//  commandBuildAppBundleTargetPlatform, // cd41
+//  commandBuildAppBundleBuildMode, // cd42
+//}
+//
+//String cdKey(CustomDimensions cd) => 'cd${cd.index + 1}';
+//
+//Map<String, String> _useCdKeys(Map<CustomDimensions, String> parameters) {
+//  return parameters.map(
+//      (CustomDimensions k, String v) => MapEntry<String, String>(cdKey(k), v));
+//}
 
-/// The collection of custom dimensions understood by the analytics backend.
-/// When adding to this list, first ensure that the custom dimension is
-/// defined in the backend, or will be defined shortly after the relevent PR
-/// lands.
-enum CustomDimensions {
-  localTime, // cd33
-  sessionHostOsDetails, // cd1
-  enabledFlutterFeatures, // cd32
-  testCustomDimension, //cd4
-  sessionChannelName, // cd2
-  commandRunIsEmulator, // cd3
-  commandRunTargetName, // cd4
-  hotEventReason, // cd5
-  hotEventFinalLibraryCount, // cd6
-  hotEventSyncedLibraryCount, // cd7
-  hotEventSyncedClassesCount, // cd8
-  hotEventSyncedProceduresCount, // cd9
-  hotEventSyncedBytes, // cd10
-  hotEventInvalidatedSourcesCount, // cd11
-  hotEventTransferTimeInMs, // cd12
-  hotEventOverallTimeInMs, // cd13
-  commandRunProjectType, // cd14
-  commandRunProjectHostLanguage, // cd15
-  commandCreateAndroidLanguage, // cd16
-  commandCreateIosLanguage, // cd17
-  commandRunProjectModule, // cd18
-  commandCreateProjectType, // cd19
-  commandPackagesNumberPlugins, // cd20
-  commandPackagesProjectModule, // cd21
-  commandRunTargetOsVersion, // cd22
-  commandRunModeName, // cd23
-  commandBuildBundleTargetPlatform, // cd24
-  commandBuildBundleIsModule, // cd25
-  commandResult, // cd26
-  hotEventTargetPlatform, // cd27
-  hotEventSdkName, // cd28
-  hotEventEmulator, // cd29
-  hotEventFullRestart, // cd30
-  commandHasTerminal, // cd31
-  commandBuildAarTargetPlatform, // cd34
-  commandBuildAarProjectType, // cd35
-  buildEventCommand, // cd36
-  buildEventSettings, // cd37
-  commandBuildApkTargetPlatform, // cd38
-  commandBuildApkBuildMode, // cd39
-  commandBuildApkSplitPerAbi, // cd40
-  commandBuildAppBundleTargetPlatform, // cd41
-  commandBuildAppBundleBuildMode, // cd42
+abstract class Dimensions {
+//  final Map<String, String> reservedDimensions = {
+//    'cd1': 'sessionHostOsDetails',
+//    'cd2': 'localTime'
+//  };
+//  final Map<String, String> reservedDimensions = {
+//    'sessionHostOsDetails':'cd1' ,
+//    'localTime':'cd2'
+//  };
+  Map<String, String> dimensions;
+
+  void validate() {
+    dimensions.forEach((k, v) {
+      if (_reservedDimensions.containsKey(k) ||
+          _reservedDimensions.containsValue(v)) {
+        throw 'reserved dimension found for: \'$k:$v\'';
+      }
+    });
+  }
 }
 
-String cdKey(CustomDimensions cd) => 'cd${cd.index + 1}';
+Usage get sylphUsage => Usage.instance;
 
-Map<String, String> _useCdKeys(Map<CustomDimensions, String> parameters) {
-  return parameters.map(
-      (CustomDimensions k, String v) => MapEntry<String, String>(cdKey(k), v));
-}
-
-Usage get flutterUsage => Usage.instance;
+final Map<String, String> _reservedDimensions = {
+  'sessionHostOsDetails':'cd1' ,
+  'localTime':'cd2'
+};
 
 abstract class Usage {
-  /// Create a new Usage instance; [versionOverride], [configDirOverride], and
+  /// Create a new Usage instance.
+  /// [analyticsUA] is the analytics UA.
+//  / [customDimensions] is the collection of custom dimensions understood
+//  / by the analytics backend.
+  /// [settingsName] is a file containing the uuid.
+  /// [versionOverride], [configDirOverride], and
   /// [logFile] are used for testing.
-  factory Usage({
-    String settingsName = 'sylph',
+  factory Usage(
+//    Dimensions customDimensions,
+    String analyticsUA,
+    String settingsName, {
     String versionOverride,
     String configDirOverride,
     String logFile,
-  }) =>
-      _DefaultUsage(
-          settingsName: settingsName,
-          versionOverride: versionOverride,
-          configDirOverride: configDirOverride,
-          logFile: logFile);
+  }) {
+    return _DefaultUsage(
+//      customDimensions,
+      analyticsUA,
+      settingsName,
+      versionOverride: versionOverride,
+      configDirOverride: configDirOverride,
+      logFile: logFile,
+    );
+  }
 
   /// Returns [Usage] active in the current app context.
   static Usage get instance => context.get<Usage>();
@@ -86,9 +123,15 @@ abstract class Usage {
   /// Uses the global [Usage] instance to send a 'command' to analytics.
   static void command(
     String command, {
-    Map<CustomDimensions, String> parameters,
+    Map<String, String> parameters,
   }) =>
-      flutterUsage.sendCommand(command, parameters: _useCdKeys(parameters));
+      sylphUsage.sendCommand(command, parameters: parameters);
+
+//  /// The collection of custom dimensions understood by the analytics backend.
+//  set customDimensions(List customDimensions);
+//  final Dimensions customDimensions;
+
+//  final analyticsUA;
 
   /// Whether this is the first run of the tool.
   bool get isFirstRun;
@@ -145,12 +188,15 @@ abstract class Usage {
 }
 
 class _DefaultUsage implements Usage {
-  _DefaultUsage({
-    String settingsName = 'sylph',
+  _DefaultUsage(
+//    Dimensions customDimensions,
+    String analyticsUA,
+    String settingsName, {
     String versionOverride,
     String configDirOverride,
     String logFile,
-  }) {
+//      }) : this.customDimensions = customDimensions {
+  })  {
 //    final FlutterVersion flutterVersion = FlutterVersion.instance;
 //    final String version = versionOverride ?? flutterVersion.getVersionString(redactUnknownBranches: true);
     final String version = '0.6.0';
@@ -182,7 +228,7 @@ class _DefaultUsage implements Usage {
       _analytics = LogToFileAnalytics(logFilePath);
     } else {
       _analytics = AnalyticsIO(
-        _kFlutterUA,
+        analyticsUA,
         settingsName,
         version,
         documentDirectory:
@@ -193,7 +239,9 @@ class _DefaultUsage implements Usage {
 
     // Report a more detailed OS version string than package:usage does by default.
     _analytics.setSessionValue(
-        cdKey(CustomDimensions.sessionHostOsDetails), os.name);
+//        cdKey(CustomDimensions.sessionHostOsDetails), os.name);
+        _reservedDimensions['sessionHostOsDetails'],
+        os.name);
     // Send the branch name as the "channel".
 //    _analytics.setSessionValue(cdKey(CustomDimensions.sessionChannelName),
 //                               flutterVersion.getBranchName(redactUnknownBranches: true));
@@ -252,7 +300,8 @@ class _DefaultUsage implements Usage {
 
     final Map<String, String> paramsWithLocalTime = <String, String>{
       ...?parameters,
-      cdKey(CustomDimensions.localTime): formatDateTime(systemClock.now()),
+//      cdKey(CustomDimensions.localTime): formatDateTime(systemClock.now()),
+      _reservedDimensions['localTime']: formatDateTime(systemClock.now()),
     };
     _analytics.sendScreenView(command, parameters: paramsWithLocalTime);
   }
@@ -271,7 +320,8 @@ class _DefaultUsage implements Usage {
 
     final Map<String, String> paramsWithLocalTime = <String, String>{
       ...?parameters,
-      cdKey(CustomDimensions.localTime): formatDateTime(systemClock.now()),
+//      cdKey(CustomDimensions.localTime): formatDateTime(systemClock.now()),
+      _reservedDimensions['localTime']: formatDateTime(systemClock.now()),
     };
 
     print('calling _analytics.sendEvent()');
