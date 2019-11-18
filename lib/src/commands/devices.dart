@@ -26,13 +26,11 @@ class DevicesCommand extends SylphCommand {
   final String name = 'devices';
 
   @override
-  List<String> get aliases => const <String>['dartfmt'];
-
-  @override
   final String description = 'List available devices in cloud.';
 
   @override
-  String get invocation => '${runner.executableName} $name <one or more paths>';
+  String get invocation =>
+      '${runner.executableName} $name <[<all|ios|android>]';
 
   @override
   Future<SylphCommandResult> runCommand() async {
