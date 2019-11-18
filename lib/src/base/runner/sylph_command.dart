@@ -179,7 +179,7 @@ abstract class SylphCommand extends Command<void> {
       final Map<String, String> additionalUsageValues =
           <String, String>{
         ...?await usageValues,
-        CustomDimensions.instance.commandHasTerminal:
+        customDimensions.commandHasTerminal:
 //        io.stdout.hasTerminal ? 'true' : 'false',
             stdio.hasTerminal ? 'true' : 'false',
       };

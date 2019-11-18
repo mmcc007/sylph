@@ -51,7 +51,7 @@ FakeUsage fakeUsage;
       expect(logger.statusText, isNotEmpty);
       final dynamic jsonObject = json.decode(logger.statusText);
       expect(jsonObject, isMap);
-      print('jsonObject=$jsonObject');
+//      print('jsonObject=$jsonObject');
 
 //      expect(jsonObject.containsKey('android-studio-dir'), true);
 //      expect(jsonObject['android-studio-dir'], isNotNull);
