@@ -167,7 +167,7 @@ void main() {
             script: Uri(scheme: 'data'),
           ),
       Stdio: () => const _NoStderr(),
-    });
+    }, skip: isCI());
   });
 }
 
