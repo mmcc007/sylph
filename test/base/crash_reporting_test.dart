@@ -88,7 +88,7 @@ void main() {
       Stdio: () => const _NoStderr(),
       Platform: () =>
           FakePlatform.fromPlatform(const LocalPlatform())..environment = {},
-    });
+    }, skip: isCI());
 
     testUsingContext('should not send a crash report if on a user-branch',
         () async {
