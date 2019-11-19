@@ -4,12 +4,9 @@ import 'package:process/process.dart';
 import 'package:reporting/reporting.dart';
 import 'package:tool_base/tool_base.dart';
 
-import 'base/user_messages.dart';
+import '../runner.dart';
 import 'base/concurrent_jobs.dart';
 
-const kAnalyticsUA=
-'UA-150933570-1';
-const kSettings='.sylph';
 Future<T> runInContext<T>(
   FutureOr<T> runner(), {
   Map<Type, Generator> overrides,

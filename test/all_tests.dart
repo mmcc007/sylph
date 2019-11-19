@@ -2,6 +2,7 @@ import 'bundle_test.dart' as bundle_test;
 import 'base/concurrent_jobs_test.dart' as concurrent_jobs_test;
 import 'commands/config_test.dart' as config_command_test;
 import 'config_test.dart' as config_test;
+import 'base/crash_reporting_test.dart' as crash_report_test;
 import 'device_farm_test.dart' as device_farm_test;
 import 'base/devices_test.dart' as devices_test;
 import 'base/local_packages_test.dart' as local_packages_test;
@@ -18,6 +19,7 @@ main() {
   concurrent_jobs_test.main();
   config_command_test.main();
   config_test.main();
+  crash_report_test.main();
   device_farm_test.main();
   devices_test.main();
   local_packages_test.main();

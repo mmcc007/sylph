@@ -5,6 +5,7 @@
 import 'dart:async';
 
 import 'package:args/command_runner.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart' as intl;
 import 'package:intl/intl_standalone.dart' as intl_standalone;
 import 'package:meta/meta.dart';
@@ -15,7 +16,26 @@ import 'src/base/runner/sylph_command.dart';
 import 'src/base/runner/sylph_command_runner.dart';
 import 'src/context_runner.dart';
 
-/// Runs the Flutter tool with support for the specified list of [commands].
+const kAnalyticsUA = 'UA-150933570-1';
+const kSettings = '.sylph';
+const kProductId = 'Sylph';
+const String kCrashServerHost = 'clients2.mauricemccabe.com';
+const String kCrashEndpointPath = '/cr/report';
+
+CrashReportSender _crashReportSender;
+
+CrashReportSender get crashReportSender {
+  if (_crashReportSender == null)
+    _crashReportSender = CrashReportSender(
+        http.Client(), kCrashServerHost, kCrashEndpointPath, kProductId);
+  return _crashReportSender;
+}
+
+@visibleForTesting
+set crashReportSender(CrashReportSender crashReportSender) =>
+    _crashReportSender = crashReportSender;
+
+/// Runs the Sylph tool with support for the specified list of [commands].
 Future<int> run(
   List<String> args,
   List<SylphCommand> commands, {
@@ -29,8 +49,8 @@ Future<int> run(
   reportCrashes ??= !isRunningOnBot;
 
   if (muteCommandLogging) {
-    // Remove the verbose option; for help and doctor, users don't need to see
-    // verbose logs.
+// Remove the verbose option; for help and doctor, users don't need to see
+// verbose logs.
     args = List<String>.from(args);
     args.removeWhere(
         (String option) => option == '-v' || option == '--verbose');
@@ -64,11 +84,12 @@ Future<int> run(
             error, stackTrace, verbose, args, reportCrashes, getVersion);
       }
     }, onError: (Object error, StackTrace stackTrace) async {
-      // If sending a crash report throws an error into the zone, we don't want
-      // to re-try sending the crash report with *that* error. Rather, we want
-      // to send the original error that triggered the crash report.
+// If sending a crash report throws an error into the zone, we don't want
+// to re-try sending the crash report with *that* error. Rather, we want
+// to send the original error that triggered the crash report.
       final Object e = firstError ?? error;
       final StackTrace s = firstStackTrace ?? stackTrace;
+
       await _handleToolError(e, s, verbose, args, reportCrashes, getVersion);
     });
   }, overrides: overrides);
@@ -112,7 +133,7 @@ Future<int> _handleToolError(
     } else {
       // Report to both [Usage] and [CrashReportSender].
       sylphUsage.sendException(error);
-      await CrashReportSender.instance.sendReport(
+      await crashReportSender.sendReport(
         error: error,
         stackTrace: stackTrace,
         getFlutterVersion: getFlutterVersion,

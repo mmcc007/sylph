@@ -26,6 +26,7 @@ dependencies:
   completion: 0.2.1+1
   reporting:
     git: https://github.com/mmcc007/reporting.git
+#    path: ../reporting
 
 dev_dependencies:
   test: ^1.0.0
