@@ -4,4 +4,6 @@ container:
 test_task:
   pub_cache:
     folder: ~/.pub-cache
-  test_script: pub run test test/all_tests.dart
+  test_script:
+    - pub get
+    - pub run test test/all_tests.dart
