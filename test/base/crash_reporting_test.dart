@@ -21,6 +21,8 @@ import 'package:tool_base/src/base/common.dart' as c;
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_base_test/tool_base_test.dart';
 
+import '../src/common.dart';
+
 void main() {
   group('crash reporting', () {
     setUpAll(() {
@@ -58,7 +60,7 @@ void main() {
       Stdio: () => const _NoStderr(),
       Platform: () =>
           FakePlatform.fromPlatform(const LocalPlatform())..environment = {},
-    });
+    }, skip: isCI());
 
     testUsingContext('should send crash reports when async throws', () async {
       final Completer<int> exitCodeCompleter = Completer<int>();
