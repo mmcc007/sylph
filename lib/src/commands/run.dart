@@ -9,35 +9,8 @@ import 'package:tool_base/tool_base.dart';
 import '../sylph_run.dart';
 import '../base/runner/sylph_command.dart';
 
-//abstract class RunCommandBase extends FlutterCommand with DeviceBasedDevelopmentArtifacts {
-abstract class RunCommandBase extends SylphCommand {
-  // Used by run and drive commands.
-  RunCommandBase({bool verboseHelp = false}) {
-    argParser
-      ..addFlag(
-        'trace-startup',
-        negatable: false,
-        help:
-            'Trace application startup, then exit, saving the trace to a file.',
-      )
-      ..addFlag(
-        'verbose-system-logs',
-        negatable: false,
-        help: 'Include verbose logging from the flutter engine.',
-      )
-      ..addOption(
-        'route',
-        help: 'Which route to load when running the app.',
-      );
-  }
-
-  bool get traceStartup => argResults['trace-startup'];
-
-  String get route => argResults['route'];
-}
-
-class RunCommand extends RunCommandBase {
-  RunCommand({bool verboseHelp = false}) : super(verboseHelp: verboseHelp) {
+class RunCommand extends SylphCommand {
+  RunCommand({bool verboseHelp = false}) {
     argParser
       ..addOption(configArg,
           abbr: 'c',
@@ -51,7 +24,7 @@ class RunCommand extends RunCommandBase {
   final String name = 'run';
 
   @override
-  final String description = 'Run your Flutter app on an attached device.';
+  final String description = 'Run Flutter integration tests on devices in cloud.';
 
   @override
   Future<Map<String, String>> get usageValues async {

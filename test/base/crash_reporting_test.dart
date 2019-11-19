@@ -57,7 +57,7 @@ void main() {
         <String>['crash'],
         <SylphCommand>[_CrashCommand()],
         reportCrashes: true,
-        flutterVersion: 'test-version',
+        sylphVersion: 'test-version',
       );
       expect(exitCode, 1);
 
@@ -80,7 +80,7 @@ void main() {
         <String>['crash'],
         <SylphCommand>[_CrashAsyncCommand()],
         reportCrashes: true,
-        flutterVersion: 'test-version',
+        sylphVersion: 'test-version',
       ));
       expect(await exitCodeCompleter.future, equals(1));
       await verifyCrashReportSent(requestInfo);
@@ -106,7 +106,7 @@ void main() {
         <String>['crash'],
         <SylphCommand>[_CrashCommand()],
         reportCrashes: true,
-        flutterVersion: '[user-branch]/v1.2.3',
+        sylphVersion: '[user-branch]/v1.2.3',
       );
 
       expect(exitCode, 1);
@@ -132,7 +132,7 @@ void main() {
         <String>['crash'],
         <SylphCommand>[_CrashCommand()],
         reportCrashes: true,
-        flutterVersion: 'test-version',
+        sylphVersion: 'test-version',
       );
 
       expect(exitCode, 1);

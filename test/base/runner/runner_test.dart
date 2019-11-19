@@ -54,7 +54,7 @@ void main() {
               CrashingSylphCommand(),
             ],
             // This flutterVersion disables crash reporting.
-            flutterVersion: '[user-branch]/',
+            sylphVersion: '[user-branch]/',
             reportCrashes: true,
           ));
           return null;

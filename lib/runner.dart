@@ -23,7 +23,7 @@ Future<int> run(
   bool verbose = false,
   bool verboseHelp = false,
   bool reportCrashes,
-  String flutterVersion,
+  String sylphVersion,
   Map<Type, Generator> overrides,
 }) {
   reportCrashes ??= !isRunningOnBot;
@@ -50,7 +50,7 @@ Future<int> run(
     );
 
 //    String getVersion() => flutterVersion ?? FlutterVersion.instance.getVersionString(redactUnknownBranches: true);
-    String getVersion() => flutterVersion ?? '0.6.0';
+    String getVersion() => sylphVersion ?? '0.6.0';
     Object firstError;
     StackTrace firstStackTrace;
     return await runZoned<Future<int>>(() async {
@@ -85,7 +85,7 @@ Future<int> _handleToolError(
   if (error is UsageException) {
     printError('${error.message}\n');
     printError(
-        "Run 'flutter -h' (or 'flutter <command> -h') for available flutter commands and options.");
+        "Run 'sylph -h' (or 'sylph <command> -h') for available sylph commands and options.");
     // Argument error exit code.
     return _exit(64);
   } else if (error is ToolExit) {
@@ -120,22 +120,22 @@ Future<int> _handleToolError(
       );
 
       if (error is String)
-        stderr.writeln('Oops; flutter has exited unexpectedly: "$error".');
+        stderr.writeln('Oops; sylph has exited unexpectedly: "$error".');
       else
-        stderr.writeln('Oops; flutter has exited unexpectedly.');
+        stderr.writeln('Oops; sylph has exited unexpectedly.');
 
       try {
         final File file =
             await _createLocalCrashReport(args, error, stackTrace);
         stderr.writeln(
           'Crash report written to ${file.path};\n'
-          'please let us know at https://github.com/flutter/flutter/issues.',
+          'please let us know at https://github.com/mmcc007/sylph/issues.',
         );
         return _exit(1);
       } catch (error) {
         stderr.writeln(
           'Unable to generate crash report due to secondary error: $error\n'
-          'please let us know at https://github.com/flutter/flutter/issues.',
+          'please let us know at https://github.com/mmcc007/sylph/issues.',
         );
         // Any exception throw here (including one thrown by `_exit()`) will
         // get caught by our zone's `onError` handler. In order to avoid an
@@ -159,29 +159,26 @@ FileSystem crashFileSystem = const LocalFileSystem();
 Future<File> _createLocalCrashReport(
     List<String> args, dynamic error, StackTrace stackTrace) async {
   File crashFile =
-      getUniqueFile(crashFileSystem.currentDirectory, 'flutter', 'log');
+      getUniqueFile(crashFileSystem.currentDirectory, 'sylph', 'log');
 
   final StringBuffer buffer = StringBuffer();
 
   buffer.writeln(
-      'Flutter crash report; please file at https://github.com/flutter/flutter/issues.\n');
+      'Flutter crash report; please file at https://github.com/mmcc007/sylph/issues.\n');
 
   buffer.writeln('## command\n');
-  buffer.writeln('flutter ${args.join(' ')}\n');
+  buffer.writeln('sylph ${args.join(' ')}\n');
 
   buffer.writeln('## exception\n');
   buffer.writeln('${error.runtimeType}: $error\n');
   buffer.writeln('```\n$stackTrace```\n');
-
-  buffer.writeln('## flutter doctor\n');
-//  buffer.writeln('```\n${await _doctorText()}```');
 
   try {
     await crashFile.writeAsString(buffer.toString());
   } on FileSystemException catch (_) {
     // Fallback to the system temporary directory.
     crashFile =
-        getUniqueFile(crashFileSystem.systemTempDirectory, 'flutter', 'log');
+        getUniqueFile(crashFileSystem.systemTempDirectory, 'sylph', 'log');
     try {
       await crashFile.writeAsString(buffer.toString());
     } on FileSystemException catch (e) {

@@ -27,7 +27,7 @@ class SylphCommandRunner extends CommandRunner<void> {
               '    Get a list of currently available devices.\n'
               '\n'
               '  sylph run [options]\n'
-              '    Run your Flutter application integration tests on pools of devices in cloud.',
+              '    Run Flutter integration tests on pools of devices in cloud.',
         ) {
     argParser.addFlag('verbose',
         abbr: 'v',
