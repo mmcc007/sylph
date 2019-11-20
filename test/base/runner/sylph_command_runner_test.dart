@@ -290,10 +290,8 @@ void main() {
         mockTimes = <int>[1000, 2000];
         await runner.run(<String>['--bug-report', DummySylphCommand().name]);
         await runShutdownHooks();
-        expect(
-            testLogger.statusText,
-            'Bug report written to bugreport_01.zip.\n'
-            'Warning: this bug report contains local paths, device identifiers, and log snippets.\n');
+        expect(testLogger.statusText,
+            contains('Bug report written to bugreport_01.zip.\n'));
       }, overrides: <Type, Generator>{
         FileSystem: () => fs,
         SystemClock: () => clock,
@@ -315,7 +313,8 @@ void main() {
                   '{"environment":{"SHELL": "/bin/zsh"}, "script":"", "executableArguments":[]}')
               : manifest.writeAsStringSync('[]');
         }
-        await runner.run(<String>['--replay-from', recordDir, DummySylphCommand().name]);
+        await runner.run(
+            <String>['--replay-from', recordDir, DummySylphCommand().name]);
         await runShutdownHooks();
         expect(testLogger.statusText, '');
       }, overrides: <Type, Generator>{
