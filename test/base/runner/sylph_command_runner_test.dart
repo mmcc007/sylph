@@ -34,7 +34,6 @@ void main() {
     ProcessManager processManager;
     MockClock clock;
     List<int> mockTimes;
-    MockitoUsage usage;
 
     setUpAll(() {
 //      Cache.disableLocking();
@@ -56,9 +55,7 @@ void main() {
       runner = createTestCommandRunner(DummySylphCommand());
       processManager = MockProcessManager();
 
-      usage = MockitoUsage();
       clock = MockClock();
-      when(usage.isFirstRun).thenReturn(false);
       when(clock.now()).thenAnswer((Invocation _) =>
           DateTime.fromMillisecondsSinceEpoch(mockTimes.removeAt(0)));
     });
@@ -131,12 +128,12 @@ void main() {
         ..createSync()
         ..writeAsStringSync('Not a valid package');
 
-      await runner.run(<String>['dummy']);
+      await runner.run(<String>[DummySylphCommand().name]);
     }, overrides: <Type, Generator>{
       FileSystem: () => fs,
       Platform: () => platform,
       SystemClock: () => clock,
-      Usage: () => usage,
+      Usage: () => FakeUsage(),
     }, initializeFlutterRoot: false);
 
 //    group('version', () {
@@ -204,13 +201,13 @@ void main() {
         mockTimes = <int>[1000, 2000];
         final FakeCommand fakeCommand = FakeCommand();
         runner.addCommand(fakeCommand);
-        await runner.run(<String>['fake']);
+        await runner.run(<String>[fakeCommand.name]);
         expect(fakeCommand.preferences.wrapText, isTrue);
       }, overrides: <Type, Generator>{
         FileSystem: () => fs,
         Stdio: () => FakeStdio(hasFakeTerminal: true),
         SystemClock: () => clock,
-        Usage: () => usage,
+        Usage: () => FakeUsage(),
       }, initializeFlutterRoot: false);
 
       testUsingContext(
@@ -225,7 +222,7 @@ void main() {
         FileSystem: () => fs,
         Stdio: () => FakeStdio(hasFakeTerminal: false),
         SystemClock: () => clock,
-        Usage: () => usage,
+        Usage: () => FakeUsage(),
       }, initializeFlutterRoot: false);
 
       testUsingContext(
@@ -234,13 +231,13 @@ void main() {
         mockTimes = <int>[1000, 2000];
         final FakeCommand fakeCommand = FakeCommand();
         runner.addCommand(fakeCommand);
-        await runner.run(<String>['--no-wrap', 'fake']);
+        await runner.run(<String>['--no-wrap', fakeCommand.name]);
         expect(fakeCommand.preferences.wrapText, isFalse);
       }, overrides: <Type, Generator>{
         FileSystem: () => fs,
         Stdio: () => FakeStdio(hasFakeTerminal: true),
         SystemClock: () => clock,
-        Usage: () => usage,
+        Usage: () => FakeUsage(),
       }, initializeFlutterRoot: false);
 
       testUsingContext(
@@ -255,7 +252,7 @@ void main() {
         FileSystem: () => fs,
         Stdio: () => FakeStdio(hasFakeTerminal: false),
         SystemClock: () => clock,
-        Usage: () => usage,
+        Usage: () => FakeUsage(),
       }, initializeFlutterRoot: false);
 
       testUsingContext('checks that wrap column is set', () async {
@@ -270,30 +267,28 @@ void main() {
         FileSystem: () => fs,
         Stdio: () => FakeStdio(hasFakeTerminal: false),
         SystemClock: () => clock,
-        Usage: () => usage,
+        Usage: () => FakeUsage(),
       });
 
       testUsingContext('checks that wrap column is invalid or bad format',
           () async {
         expect(
-            () async =>
-                await runner.run(<String>['--wrap-column', '-1', 'dummy']),
+            () async => await runner
+                .run(<String>['--wrap-column', '-1', DummySylphCommand().name]),
             throwsToolExit(
                 message:
                     'Argument to --wrap-column must be a positive integer. You supplied -1.'));
         expect(
-            () async =>
-                await runner.run(<String>['--wrap-column', 'xx', 'dummy']),
+            () async => await runner
+                .run(<String>['--wrap-column', 'xx', DummySylphCommand().name]),
             throwsToolExit(
                 message: 'Unable to parse argument --wrap-column=xx'));
       });
     });
     group('bug report', () {
-
-
       testUsingContext('checks that bug report is created', () async {
         mockTimes = <int>[1000, 2000];
-        await runner.run(<String>['--bug-report', 'dummy']);
+        await runner.run(<String>['--bug-report', DummySylphCommand().name]);
         await runShutdownHooks();
         expect(
             testLogger.statusText,
@@ -302,7 +297,7 @@ void main() {
       }, overrides: <Type, Generator>{
         FileSystem: () => fs,
         SystemClock: () => clock,
-        Usage: () => usage,
+        Usage: () => FakeUsage(),
       }, initializeFlutterRoot: false);
     });
 
@@ -320,13 +315,13 @@ void main() {
                   '{"environment":{"SHELL": "/bin/zsh"}, "script":"", "executableArguments":[]}')
               : manifest.writeAsStringSync('[]');
         }
-        await runner.run(<String>['--replay-from', recordDir, 'dummy']);
+        await runner.run(<String>['--replay-from', recordDir, DummySylphCommand().name]);
         await runShutdownHooks();
         expect(testLogger.statusText, '');
       }, overrides: <Type, Generator>{
 //        FileSystem: () => fs,
         SystemClock: () => clock,
-        Usage: () => usage,
+        Usage: () => FakeUsage(),
       });
     });
   });
