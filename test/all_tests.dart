@@ -1,5 +1,6 @@
 import 'base/concurrent_jobs_test.dart' as concurrent_jobs_test;
 import 'base/crash_reporting_test.dart' as crash_report_test;
+import 'commands/devices_test.dart' as command_devices_test;
 import 'base/devices_test.dart' as devices_test;
 import 'base/local_packages_test.dart' as local_packages_test;
 import 'base/runner/runner_test.dart' as runner_test;
@@ -17,6 +18,7 @@ import 'validator_test.dart' as validator_test;
 
 main() {
   bundle_test.main();
+  command_devices_test.main();
   concurrent_jobs_test.main();
   config_command_test.main();
   config_test.main();
