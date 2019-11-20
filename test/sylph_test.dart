@@ -188,7 +188,7 @@ void main() {
       final origDir = Directory.current;
       Directory.current = 'example';
       await unpackResources(config.tmpDir, true);
-      final bundleSize = await bundleFlutterTests(config);
+      final bundleSize = await bundle.bundleFlutterTests(config);
       expect(bundleSize, 5);
       // change back for tests to continue
       Directory.current = origDir;

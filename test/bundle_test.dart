@@ -19,7 +19,7 @@ main() {
       final config = Config(configStr: configStr);
       clearDirectory(stagingDir);
       await unpackResources(stagingDir, false, appDir: 'example/default_app');
-      final result = bundleFlutterTests(config, appDir: appDir);
+      final result = bundle.bundleFlutterTests(config, appDir: appDir);
       expect(result, equals('4.7MB'));
     }, overrides: <Type, Generator>{
       OperatingSystemUtils: () => OperatingSystemUtils(),
