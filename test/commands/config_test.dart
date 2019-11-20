@@ -66,16 +66,23 @@ void main() {
         configCommand.name,
       ]);
       expect(testLogger.statusText,
-          contains('Analytics reporting is currently disabled.\n'));
+          contains('Analytics reporting is currently enabled.\n'));
 
       mockTimes = <int>[1000, 2000];
-      await commandRunner.run(<String>[configCommand.name, '--analytics']);
+      await commandRunner.run(<String>[configCommand.name, '--no-analytics']);
       expect(testLogger.statusText,
-          contains('Analytics reporting enabled.\n')); // hack for now
+          contains('Analytics reporting disabled.\n')); // hack for now
     }, overrides: <Type, Generator>{
       FileSystem: () => MemoryFileSystem(),
       SystemClock: () => clock,
       Usage: () => Usage(kAnalyticsUA, kSettings),
+      Platform: () => FakePlatform(
+        operatingSystem: 'linux',
+        environment: <String, String>{
+          'CI': 'true',
+        },
+        script: Uri(scheme: 'data'),
+      ),
     });
   });
 }
