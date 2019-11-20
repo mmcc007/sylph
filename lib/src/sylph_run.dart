@@ -165,7 +165,7 @@ Future<bool> runSylphJob(
   // 2. Upload custom test spec yaml
   final testSpecPath = '$tmpDir/$kAppiumTestSpecName';
   // Substitute MAIN and TESTS for actual debug main and tests from test suite.
-  setTestSpecEnv(testSuite, testSpecPath, config.androidPackageName, config.androidAppId);
+  setTestSpecVars(testSuite, testSpecPath, config.androidPackageName, config.androidAppId);
   printStatus('Uploading test specification: $testSpecPath ...');
   String testSpecArn =
       await uploadFile(projectArn, testSpecPath, 'APPIUM_PYTHON_TEST_SPEC');
@@ -278,7 +278,7 @@ DateTime sylphTimestamp() {
 }
 
 /// Set MAIN and TESTS env vars in test spec.
-void setTestSpecEnv(TestSuite test_suite, String testSpecPath,
+void setTestSpecVars(TestSuite test_suite, String testSpecPath,
     String androidPackageName, String androidAppId) {
   const kMainEnvName = 'MAIN=';
   const kTestsEnvName = 'TESTS=';
