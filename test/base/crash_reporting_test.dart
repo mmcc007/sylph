@@ -22,6 +22,7 @@ import 'package:tool_base/tool_base.dart';
 import 'package:tool_base_test/tool_base_test.dart';
 
 import '../src/common.dart';
+import '../src/mocks.dart';
 
 void main() {
   group('crash reporting', () {
@@ -60,7 +61,10 @@ void main() {
       Stdio: () => const _NoStderr(),
       Platform: () =>
           FakePlatform.fromPlatform(const LocalPlatform())..environment = {},
-    }, skip: isCI());
+      Usage: () => FakeUsage(),
+    }
+//    , skip: isCI()
+    );
 
     testUsingContext('should send crash reports when async throws', () async {
       final Completer<int> exitCodeCompleter = Completer<int>();
@@ -88,6 +92,7 @@ void main() {
       Stdio: () => const _NoStderr(),
       Platform: () =>
           FakePlatform.fromPlatform(const LocalPlatform())..environment = {},
+      Usage: () => FakeUsage(),
     }, skip: isCI());
 
     testUsingContext('should not send a crash report if on a user-branch',
@@ -194,7 +199,7 @@ Future<void> verifyCrashReportSent(RequestInfo crashInfo) async {
           'version': 'test-version',
         },
       ));
-//  expect(crashInfo.fields['uuid'], '00000000-0000-4000-0000-000000000000');
+  expect(crashInfo.fields['uuid'], '00000000-0000-4000-0000-000000000000');
   expect(crashInfo.fields['product'], tools.kProductId);
   expect(crashInfo.fields['version'], 'test-version');
   expect(crashInfo.fields['osName'], platform.operatingSystem);
