@@ -70,13 +70,13 @@ Future run() async {
   if (devicesArgVal != null) {
     switch (devicesArgVal) {
       case 'all':
-        printDeviceFarmDevices(getDeviceFarmDevices());
+        printDeviceFarmDevices(df.getDeviceFarmDevices());
         break;
       case 'android':
-        printDeviceFarmDevices(getDeviceFarmDevicesByType(DeviceType.android));
+        printDeviceFarmDevices(df.getDeviceFarmDevicesByType(DeviceType.android));
         break;
       case 'ios':
-        printDeviceFarmDevices(getDeviceFarmDevicesByType(DeviceType.ios));
+        printDeviceFarmDevices(df.getDeviceFarmDevicesByType(DeviceType.ios));
         break;
     }
     exit(0);

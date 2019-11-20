@@ -144,13 +144,6 @@ void traceCommand(List<String> args, {String workingDirectory}) {
   }
 }
 
-/// Runs a device farm command.
-/// Returns as [Map].
-Map deviceFarmCmd(List<String> arguments, [String workingDir = '.']) {
-  return jsonDecode(cmd(['aws', 'devicefarm']..addAll(arguments),
-      workingDirectory: workingDir));
-}
-
 /// Converts [enum] value to [String].
 String enumToStr(dynamic _enum) => _enum.toString().split('.').last;
 

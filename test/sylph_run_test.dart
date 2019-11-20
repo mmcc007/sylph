@@ -603,6 +603,7 @@ main() {
           'AWS_ACCESS_KEY_ID': 'AWS_ACCESS_KEY_ID',
           'AWS_SECRET_ACCESS_KEY': 'AWS_SECRET_ACCESS_KEY',
         },
+      DeviceFarm:()=>DeviceFarm(),
     });
   });
 
@@ -673,6 +674,7 @@ main() {
       ConcurrentJobs: () => FakeConcurrentJobs(),
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
         ..operatingSystem = 'macos',
+      DeviceFarm:()=>DeviceFarm(),
     });
   });
 

@@ -36,13 +36,13 @@ class DevicesCommand extends SylphCommand {
   Future<SylphCommandResult> runCommand() async {
     switch (deviceType) {
       case 'all':
-        printDeviceFarmDevices(getDeviceFarmDevices());
+        printDeviceFarmDevices(df.getDeviceFarmDevices());
         break;
       case 'android':
-        printDeviceFarmDevices(getDeviceFarmDevicesByType(DeviceType.android));
+        printDeviceFarmDevices(df.getDeviceFarmDevicesByType(DeviceType.android));
         break;
       case 'ios':
-        printDeviceFarmDevices(getDeviceFarmDevicesByType(DeviceType.ios));
+        printDeviceFarmDevices(df.getDeviceFarmDevicesByType(DeviceType.ios));
         break;
       default:
         throwToolExit(

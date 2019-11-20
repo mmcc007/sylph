@@ -11,6 +11,7 @@ import 'package:mockito/mockito.dart';
 import 'package:process/process.dart';
 import 'package:reporting/reporting.dart';
 import 'package:sylph/src/commands/devices.dart';
+import 'package:sylph/src/device_farm.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_base_test/tool_base_test.dart';
@@ -85,6 +86,7 @@ main() {
       ProcessManager: () => fakeProcessManager,
       SystemClock: () => clock,
       Usage: () => FakeUsage(),
+      DeviceFarm:()=>DeviceFarm(),
     });
 
     testUsingContext('lists android devices in cloud', () async {
@@ -100,6 +102,7 @@ main() {
       ProcessManager: () => fakeProcessManager,
       SystemClock: () => clock,
       Usage: () => FakeUsage(),
+      DeviceFarm:()=>DeviceFarm(),
     });
 
     testUsingContext('lists ios devices in cloud', () async {
@@ -115,6 +118,7 @@ main() {
       ProcessManager: () => fakeProcessManager,
       SystemClock: () => clock,
       Usage: () => FakeUsage(),
+      DeviceFarm:()=>DeviceFarm(),
     });
 
     testUsingContext('lists ios devices in cloud using option', () async {
@@ -130,6 +134,7 @@ main() {
       ProcessManager: () => fakeProcessManager,
       SystemClock: () => clock,
       Usage: () => FakeUsage(),
+      DeviceFarm:()=>DeviceFarm(),
     });
 
     testUsingContext('catches bad param', () async {

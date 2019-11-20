@@ -195,42 +195,46 @@ main() {
 
       testUsingContext('compare device farm devices', () async {
         fakeProcessManager.calls = calls;
-        final deviceFarmDevices = getDeviceFarmDevices();
+        final deviceFarmDevices = df.getDeviceFarmDevices();
         expect(deviceFarmDevices[0].compareTo(deviceFarmDevices[1]),
             kOrderedBefore);
         expect(deviceFarmDevices.length, equals(2));
         fakeProcessManager.verifyCalls();
       }, overrides: <Type, Generator>{
         ProcessManager: () => fakeProcessManager,
+        DeviceFarm:()=>DeviceFarm(),
       });
 
       testUsingContext('get all device farm devices', () {
         fakeProcessManager.calls = calls;
-        final List<DeviceFarmDevice> deviceFarmDevices = getDeviceFarmDevices();
+        final List<DeviceFarmDevice> deviceFarmDevices = df.getDeviceFarmDevices();
         expect(deviceFarmDevices.length, equals(2));
         fakeProcessManager.verifyCalls();
       }, overrides: <Type, Generator>{
         ProcessManager: () => fakeProcessManager,
+        DeviceFarm:()=>DeviceFarm(),
       });
 
       testUsingContext('get device farm android devices', () {
         fakeProcessManager.calls = calls;
         final List<DeviceFarmDevice> androidDevices =
-            getDeviceFarmDevicesByType(DeviceType.android);
+        df.getDeviceFarmDevicesByType(DeviceType.android);
         expect(androidDevices.length, equals(1));
         fakeProcessManager.verifyCalls();
       }, overrides: <Type, Generator>{
         ProcessManager: () => fakeProcessManager,
+        DeviceFarm:()=>DeviceFarm(),
       });
 
       testUsingContext('get device farm ios devices', () {
         fakeProcessManager.calls = calls;
         final List<DeviceFarmDevice> iOSDevices =
-            getDeviceFarmDevicesByType(DeviceType.ios);
+        df.getDeviceFarmDevicesByType(DeviceType.ios);
         expect(iOSDevices.length, equals(1));
         fakeProcessManager.verifyCalls();
       }, overrides: <Type, Generator>{
         ProcessManager: () => fakeProcessManager,
+        DeviceFarm:()=>DeviceFarm(),
       });
     });
   });

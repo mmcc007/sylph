@@ -6,6 +6,7 @@ import 'package:tool_base/tool_base.dart';
 
 import '../runner.dart';
 import 'base/concurrent_jobs.dart';
+import 'device_farm.dart';
 
 Future<T> runInContext<T>(
   FutureOr<T> runner(), {
@@ -19,6 +20,7 @@ Future<T> runInContext<T>(
       BotDetector: () => const BotDetector(),
       ConcurrentJobs: () => ConcurrentJobs(),
       Config: () => Config(configFile),
+      DeviceFarm:()=>DeviceFarm(),
       Flags: () => const EmptyFlags(),
       Logger: () => platform.isWindows ? WindowsStdoutLogger() : StdoutLogger(),
       OperatingSystemUtils: () => OperatingSystemUtils(),

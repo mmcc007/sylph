@@ -99,7 +99,7 @@ void main() {
     test('setup project', () {
       final projectName = 'flutter test';
       final jobTimeoutMinutes = 5;
-      final result = setupProject(projectName, jobTimeoutMinutes);
+      final result = df.setupProject(projectName, jobTimeoutMinutes);
       final expected =
           'arn:aws:devicefarm:us-west-2:122621792560:project:c43f0049-7b2f-42ed-9e4b-c6c46de9de23';
       expect(result, expected);
@@ -113,7 +113,7 @@ void main() {
 //      'os': '11.4'
       }, 'ios');
 
-      final result = findDevicesArns([sylphDevice]);
+      final result = df.findDevicesArns([sylphDevice]);
       expect(result.length, 1);
       expect(result.first,
           'arn:aws:devicefarm:us-west-2::device:D125AEEE8614463BAE106865CAF4470E');
@@ -136,7 +136,7 @@ void main() {
       ];
 
       // convert devices to rules
-      final rules = devicesToRule(devices);
+      final rules = df.devicesToRule(devices);
       final expected =
           '[{"attribute": "ARN", "operator": "IN","value": "[\\"arn:aws:devicefarm:us-west-2::device:D125AEEE8614463BAE106865CAF4470E\\",\\"arn:aws:devicefarm:us-west-2::device:CEA80E8918814308A6275FEBC4310134\\"]"}]';
       expect(rules, expected);
@@ -164,7 +164,7 @@ void main() {
       final devicePool = config.getDevicePool(poolName);
 
       // check for existing pool
-      final result = setupDevicePool(devicePool, projectArn);
+      final result = df.setupDevicePool(devicePool, projectArn);
       final expected =
           'arn:aws:devicefarm:us-west-2:122621792560:devicepool:e1c97f71-f534-432b-9e86-3bd7529e327b/d1a72830-e094-4280-b8b9-3b800ba76a31';
       expect(result, expected);
@@ -173,7 +173,7 @@ void main() {
     test('monitor successful run progress until complete', () async {
       final timeout = 100;
       final poolName = 'dummy pool name';
-      final result = await runStatus(kSuccessfulRunArn, timeout, poolName);
+      final result = await df.runStatus(kSuccessfulRunArn, timeout, poolName);
 
       // generate report
       runReport(result);
@@ -269,13 +269,13 @@ void main() {
 
     test('download artifacts by run', () {
       final downloadDir = '/tmp/test_artifacts/downloaded_artifacts';
-      downloadArtifacts(kSuccessfulRunArn, downloadDir);
+      df.downloadArtifacts(kSuccessfulRunArn, downloadDir);
       expect(Directory(downloadDir).existsSync(), isTrue);
     });
 
     test('run device farm command', () {
       final projectName = 'flutter tests';
-      var projectInfo = deviceFarmCmd(['list-projects']);
+      var projectInfo = df.deviceFarmCmd(['list-projects']);
       final projects = projectInfo['projects'];
       final project = projects.firstWhere(
           (project) => project['name'] == projectName,
@@ -299,7 +299,7 @@ void main() {
       final downloadDirPrefix = '/tmp/sylph artifacts';
 
       // list projects
-      final projects = deviceFarmCmd(['list-projects'])['projects'];
+      final projects = df.deviceFarmCmd(['list-projects'])['projects'];
 
       // get project arn
       final project = projects.firstWhere(
@@ -310,7 +310,7 @@ void main() {
       expect(projectArn, kTestProjectArn);
 
       // list runs
-      final runs = deviceFarmCmd(['list-runs', '--arn', projectArn])['runs'];
+      final runs = df.deviceFarmCmd(['list-runs', '--arn', projectArn])['runs'];
 //    print('runs=$runs');
       // get a run
       final run = runs.firstWhere((run) => '${run['name']}' == runName,
@@ -320,7 +320,7 @@ void main() {
       expect(runArn, kSuccessfulRunArn);
 
       // list jobs
-      final List jobs = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
+      final List jobs = df.deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
       expect(jobs.length, 1); // find multiple jobs
 
       // confirm first job
@@ -331,7 +331,7 @@ void main() {
           downloadDirPrefix, sylphRunName, projectName, poolName);
 
       // download job artifacts
-      downloadJobArtifacts(runArn, runDownloadDir);
+      df.downloadJobArtifacts(runArn, runDownloadDir);
       expect(Directory(runDownloadDir).existsSync(), isTrue);
     });
 
@@ -351,7 +351,7 @@ void main() {
 
     test('generate job progress report for current run', () {
       final runArn = kSuccessfulRunArn;
-      final jobsInfo = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
+      final jobsInfo = df.deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
       for (final jobInfo in jobsInfo) {
 //      print('jobInfo=$jobInfo');
         print('\t\t${jobStatus(jobInfo)}');

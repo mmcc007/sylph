@@ -37,12 +37,13 @@ main() {
                 }),
                 '')),
       ];
-      final result = setupProject(projectName, jobTimeoutMinutes);
+      final result = df.setupProject(projectName, jobTimeoutMinutes);
       expect(result, equals(projectArn));
       fakeProcessManager.verifyCalls();
     }, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
 //      Logger: () => VerboseLogger(StdoutLogger()),
+      DeviceFarm:()=>DeviceFarm(),
     });
 
     testUsingContext('setup device pool', () {
@@ -102,7 +103,7 @@ main() {
       final devicePool = config.getDevicePool(poolName);
 
       // check for existing pool
-      final result = setupDevicePool(devicePool, projectArn);
+      final result = df.setupDevicePool(devicePool, projectArn);
       final expected =
           'arn:aws:devicefarm:us-west-2:122621792560:devicepool:e1c97f71-f534-432b-9e86-3bd7529e327b/c03cb5e8-0660-4dba-a1b2-89cb3d0dc26f';
       expect(result, expected);
