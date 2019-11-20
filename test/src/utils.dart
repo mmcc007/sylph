@@ -19,7 +19,7 @@ typedef CommandFunction = Future<SylphCommandResult> Function();
 class DummySylphCommand extends SylphCommand {
 
   DummySylphCommand({
-    this.shouldUpdateCache = false,
+//    this.shouldUpdateCache = false,
     this.noUsagePath  = false,
     this.commandFunction,
   });
@@ -27,8 +27,8 @@ class DummySylphCommand extends SylphCommand {
   final bool noUsagePath;
   final CommandFunction commandFunction;
 
-  @override
-  final bool shouldUpdateCache;
+//  @override
+//  final bool shouldUpdateCache;
 
   @override
   String get description => 'does nothing';

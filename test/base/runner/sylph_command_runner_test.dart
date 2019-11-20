@@ -21,17 +21,17 @@ import '../../src/mocks.dart';
 import '../../src/utils.dart';
 
 const String _kFlutterRoot = '/flutter/flutter';
-const String _kEngineRoot = '/flutter/engine';
-const String _kArbitraryEngineRoot = '/arbitrary/engine';
+//const String _kEngineRoot = '/flutter/engine';
+//const String _kArbitraryEngineRoot = '/arbitrary/engine';
 const String _kProjectRoot = '/project';
-const String _kDotPackages = '.packages';
+//const String _kDotPackages = '.packages';
 
 void main() {
   group('SylphCommandRunner', () {
     MemoryFileSystem fs;
     Platform platform;
     SylphCommandRunner runner;
-    ProcessManager processManager;
+//    ProcessManager processManager;
     MockClock clock;
     List<int> mockTimes;
 
@@ -53,7 +53,7 @@ void main() {
       );
 
       runner = createTestCommandRunner(DummySylphCommand());
-      processManager = MockProcessManager();
+//      processManager = MockProcessManager();
 
       clock = MockClock();
       when(clock.now()).thenAnswer((Invocation _) =>
