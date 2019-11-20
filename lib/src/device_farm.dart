@@ -1,6 +1,6 @@
 //import 'dart:io';
 import 'dart:async';
-
+import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
 import 'package:sprintf/sprintf.dart';
 import 'package:tool_base/tool_base.dart' hide Version;
@@ -14,12 +14,11 @@ DeviceFarm get df => context.get<DeviceFarm>();
 
 /// Manages all calls to the AWS Device Farm API
 class DeviceFarm {
-  static const kUploadTimeout = 15;
-  static const kUploadSucceeded = 'SUCCEEDED';
-  static const kUploadFailed = 'FAILED';
-  static const kCompletedRunStatus = 'COMPLETED';
-  static const kSuccessResult = 'PASSED';
-
+  static const _kUploadFailed = 'FAILED';
+  static const _kCompletedRunStatus = 'COMPLETED';
+  static const _kSuccessResult = 'PASSED';
+  static const _kUploadSucceeded = 'SUCCEEDED';
+  static const _kUploadTimeout = 15;
 
   /// Sets up a project for testing.
   /// Creates new project if none exists.
@@ -138,7 +137,7 @@ class DeviceFarm {
         printStatus('\t\t${jobStatus(jobInfo)}');
       }
 
-      if (runStatusFlag == kCompletedRunStatus) return runStatus;
+      if (runStatusFlag == _kCompletedRunStatus) return runStatus;
 
       await Future.delayed(Duration(milliseconds: 1000 * timeoutIncrement));
     }
@@ -167,15 +166,15 @@ class DeviceFarm {
     cmd(['curl', '-T', filePath, '$uploadUrl']);
 
     // 3. Wait until file upload complete
-    for (int i = 0; i < kUploadTimeout; i++) {
+    for (int i = 0; i < _kUploadTimeout; i++) {
       final upload =
           deviceFarmCmd(['get-upload', '--arn', uploadArn])['upload'];
       await Future.delayed(Duration(milliseconds: 1000));
       final uploadStatus = upload['status'];
-      if (uploadStatus == kUploadSucceeded) {
+      if (uploadStatus == _kUploadSucceeded) {
         return uploadArn;
       }
-      if (uploadStatus == kUploadFailed) {
+      if (uploadStatus == _kUploadFailed) {
 //      throw 'Error: upload of \'$filePath\' failed: ${upload['metadata']['errorMessage']}';
         throw 'Error: upload of \'$filePath\' failed: ${upload['metadata']}';
       }
@@ -305,7 +304,7 @@ bool runReport(Map run) {
       '    errored: ${counters['errored']}\n'
       '    total: ${counters['total']}\n');
 
-  if (result != DeviceFarm.kSuccessResult) {
+  if (result != DeviceFarm._kSuccessResult) {
     printStatus('Warning: run failed. Continuing...');
     return false;
   }
