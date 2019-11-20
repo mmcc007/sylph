@@ -117,7 +117,7 @@ main() {
       Usage: () => FakeUsage(),
     });
 
-    testUsingContext('lists ios devices in cloud', () async {
+    testUsingContext('lists ios devices in cloud using option', () async {
       fakeProcessManager.calls = calls;
       final DevicesCommand devicesCommand = DevicesCommand();
       final CommandRunner<void> commandRunner =
@@ -125,6 +125,7 @@ main() {
       await commandRunner.run(<String>[devicesCommand.name, '-d' 'ios']);
       fakeProcessManager.verifyCalls();
       expect(testLogger.statusText, contains('deviceType:ios'));
+      expect(testLogger.statusText, isNot(contains('deviceType:android')));
     }, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
       SystemClock: () => clock,
