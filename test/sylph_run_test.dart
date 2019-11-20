@@ -26,7 +26,6 @@ const kFirstJobArn =
 main() {
   final projectName = 'test sylph run';
   final defaultJobTimeoutMinutes = '10';
-  final jobTimeoutMinutes = '15';
   final projectArn =
       'arn:aws:devicefarm:us-west-2:122621792560:project:fake-project-id';
   final stagingDir = '/tmp/test_sylph_run';
