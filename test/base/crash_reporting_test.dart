@@ -93,7 +93,9 @@ void main() {
       Platform: () =>
           FakePlatform.fromPlatform(const LocalPlatform())..environment = {},
       Usage: () => FakeUsage(),
-    }, skip: isCI());
+    }
+//    , skip: isCI()
+    );
 
     testUsingContext('should not send a crash report if on a user-branch',
         () async {
@@ -172,7 +174,9 @@ void main() {
             script: Uri(scheme: 'data'),
           ),
       Stdio: () => const _NoStderr(),
-    }, skip: isCI());
+    }
+//    , skip: isCI()
+    );
   });
 }
 
