@@ -1,3 +1,8 @@
+## 0.7.0
+- Fixed bug in gathering job args for concurrent runs #72
+- Added support for flavors using 'recommended' example #75 #76
+- Added support for bundling external local packages #73 #77
+
 ## 0.6.0
 - Added verbose mode #56 #66
 - Added support for linux and windows #50 #69
