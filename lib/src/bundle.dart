@@ -1,6 +1,5 @@
 //import 'dart:io';
 
-import 'package:sylph/src/base/copy_path.dart';
 import 'package:sylph/src/config.dart';
 import 'package:sylph/src/resources.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
