@@ -18,7 +18,7 @@ import 'package:tool_base_test/tool_base_test.dart';
 
 import '../../src/common_tools.dart';
 import '../../src/mocks.dart';
-import 'utils.dart';
+import '../../src/utils.dart';
 
 const String _kFlutterRoot = '/flutter/flutter';
 const String _kEngineRoot = '/flutter/engine';

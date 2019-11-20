@@ -21,7 +21,7 @@ import 'package:tool_base_test/tool_base_test.dart';
 //import '../../src/common.dart';
 //import '../../src/context.dart';
 import '../../src/mocks.dart';
-import 'utils.dart';
+import '../../src/utils.dart';
 
 void main() {
   group('Flutter Command', () {
