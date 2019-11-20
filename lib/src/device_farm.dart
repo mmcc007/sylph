@@ -10,16 +10,17 @@ import 'base/devices.dart';
 import 'base/utils.dart';
 import 'config.dart';
 
-const kUploadTimeout = 15;
-const kUploadSucceeded = 'SUCCEEDED';
-const kUploadFailed = 'FAILED';
-const kCompletedRunStatus = 'COMPLETED';
-const kSuccessResult = 'PASSED';
-
 DeviceFarm get df => context.get<DeviceFarm>();
 
 /// Manages all calls to the AWS Device Farm API
 class DeviceFarm {
+  static const kUploadTimeout = 15;
+  static const kUploadSucceeded = 'SUCCEEDED';
+  static const kUploadFailed = 'FAILED';
+  static const kCompletedRunStatus = 'COMPLETED';
+  static const kSuccessResult = 'PASSED';
+
+
   /// Sets up a project for testing.
   /// Creates new project if none exists.
   /// Returns the project ARN as [String].
@@ -304,7 +305,7 @@ bool runReport(Map run) {
       '    errored: ${counters['errored']}\n'
       '    total: ${counters['total']}\n');
 
-  if (result != kSuccessResult) {
+  if (result != DeviceFarm.kSuccessResult) {
     printStatus('Warning: run failed. Continuing...');
     return false;
   }
