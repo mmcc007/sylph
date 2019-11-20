@@ -9,6 +9,7 @@ import 'package:reporting/reporting.dart';
 import 'package:tool_base/tool_base.dart';
 
 import '../base/runner/sylph_command.dart';
+
 //import '../android/android_sdk.dart';
 //import '../android/android_studio.dart';
 //import '../base/common.dart';
@@ -21,10 +22,11 @@ import '../base/runner/sylph_command.dart';
 //import '../version.dart';
 
 class ConfigCommand extends SylphCommand {
-  ConfigCommand({ bool verboseHelp = false }) {
+  ConfigCommand({bool verboseHelp = false}) {
     argParser.addFlag('analytics',
-      negatable: true,
-      help: 'Enable or disable reporting anonymously tool usage statistics and crash reports.');
+        negatable: true,
+        help:
+            'Enable or disable reporting anonymously tool usage statistics and crash reports.');
 //    argParser.addFlag('clear-ios-signing-cert',
 //      negatable: false,
 //      help: 'Clear the saved development certificate choice used to sign apps for iOS device deployment.');
@@ -32,10 +34,10 @@ class ConfigCommand extends SylphCommand {
 //    argParser.addOption('android-studio-dir', help: 'The Android Studio install directory.');
 //    argParser.addOption('build-dir', help: 'The relative path to override a projects build directory',
 //        valueHelp: 'out/');
-    argParser.addFlag('machine',
-      negatable: false,
-      hide: !verboseHelp,
-      help: 'Print config values as json.');
+//    argParser.addFlag('machine',
+//        negatable: false,
+//        hide: !verboseHelp,
+//        help: 'Print config values as json.');
 //    for (Feature feature in allFeatures) {
 //      if (feature.configSetting == null) {
 //        continue;
@@ -57,17 +59,16 @@ class ConfigCommand extends SylphCommand {
   final String name = 'config';
 
   @override
-  final String description =
-    'Configure Flutter settings.\n\n'
-    'To remove a setting, configure it to an empty string.\n\n'
-    'The Flutter tool anonymously reports feature usage statistics and basic crash reports to help improve '
-    'Flutter tools over time. See Google\'s privacy policy: https://www.google.com/intl/en/policies/privacy/';
+  final String description = 'Configure Sylph settings.\n\n'
+      'To remove a setting, configure it to an empty string.\n\n'
+      'Sylph anonymously reports feature usage statistics and basic crash reports to help improve '
+      'Sylph over time. See Sylph\'s privacy policy: https://www.mauricemccabe.com/intl/privacy/';
 
   @override
   final List<String> aliases = <String>['configure'];
 
-  @override
-  bool get shouldUpdateCache => false;
+//  @override
+//  bool get shouldUpdateCache => false;
 
   @override
   String get usageFooter {
@@ -80,22 +81,19 @@ class ConfigCommand extends SylphCommand {
 //        featuresByName[feature.configSetting] = feature;
 //      }
 //    }
-    String values = config.keys
-        .map<String>((String key) {
-          String configFooter = '';
+    String values = config.keys.map<String>((String key) {
+      String configFooter = '';
 //          if (featuresByName.containsKey(key)) {
 //            final FeatureChannelSetting setting = featuresByName[key].getSettingForChannel(channel);
 //            if (!setting.available) {
 //              configFooter = '(Unavailable)';
 //            }
 //          }
-          return '  $key: ${config.getValue(key)} $configFooter';
-        }).join('\n');
-    if (values.isEmpty)
-      values = '  No settings have been configured.';
-    return
-      '\nSettings:\n$values\n\n'
-      'Analytics reporting is currently ${sylphUsage.enabled ? 'enabled' : 'disabled'}.';
+      return '  $key: ${config.getValue(key)} $configFooter';
+    }).join('\n');
+    if (values.isEmpty) values = '  No settings have been configured.';
+    return '\nSettings:\n$values\n\n'
+        'Analytics reporting is currently ${sylphUsage.enabled ? 'enabled' : 'disabled'}.';
   }
 
   /// Return null to disable analytics recording of the `config` command.
@@ -104,11 +102,11 @@ class ConfigCommand extends SylphCommand {
 
   @override
   Future<SylphCommandResult> runCommand() async {
-    if (argResults['machine']) {
-      await handleMachine();
-      return null;
-    }
-
+//    if (argResults['machine']) {
+//      await handleMachine();
+//      return null;
+//    }
+//
 //    if (argResults['clear-features']) {
 //      for (Feature feature in allFeatures) {
 //        if (feature.configSetting != null) {
@@ -120,7 +118,10 @@ class ConfigCommand extends SylphCommand {
 
     if (argResults.wasParsed('analytics')) {
       final bool value = argResults['analytics'];
-      sylphUsage.enabled = value;
+      // Combines with Usage package to default to storing in home directory.
+      // File is named by both [Config] and [Usage] using [kSettings].
+      config.setValue('enabled', value);
+//      sylphUsage.enabled = value;
       printStatus('Analytics reporting ${value ? 'enabled' : 'disabled'}.');
     }
 
@@ -152,19 +153,18 @@ class ConfigCommand extends SylphCommand {
 //      }
 //    }
 
-    if (argResults.arguments.isEmpty)
-      printStatus(usage);
+    if (argResults.arguments.isEmpty) printStatus(usage);
 
     return null;
   }
 
-  Future<void> handleMachine() async {
-    // Get all the current values.
-    final Map<String, dynamic> results = <String, dynamic>{};
-    for (String key in config.keys) {
-      results[key] = config.getValue(key);
-    }
-
+//  Future<void> handleMachine() async {
+//    // Get all the current values.
+//    final Map<String, dynamic> results = <String, dynamic>{};
+//    for (String key in config.keys) {
+//      results[key] = config.getValue(key);
+//    }
+//
 //    // Ensure we send any calculated ones, if overrides don't exist.
 //    if (results['android-studio-dir'] == null && androidStudio != null) {
 //      results['android-studio-dir'] = androidStudio.directory;
@@ -172,17 +172,17 @@ class ConfigCommand extends SylphCommand {
 //    if (results['android-sdk'] == null && androidSdk != null) {
 //      results['android-sdk'] = androidSdk.directory;
 //    }
-
-    printStatus(const JsonEncoder.withIndent('  ').convert(results));
-  }
-
-  void _updateConfig(String keyName, String keyValue) {
-    if (keyValue.isEmpty) {
-      config.removeValue(keyName);
-      printStatus('Removing "$keyName" value.');
-    } else {
-      config.setValue(keyName, keyValue);
-      printStatus('Setting "$keyName" value to "$keyValue".');
-    }
-  }
+//
+//    printStatus(const JsonEncoder.withIndent('  ').convert(results));
+//  }
+//
+//  void _updateConfig(String keyName, String keyValue) {
+//    if (keyValue.isEmpty) {
+//      config.removeValue(keyName);
+//      printStatus('Removing "$keyName" value.');
+//    } else {
+//      config.setValue(keyName, keyValue);
+//      printStatus('Setting "$keyName" value to "$keyValue".');
+//    }
+//  }
 }

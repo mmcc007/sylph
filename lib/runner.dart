@@ -17,10 +17,11 @@ import 'src/base/runner/sylph_command_runner.dart';
 import 'src/context_runner.dart';
 
 const kAnalyticsUA = 'UA-150933570-1';
-const kSettings = '.sylph';
+const kSettings = 'sylph';
 const kProductId = 'Sylph';
 const String kCrashServerHost = 'clients2.mauricemccabe.com';
 const String kCrashEndpointPath = '/cr/report';
+final File configFile=fs.file('${platform.environment['HOME']}/.$kSettings');
 
 CrashReportSender _crashReportSender;
 

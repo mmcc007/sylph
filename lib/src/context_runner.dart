@@ -18,7 +18,7 @@ Future<T> runInContext<T>(
     fallbacks: <Type, Generator>{
       BotDetector: () => const BotDetector(),
       ConcurrentJobs: () => ConcurrentJobs(),
-//      Config: () => Config(),
+      Config: () => Config(configFile),
       Flags: () => const EmptyFlags(),
       Logger: () => platform.isWindows ? WindowsStdoutLogger() : StdoutLogger(),
       OperatingSystemUtils: () => OperatingSystemUtils(),
