@@ -175,7 +175,7 @@ void main() {
           ),
       Stdio: () => const _NoStderr(),
     }
-//    , skip: isCI()
+    , skip: isCI()
     );
   });
 }
