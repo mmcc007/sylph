@@ -77,7 +77,7 @@ main() {
       fakeProcessManager.calls = calls;
       final DevicesCommand devicesCommand = DevicesCommand();
       final CommandRunner<void> commandRunner =
-      createTestCommandRunner(devicesCommand);
+          createTestCommandRunner(devicesCommand);
       await commandRunner.run(<String>[devicesCommand.name]);
       fakeProcessManager.verifyCalls();
       expect(testLogger.statusText, contains('2 devices\n'));
@@ -91,11 +91,11 @@ main() {
       fakeProcessManager.calls = calls;
       final DevicesCommand devicesCommand = DevicesCommand();
       final CommandRunner<void> commandRunner =
-      createTestCommandRunner(devicesCommand);
-      await commandRunner.run(<String>[devicesCommand.name,
-      'android']);
+          createTestCommandRunner(devicesCommand);
+      await commandRunner.run(<String>[devicesCommand.name, 'android']);
       fakeProcessManager.verifyCalls();
       expect(testLogger.statusText, contains('deviceType:android'));
+      expect(testLogger.statusText, isNot(contains('deviceType:ios')));
     }, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
       SystemClock: () => clock,
@@ -106,12 +106,52 @@ main() {
       fakeProcessManager.calls = calls;
       final DevicesCommand devicesCommand = DevicesCommand();
       final CommandRunner<void> commandRunner =
-      createTestCommandRunner(devicesCommand);
-      await commandRunner.run(<String>[devicesCommand.name, 'ios']);
+          createTestCommandRunner(devicesCommand);
+      await commandRunner.run(<String>[devicesCommand.name, '-d', 'ios']);
+      fakeProcessManager.verifyCalls();
+      expect(testLogger.statusText, contains('deviceType:ios'));
+      expect(testLogger.statusText, isNot(contains('deviceType:android')));
+    }, overrides: <Type, Generator>{
+      ProcessManager: () => fakeProcessManager,
+      SystemClock: () => clock,
+      Usage: () => FakeUsage(),
+    });
+
+    testUsingContext('lists ios devices in cloud', () async {
+      fakeProcessManager.calls = calls;
+      final DevicesCommand devicesCommand = DevicesCommand();
+      final CommandRunner<void> commandRunner =
+          createTestCommandRunner(devicesCommand);
+      await commandRunner.run(<String>[devicesCommand.name, '-d' 'ios']);
       fakeProcessManager.verifyCalls();
       expect(testLogger.statusText, contains('deviceType:ios'));
     }, overrides: <Type, Generator>{
       ProcessManager: () => fakeProcessManager,
+      SystemClock: () => clock,
+      Usage: () => FakeUsage(),
+    });
+
+    testUsingContext('catches bad param', () async {
+      final DevicesCommand devicesCommand = DevicesCommand();
+      final CommandRunner<void> commandRunner =
+          createTestCommandRunner(devicesCommand);
+      expect(
+          () async =>
+              await commandRunner.run(<String>[devicesCommand.name, 'xxx']),
+          throwsA(isA<ToolExit>()));
+    }, overrides: <Type, Generator>{
+      SystemClock: () => clock,
+      Usage: () => FakeUsage(),
+    });
+
+    testUsingContext('shows help', () async {
+      final DevicesCommand devicesCommand = DevicesCommand();
+      final CommandRunner<void> commandRunner =
+          createTestCommandRunner(devicesCommand);
+      await commandRunner.run(<String>['help', devicesCommand.name]);
+      expect(
+          testLogger.statusText, isEmpty);
+    }, overrides: <Type, Generator>{
       SystemClock: () => clock,
       Usage: () => FakeUsage(),
     });

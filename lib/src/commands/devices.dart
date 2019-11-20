@@ -44,11 +44,12 @@ class DevicesCommand extends SylphCommand {
       case 'ios':
         printDeviceFarmDevices(getDeviceFarmDevicesByType(DeviceType.ios));
         break;
+      default:
+        throwToolExit(
+            '"${argResults.rest.first}" is not a permitted option for command "devices".',
+            exitCode: 1);
     }
-    final int result = 0; // always succeeds for now!
-    if (result != 0)
-      throwToolExit('Listing devices failed: $result', exitCode: result);
-
+    // todo: return error code
     return null;
   }
 
@@ -56,19 +57,9 @@ class DevicesCommand extends SylphCommand {
     if (argResults.wasParsed('devices'))
       return argResults['devices'];
     else if (argResults.rest.isNotEmpty) {
-      final String deviceTypeArg = argResults.rest.first;
-      final String deviceType =
-          deviceTypes.firstWhere((d) => d == deviceTypeArg, orElse: () => null);
-      if (deviceType == null)
-        throwToolExit(
-            '"$deviceTypeArg" is not an allowed value for option "devices".',
-            exitCode: 1);
-      else
-        return deviceType;
+      return deviceTypes.firstWhere((d) => d == argResults.rest.first, orElse: () => null);
     } else
       return deviceTypes.first; // default to 'all'
-    throwToolExit('Unexpected');
-    return null;
   }
 
   void printDeviceFarmDevices(List<DeviceFarmDevice> deviceFarmDevices) {
