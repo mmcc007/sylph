@@ -102,7 +102,7 @@ Future<int> _handleToolError(
   bool verbose,
   List<String> args,
   bool reportCrashes,
-  String getFlutterVersion(),
+  String getSylphVersion(),
 ) async {
   if (error is UsageException) {
     printError('${error.message}\n');
@@ -137,7 +137,7 @@ Future<int> _handleToolError(
       await crashReportSender.sendReport(
         error: error,
         stackTrace: stackTrace,
-        getFlutterVersion: getFlutterVersion,
+        getFlutterVersion: getSylphVersion,
         command: args.join(' '),
       );
 
@@ -186,7 +186,7 @@ Future<File> _createLocalCrashReport(
   final StringBuffer buffer = StringBuffer();
 
   buffer.writeln(
-      'Flutter crash report; please file at https://github.com/mmcc007/sylph/issues.\n');
+      'Sylph crash report; please file at https://github.com/mmcc007/sylph/issues.\n');
 
   buffer.writeln('## command\n');
   buffer.writeln('sylph ${args.join(' ')}\n');
