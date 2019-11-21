@@ -1,5 +1,4 @@
 import 'package:args/command_runner.dart';
-import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:file/memory.dart';
 import 'package:mockito/mockito.dart';
 import 'package:process/process.dart';
@@ -116,6 +115,8 @@ main() {
       DeviceFarm: () => mockDeviceFarm,
       ProcessManager: () => mockProcessManager,
       Bundle: () => mockBundle,
+      Platform: () =>
+          FakePlatform.fromPlatform(const LocalPlatform())..environment = {},
     });
 
     testUsingContext('help', () async {
