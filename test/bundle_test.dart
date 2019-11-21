@@ -15,6 +15,20 @@ main() {
       final stagingDir = '/tmp/sylph_test_bundle';
       final configStr = '''
         tmp_dir: $stagingDir
+        device_pools:
+          - pool_name: android pool 1
+            pool_type: android
+            devices:
+              - name: Samsung Galaxy Note 4 SM-N910H
+                model: SM-N910H
+                os: 5.0.1
+        test_suites:
+          - test_suite: example tests 1
+            main: test_driver/main.dart
+            tests:
+              - test_driver/main_test.dart
+            pool_names:
+              - android pool 1
       ''';
       final config = Config(configStr: configStr);
       clearDirectory(stagingDir);
@@ -24,6 +38,7 @@ main() {
     }, overrides: <Type, Generator>{
       OperatingSystemUtils: () => OperatingSystemUtils(),
 //      Logger: () => VerboseLogger(StdoutLogger()),
+      Bundle: () => Bundle(),
     });
   });
 }
