@@ -48,13 +48,14 @@ Future<void> unpackResources(String tmpDir, bool isIosPoolTypeActive,
   // unpack scripts
   await unpackScripts(tmpDir);
 
-  // unpack build to os map file
-  await unpackFile(kBuildToOsMapFileName, tmpDir);
-
-  final nameVals = {kAppIdentifier: getAppIdentifier(appDir)};
-
-  // unpack export options
+  Map nameVals;
   if (isIosPoolTypeActive) {
+    // unpack build to os map file
+    await unpackFile(kBuildToOsMapFileName, tmpDir);
+
+     nameVals = {kAppIdentifier: getAppIdentifier(appDir)};
+
+    // unpack export options
     await unpackFile('exportOptions.plist', 'ios',
         envVars: kExportOptionsPlistEnvVars, nameVals: nameVals);
   }
@@ -64,6 +65,7 @@ Future<void> unpackResources(String tmpDir, bool isIosPoolTypeActive,
     printStatus(
         'iOS build in CI environment detected. Unpacking related resources.');
     // unpack fastlane
+    // todo: remove fastlane install
     await unpackFile('fastlane/Appfile', 'ios', nameVals: nameVals);
     await unpackFile('fastlane/Fastfile', 'ios');
     await unpackFile('Gemfile', 'ios');

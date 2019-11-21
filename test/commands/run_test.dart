@@ -1,279 +1,176 @@
-//// Copyright 2016 The Chromium Authors. All rights reserved.
-//// Use of this source code is governed by a BSD-style license that can be
-//// found in the LICENSE file.
-//
-//import 'package:args/command_runner.dart';
-////import 'package:flutter_tools/src/application_package.dart';
-////import 'package:flutter_tools/src/base/common.dart';
-////import 'package:flutter_tools/src/build_info.dart';
-////import 'package:flutter_tools/src/cache.dart';
-////import 'package:flutter_tools/src/commands/run.dart';
-////import 'package:flutter_tools/src/device.dart';
-////import 'package:flutter_tools/src/runner/flutter_command.dart';
-////import 'package:flutter_tools/src/version.dart';
-//import 'package:mockito/mockito.dart';
-//import 'package:sylph/src/commands/run.dart';
-//import 'package:test/test.dart';
-//import 'package:tool_base/tool_base.dart';
-//import 'package:tool_base_test/tool_base_test.dart';
-//
-////import '../../src/common.dart';
-////import '../../src/context.dart';
-////import '../../src/mocks.dart';
-//
-//void main() {
-//  group('run', () {
-//    MockApplicationPackageFactory mockApplicationPackageFactory;
-//    MockDeviceManager mockDeviceManager;
-//    MockFlutterVersion mockStableFlutterVersion;
-//    MockFlutterVersion mockUnstableFlutterVersion;
-//
-//    setUpAll(() {
-//      Cache.disableLocking();
-//      mockApplicationPackageFactory = MockApplicationPackageFactory();
-//      mockDeviceManager = MockDeviceManager();
-//      mockStableFlutterVersion = MockFlutterVersion(isStable: true);
-//      mockUnstableFlutterVersion = MockFlutterVersion(isStable: false);
-//    });
-//
-//    testUsingContext('fails when target not found', () async {
-//      final RunCommand command = RunCommand();
-//      applyMocksToCommand(command);
-//      try {
-//        await createTestCommandRunner(command)
-//            .run(<String>['run', '-t', 'abc123']);
-//        fail('Expect exception');
-//      } on ToolExit catch (e) {
-//        expect(e.exitCode ?? 1, 1);
-//      }
-//    });
-//
-//    group('dart-flags option', () {
-//      setUpAll(() {
-//        when(mockDeviceManager.getDevices())
-//            .thenAnswer((Invocation invocation) {
-//          return Stream<Device>.fromIterable(<Device>[
-//            FakeDevice(),
-//          ]);
-//        });
-//      });
-//
-//      RunCommand command;
-//      List<String> args;
-//      setUp(() {
-//        command = TestRunCommand();
-//        args = <String>[
-//          'run',
-//          '--dart-flags',
-//          '"--observe"',
-//          '--no-hot',
-//        ];
-//      });
-//
-//      testUsingContext('is not available on stable channel', () async {
-//        // Stable branch.
-//        try {
-//          await createTestCommandRunner(command).run(args);
-//          fail('Expect exception');
-//          // ignore: unused_catch_clause
-//        } on UsageException catch (e) {
-//          // Not available while on stable branch.
-//        }
-//      }, overrides: <Type, Generator>{
-//        DeviceManager: () => mockDeviceManager,
-//        FlutterVersion: () => mockStableFlutterVersion,
-//      });
-//
-//      testUsingContext('is populated in debug mode', () async {
-//        // FakeDevice.startApp checks that --dart-flags doesn't get dropped and
-//        // throws ToolExit with FakeDevice.kSuccess if the flag is populated.
-//        try {
-//          await createTestCommandRunner(command).run(args);
-//          fail('Expect exception');
-//        } on ToolExit catch (e) {
-//          expect(e.exitCode, FakeDevice.kSuccess);
-//        }
-//      }, overrides: <Type, Generator>{
-//        ApplicationPackageFactory: () => mockApplicationPackageFactory,
-//        DeviceManager: () => mockDeviceManager,
-//        FlutterVersion: () => mockUnstableFlutterVersion,
-//      });
-//
-//      testUsingContext('is populated in profile mode', () async {
-//        args.add('--profile');
-//
-//        // FakeDevice.startApp checks that --dart-flags doesn't get dropped and
-//        // throws ToolExit with FakeDevice.kSuccess if the flag is populated.
-//        try {
-//          await createTestCommandRunner(command).run(args);
-//          fail('Expect exception');
-//        } on ToolExit catch (e) {
-//          expect(e.exitCode, FakeDevice.kSuccess);
-//        }
-//      }, overrides: <Type, Generator>{
-//        ApplicationPackageFactory: () => mockApplicationPackageFactory,
-//        DeviceManager: () => mockDeviceManager,
-//        FlutterVersion: () => mockUnstableFlutterVersion,
-//      });
-//
-//      testUsingContext('is not populated in release mode', () async {
-//        args.add('--release');
-//
-//        // FakeDevice.startApp checks that --dart-flags *does* get dropped and
-//        // throws ToolExit with FakeDevice.kSuccess if the flag is set to the
-//        // empty string.
-//        try {
-//          await createTestCommandRunner(command).run(args);
-//          fail('Expect exception');
-//        } on ToolExit catch (e) {
-//          expect(e.exitCode, FakeDevice.kSuccess);
-//        }
-//      }, overrides: <Type, Generator>{
-//        ApplicationPackageFactory: () => mockApplicationPackageFactory,
-//        DeviceManager: () => mockDeviceManager,
-//        FlutterVersion: () => mockUnstableFlutterVersion,
-//      });
-//    });
-//
-//    testUsingContext(
-//        'should only request artifacts corresponding to connected devices',
-//        () async {
-//      when(mockDeviceManager.getDevices()).thenAnswer((Invocation invocation) {
-//        return Stream<Device>.fromIterable(<Device>[
-//          MockDevice(TargetPlatform.android_arm),
-//        ]);
-//      });
-//
-//      expect(
-//          await RunCommand().requiredArtifacts,
-//          unorderedEquals(<DevelopmentArtifact>{
-//            DevelopmentArtifact.universal,
-//            DevelopmentArtifact.android,
-//          }));
-//
-//      when(mockDeviceManager.getDevices()).thenAnswer((Invocation invocation) {
-//        return Stream<Device>.fromIterable(<Device>[
-//          MockDevice(TargetPlatform.ios),
-//        ]);
-//      });
-//
-//      expect(
-//          await RunCommand().requiredArtifacts,
-//          unorderedEquals(<DevelopmentArtifact>{
-//            DevelopmentArtifact.universal,
-//            DevelopmentArtifact.iOS,
-//          }));
-//
-//      when(mockDeviceManager.getDevices()).thenAnswer((Invocation invocation) {
-//        return Stream<Device>.fromIterable(<Device>[
-//          MockDevice(TargetPlatform.ios),
-//          MockDevice(TargetPlatform.android_arm),
-//        ]);
-//      });
-//
-//      expect(
-//          await RunCommand().requiredArtifacts,
-//          unorderedEquals(<DevelopmentArtifact>{
-//            DevelopmentArtifact.universal,
-//            DevelopmentArtifact.iOS,
-//            DevelopmentArtifact.android,
-//          }));
-//
-//      when(mockDeviceManager.getDevices()).thenAnswer((Invocation invocation) {
-//        return Stream<Device>.fromIterable(<Device>[
-//          MockDevice(TargetPlatform.web_javascript),
-//        ]);
-//      });
-//
-//      expect(
-//          await RunCommand().requiredArtifacts,
-//          unorderedEquals(<DevelopmentArtifact>{
-//            DevelopmentArtifact.universal,
-//            DevelopmentArtifact.web,
-//          }));
-//    }, overrides: <Type, Generator>{
-//      DeviceManager: () => mockDeviceManager,
-//    });
-//  });
-//}
-//
-//class MockDeviceManager extends Mock implements DeviceManager {}
-//
-//class MockDevice extends Mock implements Device {
-//  MockDevice(this._targetPlatform);
-//
-//  final TargetPlatform _targetPlatform;
-//
-//  @override
-//  Future<TargetPlatform> get targetPlatform async => _targetPlatform;
-//}
-//
-//class TestRunCommand extends RunCommand {
-//  @override
-//  // ignore: must_call_super
-//  Future<void> validateCommand() async {
-//    devices = await deviceManager.getDevices().toList();
-//  }
-//}
-//
-//class MockStableFlutterVersion extends MockFlutterVersion {
-//  @override
-//  bool get isMaster => false;
-//}
-//
-//class FakeDevice extends Fake implements Device {
-//  static const int kSuccess = 1;
-//  static const int kFailure = -1;
-//  final TargetPlatform _targetPlatform = TargetPlatform.ios;
-//
-//  void _throwToolExit(int code) => throwToolExit(null, exitCode: code);
-//
-//  @override
-//  Future<bool> get isLocalEmulator => Future<bool>.value(false);
-//
-//  @override
-//  bool get supportsHotReload => false;
-//
-//  @override
-//  Future<String> get sdkNameAndVersion => Future<String>.value('');
-//
-//  @override
-//  DeviceLogReader getLogReader({ApplicationPackage app}) {
-//    return MockDeviceLogReader();
-//  }
-//
-//  @override
-//  String get name => 'FakeDevice';
-//
-//  @override
-//  Future<TargetPlatform> get targetPlatform async => _targetPlatform;
-//
-//  @override
-//  Future<LaunchResult> startApp(
-//    ApplicationPackage package, {
-//    String mainPath,
-//    String route,
-//    DebuggingOptions debuggingOptions,
-//    Map<String, dynamic> platformArgs,
-//    bool prebuiltApplication = false,
-//    bool usesTerminalUi = true,
-//    bool ipv6 = false,
-//  }) async {
-//    final String dartFlags = debuggingOptions.dartFlags;
-//    // In release mode, --dart-flags should be set to the empty string and
-//    // provided flags should be dropped. In debug and profile modes,
-//    // --dart-flags should not be empty.
-//    if (debuggingOptions.buildInfo.isRelease) {
-//      if (dartFlags.isNotEmpty) {
-//        _throwToolExit(kFailure);
-//      }
-//      _throwToolExit(kSuccess);
-//    } else {
-//      if (dartFlags.isEmpty) {
-//        _throwToolExit(kFailure);
-//      }
-//      _throwToolExit(kSuccess);
-//    }
-//    return null;
-//  }
-//}
+import 'package:args/command_runner.dart';
+import 'package:fake_process_manager/fake_process_manager.dart';
+import 'package:file/memory.dart';
+import 'package:mockito/mockito.dart';
+import 'package:process/process.dart';
+import 'package:reporting/reporting.dart';
+import 'package:sylph/src/bundle.dart';
+import 'package:sylph/src/commands/run.dart';
+import 'package:sylph/src/config.dart';
+import 'package:sylph/sylph.dart';
+import 'package:test/test.dart';
+import 'package:tool_base/tool_base.dart' hide Config;
+import 'package:tool_base_test/tool_base_test.dart';
+import 'package:version/version.dart' as v;
+
+import '../src/common_tools.dart';
+import '../src/mocks.dart';
+
+const String _kProjectRoot = '/project';
+const String _kTempDir = '/tmp/sylph';
+
+main() {
+  group('run', () {
+    MockClock clock;
+    List<int> mockTimes;
+    MemoryFileSystem fs;
+    MockDeviceFarm mockDeviceFarm;
+    MockProcessManager mockProcessManager;
+    MockBundle mockBundle;
+    MockProcess mockProcess;
+
+    setUp(() {
+      fs = MemoryFileSystem();
+      fs.directory(_kProjectRoot).createSync(recursive: true);
+      fs.directory(_kTempDir).createSync(recursive: true);
+      fs.currentDirectory = _kProjectRoot;
+      mockDeviceFarm = MockDeviceFarm();
+      mockProcessManager = MockProcessManager();
+      mockBundle = MockBundle();
+      mockProcess = MockProcess();
+      clock = MockClock();
+      when(clock.now()).thenAnswer((Invocation _) =>
+          DateTime.fromMillisecondsSinceEpoch(mockTimes.removeAt(0)));
+      mockTimes = <int>[1000, 2000, 3000, 4000, 5000, 6000];
+    });
+
+    testUsingContext('normal run', () async {
+      final configFile = fs.file('$_kProjectRoot/sylph.yaml');
+      configFile.createSync();
+      configFile.writeAsStringSync(configStr);
+      final config = Config(configPath: configFile.path);
+      fs.file(config.testSuites[0].main).createSync(recursive: true);
+      fs.file(config.testSuites[0].tests[0]).createSync();
+      final pubspec = fs.file('pubspec.yaml');
+      pubspec.createSync();
+      pubspec.writeAsStringSync('name: test_app');
+
+      when(mockBundle.bundleFlutterTests(any)).thenReturn('size in MB');
+      when(mockProcessManager.runSync(
+        any,
+        environment: anyNamed('environment'),
+        workingDirectory: anyNamed('workingDirectory'),
+      )).thenReturn(exitsHappy);
+
+      when(mockProcessManager.start(
+        any,
+        environment: anyNamed('environment'),
+        workingDirectory: anyNamed('workingDirectory'),
+      )).thenAnswer((_) async => mockProcess);
+
+      when(mockDeviceFarm.getDeviceFarmDevices()).thenReturn([
+        DeviceFarmDevice(
+          'Samsung Galaxy Note 4 SM-N910H',
+          'SM-N910H',
+          v.Version(5, 0, 1),
+          DeviceType.android,
+          FormFactor.phone,
+          'AVAILABLE',
+          'arn1',
+        ),
+        DeviceFarmDevice(
+          'Apple iPhone 6 Plus',
+          'A1522',
+          v.Version(10, 0, 2),
+          DeviceType.ios,
+          FormFactor.phone,
+          'AVAILABLE',
+          'arn2',
+        )
+      ]);
+      when(mockDeviceFarm.runReport(any)).thenReturn(true);
+
+      final RunCommand runCommand = RunCommand();
+      final CommandRunner<void> commandRunner =
+          createTestCommandRunner(runCommand);
+      await commandRunner.run(<String>[runCommand.name]);
+      expect(testLogger.statusText, contains(' succeeded.\n'));
+
+      verify(mockBundle.bundleFlutterTests(any)).called(1);
+      verify(mockProcessManager.runSync(
+        any,
+        environment: anyNamed('environment'),
+        workingDirectory: anyNamed('workingDirectory'),
+      )).called(3);
+      verify(mockProcessManager.start(
+        any,
+        environment: anyNamed('environment'),
+        workingDirectory: anyNamed('workingDirectory'),
+      )).called(1);
+      verify(mockDeviceFarm.getDeviceFarmDevices()).called(1);
+      verify(mockDeviceFarm.runReport(any)).called(1);
+    }, overrides: <Type, Generator>{
+      FileSystem: () => fs,
+      SystemClock: () => clock,
+      Usage: () => FakeUsage(),
+      DeviceFarm: () => mockDeviceFarm,
+      ProcessManager: () => mockProcessManager,
+      Bundle: () => mockBundle,
+    });
+
+    testUsingContext('help', () async {
+      final RunCommand runCommand = RunCommand();
+      final CommandRunner<void> commandRunner =
+          createTestCommandRunner(runCommand);
+      await commandRunner.run(<String>['help', runCommand.name]);
+      expect(testLogger.statusText, isEmpty);
+    });
+  });
+}
+
+class MockProcessManager extends Mock implements ProcessManager {}
+
+class MockBundle extends Mock implements Bundle {}
+
+class MockDeviceFarm extends Mock implements DeviceFarm {}
+
+final ProcessResult exitsHappy = ProcessResult(
+  1, // pid
+  0, // exitCode
+  '', // stdout
+  '', // stderr
+);
+
+final configStr = '''
+        tmp_dir: /tmp/sylph
+        artifacts_dir: /tmp/sylph_artifacts
+        sylph_timeout: 720 
+        concurrent_runs: false
+        flavor: dev
+        android_package_name: com.app.package
+        android_app_id: com.id.dev
+        project_name: Test App
+        default_job_timeout: 15 
+        device_pools:
+          - pool_name: android pool 1
+            pool_type: android
+            devices:
+              - name: Samsung Galaxy Note 4 SM-N910H
+                model: SM-N910H
+                os: 5.0.1
+          - pool_name: ios pool 1
+            pool_type: ios
+            devices:
+              - name: Apple iPhone 6 Plus
+                model: A1522
+                os: 10.0.2
+        test_suites:
+          - test_suite: example tests 1
+            main: test_driver/main.dart
+            tests:
+              - test_driver/main_test.dart
+            pool_names:
+              - android pool 1
+#              - ios pool 1
+            job_timeout: 15
+      ''';

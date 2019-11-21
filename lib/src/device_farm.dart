@@ -1,5 +1,6 @@
 //import 'dart:io';
 import 'dart:async';
+
 import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
 import 'package:sprintf/sprintf.dart';
@@ -263,10 +264,43 @@ class DeviceFarm {
 
   /// Runs a device farm command.
   /// Returns as [Map].
+  @visibleForTesting
   Map deviceFarmCmd(List<String> arguments, [String workingDir = '.']) {
     return jsonDecode(cmd(['aws', 'devicefarm']..addAll(arguments),
         workingDirectory: workingDir));
-  }}
+  }
+
+  /// Runs run report.
+  /// Returns [bool] for pass/fail of run.
+  bool runReport(Map run) {
+    printStatus(
+        'Run \'${run['name']}\' completed ${run['completedJobs']} of ${run['totalJobs']} jobs.');
+
+    final result = run['result'];
+
+    printStatus('  Result: $result');
+    final deviceMinutes = run['deviceMinutes'];
+    if (deviceMinutes != null) {
+      printStatus(
+          '  Device minutes: ${deviceMinutes['total']} (${deviceMinutes['metered']} metered).');
+    }
+    final counters = run['counters'];
+    printStatus('  Counters:\n'
+        '    skipped: ${counters['skipped']}\n'
+        '    warned: ${counters['warned']}\n'
+        '    failed: ${counters['failed']}\n'
+        '    stopped: ${counters['stopped']}\n'
+        '    passed: ${counters['passed']}\n'
+        '    errored: ${counters['errored']}\n'
+        '    total: ${counters['total']}\n');
+
+    if (result != DeviceFarm._kSuccessResult) {
+      printStatus('Warning: run failed. Continuing...');
+      return false;
+    }
+    return true;
+  }
+}
 
 /// Generates string of job status info from a [Map] of job info
 String jobStatus(Map job) {
@@ -278,37 +312,6 @@ String jobStatus(Map job) {
       deviceMinutes == null ? '?' : deviceMinutes['total'];
   return sprintf('device: %-15s, passed: %s, failed: %s, minutes: %s',
       [job['name'] ?? 'unknown for now', passed, failed, deviceMinutesTotal]);
-}
-
-/// Runs run report.
-/// Returns [bool] for pass/fail of run.
-bool runReport(Map run) {
-  printStatus(
-      'Run \'${run['name']}\' completed ${run['completedJobs']} of ${run['totalJobs']} jobs.');
-
-  final result = run['result'];
-
-  printStatus('  Result: $result');
-  final deviceMinutes = run['deviceMinutes'];
-  if (deviceMinutes != null) {
-    printStatus(
-        '  Device minutes: ${deviceMinutes['total']} (${deviceMinutes['metered']} metered).');
-  }
-  final counters = run['counters'];
-  printStatus('  Counters:\n'
-      '    skipped: ${counters['skipped']}\n'
-      '    warned: ${counters['warned']}\n'
-      '    failed: ${counters['failed']}\n'
-      '    stopped: ${counters['stopped']}\n'
-      '    passed: ${counters['passed']}\n'
-      '    errored: ${counters['errored']}\n'
-      '    total: ${counters['total']}\n');
-
-  if (result != DeviceFarm._kSuccessResult) {
-    printStatus('Warning: run failed. Continuing...');
-    return false;
-  }
-  return true;
 }
 
 /// Load a device farm device from a [Map] of device.

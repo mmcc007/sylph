@@ -60,7 +60,7 @@ Future<bool> sylphRun(
   await unpackResources(config.tmpDir, isIosPoolTypeActive);
 
   // Bundle tests
-  bundleFlutterTests(config);
+  bundle.bundleFlutterTests(config);
 
   for (var testSuite in config.testSuites) {
     bool isConcurrentRun() => config.concurrentRuns ?? false;
@@ -246,7 +246,7 @@ Future<bool> _runTests(
   final run = df.runStatus(runArn, sylphRunTimeout, poolName);
 
   // Output run result
-  runSucceeded = runReport(await run);
+  runSucceeded = df.runReport(await run);
 
   // Download artifacts
   printStatus('Downloading artifacts...');

@@ -6,6 +6,7 @@ import 'package:tool_base/tool_base.dart';
 
 import '../runner.dart';
 import 'base/concurrent_jobs.dart';
+import 'bundle.dart';
 import 'device_farm.dart';
 
 Future<T> runInContext<T>(
@@ -18,6 +19,7 @@ Future<T> runInContext<T>(
     overrides: overrides,
     fallbacks: <Type, Generator>{
       BotDetector: () => const BotDetector(),
+      Bundle:()=>Bundle(),
       ConcurrentJobs: () => ConcurrentJobs(),
       Config: () => Config(configFile),
       DeviceFarm:()=>DeviceFarm(),

@@ -4,6 +4,7 @@ import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:file/memory.dart';
 import 'package:process/process.dart';
 import 'package:sylph/src/base/concurrent_jobs.dart';
+import 'package:sylph/src/bundle.dart';
 import 'package:sylph/src/config.dart';
 import 'package:sylph/src/device_farm.dart';
 import 'package:sylph/src/resources.dart';
@@ -604,6 +605,7 @@ main() {
           'AWS_SECRET_ACCESS_KEY': 'AWS_SECRET_ACCESS_KEY',
         },
       DeviceFarm:()=>DeviceFarm(),
+      Bundle: () => Bundle(),
     });
   });
 
@@ -675,6 +677,7 @@ main() {
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
         ..operatingSystem = 'macos',
       DeviceFarm:()=>DeviceFarm(),
+      Bundle: () => Bundle(),
     });
   });
 

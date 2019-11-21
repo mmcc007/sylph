@@ -176,7 +176,7 @@ void main() {
       final result = await df.runStatus(kSuccessfulRunArn, timeout, poolName);
 
       // generate report
-      runReport(result);
+      df.runReport(result);
     });
 
     test('bundle flutter test', () async {
