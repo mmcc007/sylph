@@ -1,44 +1,61 @@
 // Copyright 2015 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+// ignore_for_file: curly_braces_in_flow_control_structures
 
 import 'dart:async';
 
 import 'package:meta/meta.dart';
 import 'package:tool_base/tool_base.dart';
 
-//import 'base/common.dart';
-//import 'base/context.dart';
-//import 'base/file_system.dart';
-//import 'base/io.dart';
-//import 'base/process.dart';
-//import 'base/process_manager.dart';
-//import 'base/time.dart';
-import 'cache.dart';
-//import 'convert.dart';
-//import 'globals.dart';
+import '../../runner.dart';
+
+//Cache get cache => Cache.instance;
+
+/// A wrapper around the `bin/cache/` directory.
+class Cache {
+  // Initialized by FlutterCommandRunner on startup.
+  static String flutterRoot;
+
+  static Cache get instance => context.get<Cache>();
+
+  /// Return the top-level directory in the cache; this is `bin/cache`.
+  Directory getRoot() {
+    return fs.directory(platform.environment['HOME']);
+  }
+
+  String getStampFor(String artifactName) {
+    final File stampFile = getStampFileFor(artifactName);
+    return stampFile.existsSync()
+        ? stampFile.readAsStringSync().trim()
+        : null; // todo read json
+  }
+
+  void setStampFor(String artifactName, String version) {
+    getStampFileFor(artifactName).writeAsStringSync(version); // todo write json
+  }
+
+  File getStampFileFor(String artifactName) {
+//    return fs.file(fs.path.join(getRoot().path, '$artifactName.stamp'));
+    return fs.file(fs.path.join(getRoot().path, '.$kSettings'));
+  }
+
+  /// Returns `true` if either [entity] is older than the tools stamp or if
+  /// [entity] doesn't exist.
+  bool isOlderThanToolsStamp(FileSystemEntity entity) {
+    final File flutterToolsStamp = getStampFileFor('flutter_tools');
+    return isOlderThanReference(
+        entity: entity, referenceFile: flutterToolsStamp);
+    // todo pass timestamp and compare to now
+  }
+}
 
 class FlutterVersion {
   @visibleForTesting
-  FlutterVersion([this._clock = const SystemClock()]) {
-//    _frameworkRevision = _runGit('git log -n 1 --pretty=format:%H');
-//    _frameworkVersion = GitTagVersion.determine().frameworkVersionFor(_frameworkRevision);
-  }
+  FlutterVersion([this._clock = const SystemClock()]);
 
   final SystemClock _clock;
 
-//  String _repositoryUrl;
-//  String get repositoryUrl {
-//    final String _ = channel;
-//    return _repositoryUrl;
-//  }
-//
-//  /// Whether we are currently on the master branch.
-//  bool get isMaster {
-//    final String branchName = getBranchName();
-//    return !<String>['dev', 'beta', 'stable'].contains(branchName);
-//  }
-//
   static const Set<String> officialChannels = <String>{
     'master',
     'dev',
@@ -65,7 +82,7 @@ class FlutterVersion {
       final String channel = _runGit('git rev-parse --abbrev-ref --symbolic @{u}');
       final int slash = channel.indexOf('/');
       if (slash != -1) {
-        final String remote = channel.substring(0, slash);
+//        final String remote = channel.substring(0, slash);
 //        _repositoryUrl = _runGit('git ls-remote --get-url $remote');
         _channel = channel.substring(slash + 1);
       } else if (channel.isEmpty) {
@@ -84,51 +101,11 @@ class FlutterVersion {
   String _frameworkRevision;
   String get frameworkRevision => _frameworkRevision;
   String get frameworkRevisionShort => _shortGitRevision(frameworkRevision);
-//
-//  String _frameworkAge;
-//  String get frameworkAge {
-//    return _frameworkAge ??= _runGit('git log -n 1 --pretty=format:%ar');
-//  }
-//
   String _frameworkVersion;
   String get frameworkVersion => _frameworkVersion;
-//
-//  String get frameworkDate => frameworkCommitDate;
-//
-//  String get dartSdkVersion => Cache.instance.dartSdkVersion;
-//
-//  String get engineRevision => Cache.instance.engineRevision;
-//  String get engineRevisionShort => _shortGitRevision(engineRevision);
-//
   Future<void> ensureVersionFile() async {
     fs.file(fs.path.join(Cache.flutterRoot, 'version')).writeAsStringSync(_frameworkVersion);
   }
-//
-//  @override
-//  String toString() {
-//    final String versionText = frameworkVersion == 'unknown' ? '' : ' $frameworkVersion';
-//    final String flutterText = 'Flutter$versionText • channel $channel • ${repositoryUrl ?? 'unknown source'}';
-//    final String frameworkText = 'Framework • revision $frameworkRevisionShort ($frameworkAge) • $frameworkCommitDate';
-//    final String engineText = 'Engine • revision $engineRevisionShort';
-//    final String toolsText = 'Tools • Dart $dartSdkVersion';
-//
-//    // Flutter 1.10.2-pre.69 • channel master • https://github.com/flutter/flutter.git
-//    // Framework • revision 340c158f32 (84 minutes ago) • 2018-10-26 11:27:22 -0400
-//    // Engine • revision 9c46333e14
-//    // Tools • Dart 2.1.0 (build 2.1.0-dev.8.0 bf26f760b1)
-//
-//    return '$flutterText\n$frameworkText\n$engineText\n$toolsText';
-//  }
-//
-//  Map<String, Object> toJson() => <String, Object>{
-//    'frameworkVersion': frameworkVersion ?? 'unknown',
-//    'channel': channel,
-//    'repositoryUrl': repositoryUrl ?? 'unknown source',
-//    'frameworkRevision': frameworkRevision,
-//    'frameworkCommitDate': frameworkCommitDate,
-//    'engineRevision': engineRevision,
-//    'dartSdkVersion': dartSdkVersion,
-//  };
 
   /// A date String describing the last framework commit.
   String get frameworkCommitDate => _latestGitCommitDate();
@@ -186,13 +163,44 @@ class FlutterVersion {
 
   static FlutterVersion get instance => context.get<FlutterVersion>();
 
+  // Initialized by FlutterCommandRunner on startup.
+  static String flutterRoot;
+  
+  /// Return the top-level directory in the cache; this is `bin/cache`.
+  Directory getRoot() {
+    return fs.directory(platform.environment['HOME']);
+  }
+
+  String getStampFor(String artifactName) {
+    final File stampFile = getStampFileFor(artifactName);
+    return stampFile.existsSync()
+        ? stampFile.readAsStringSync().trim()
+        : null; // todo read json
+  }
+
+  void setStampFor(String artifactName, String version) {
+    getStampFileFor(artifactName).writeAsStringSync(version); // todo write json
+  }
+
+  File getStampFileFor(String artifactName) {
+//    return fs.file(fs.path.join(getRoot().path, '$artifactName.stamp'));
+    return fs.file(fs.path.join(getRoot().path, '.$kSettings'));
+  }
+
+  /// Returns `true` if either [entity] is older than the tools stamp or if
+  /// [entity] doesn't exist.
+  bool isOlderThanToolsStamp(FileSystemEntity entity) {
+    final File flutterToolsStamp = getStampFileFor('flutter_tools');
+    return isOlderThanReference(
+        entity: entity, referenceFile: flutterToolsStamp);
+    // todo pass timestamp and compare to now
+  }
+
   /// Return a short string for the version (e.g. `master/0.0.59-pre.92`, `scroll_refactor/a76bc8e22b`).
   String getVersionString({ bool redactUnknownBranches = false }) {
     if (frameworkVersion != 'unknown')
       return '${getBranchName(redactUnknownBranches: redactUnknownBranches)}/$frameworkVersion';
     return '${getBranchName(redactUnknownBranches: redactUnknownBranches)}/$frameworkRevisionShort';
-    return 'tbd/$frameworkVersion';
-    return 'tbs}/$frameworkRevisionShort'; // todo
   }
 
   /// Return the branch name.
@@ -420,6 +428,7 @@ class VersionCheckStamp {
   static const String flutterVersionCheckStampFile = 'flutter_version_check';
 
   static Future<VersionCheckStamp> load() async {
+//    final String versionCheckStamp = FlutterVersion.getStampFor(flutterVersionCheckStampFile);
     final String versionCheckStamp = Cache.instance.getStampFor(flutterVersionCheckStampFile);
 
     if (versionCheckStamp != null) {
@@ -472,6 +481,7 @@ class VersionCheckStamp {
       jsonData['lastTimeWarningWasPrinted'] = '$newTimeWarningWasPrinted';
 
     const JsonEncoder prettyJsonEncoder = JsonEncoder.withIndent('  ');
+//    FlutterVersion.setStampFor(flutterVersionCheckStampFile, prettyJsonEncoder.convert(jsonData));
     Cache.instance.setStampFor(flutterVersionCheckStampFile, prettyJsonEncoder.convert(jsonData));
   }
 
