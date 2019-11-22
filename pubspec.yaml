@@ -41,5 +41,5 @@ dev_dependencies:
   file: ^5.0.7
 
 executables:
-  sylph: main
-  sylph_tools: sylph_tools
+  sylph_old: main
+  sylph: sylph_tool

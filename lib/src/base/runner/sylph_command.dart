@@ -159,7 +159,7 @@ abstract class SylphCommand extends Command<void> {
       // the duration of the entire execution.
       (commandResult?.endTimeOverride ?? endTime).difference(startTime),
       // Report in the form of `success-[parameter1-parameter2]`, all of which
-      // can be null if the command doesn't provide a FlutterCommandResult.
+      // can be null if the command doesn't provide a [SylphCommandResult].
       label: label == '' ? null : label,
     );
   }
