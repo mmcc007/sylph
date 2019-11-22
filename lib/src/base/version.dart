@@ -59,9 +59,9 @@ class FlutterVersion {
   final SystemClock _clock;
 
   static const Set<String> officialChannels = <String>{
-    'master',
-    'dev',
-    'beta',
+//    'master',
+//    'dev',
+//    'beta',
     'stable',
   };
 
