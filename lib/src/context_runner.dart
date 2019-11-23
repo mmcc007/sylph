@@ -6,6 +6,8 @@ import 'package:tool_base/tool_base.dart';
 
 import '../runner.dart';
 import 'base/concurrent_jobs.dart';
+import 'base/user_messages.dart';
+import 'base/version.dart';
 import 'bundle.dart';
 import 'device_farm.dart';
 
@@ -20,10 +22,12 @@ Future<T> runInContext<T>(
     fallbacks: <Type, Generator>{
       BotDetector: () => const BotDetector(),
       Bundle:()=>Bundle(),
+      Cache: () => Cache(),
       ConcurrentJobs: () => ConcurrentJobs(),
       Config: () => Config(configFile),
       DeviceFarm:()=>DeviceFarm(),
       Flags: () => const EmptyFlags(),
+      FlutterVersion: () => FlutterVersion(const SystemClock()),
       Logger: () => platform.isWindows ? WindowsStdoutLogger() : StdoutLogger(),
       OperatingSystemUtils: () => OperatingSystemUtils(),
       ProcessManager: () => LocalProcessManager(),
@@ -31,7 +35,7 @@ Future<T> runInContext<T>(
       SystemClock: () => const SystemClock(),
       TimeoutConfiguration: () => const TimeoutConfiguration(),
       Usage: () => Usage(kAnalyticsUA, kSettings),
-//      UserMessages: () => UserMessages(),
+      UserMessages: () => UserMessages(),
     },
   );
 }
