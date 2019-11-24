@@ -1,7 +1,9 @@
 // Copyright 2015 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+
 // ignore_for_file: curly_braces_in_flow_control_structures
+
 import 'dart:async';
 
 import 'package:args/command_runner.dart';
@@ -10,10 +12,18 @@ import 'package:intl/intl.dart' as intl;
 import 'package:intl/intl_standalone.dart' as intl_standalone;
 import 'package:meta/meta.dart';
 import 'package:reporting/reporting.dart';
+import 'package:sylph/src/base/runner/sylph_command_runner.dart';
+import 'package:sylph/src/base/version.dart';
 import 'package:tool_base/tool_base.dart';
 
+//import 'src/base/common.dart';
+//import 'src/base/context.dart';
+//import 'src/base/file_system.dart';
+//import 'src/base/io.dart';
+//import 'src/base/logger.dart';
+//import 'src/base/process.dart';
+//import 'src/base/utils.dart';
 import 'src/base/runner/sylph_command.dart';
-import 'src/base/runner/sylph_command_runner.dart';
 import 'src/context_runner.dart';
 
 const kAnalyticsUA = 'UA-150933570-1';
@@ -38,40 +48,36 @@ set crashReportSender(CrashReportSender crashReportSender) =>
 
 /// Runs the Sylph tool with support for the specified list of [commands].
 Future<int> run(
-  List<String> args,
-  List<SylphCommand> commands, {
-  bool muteCommandLogging = false,
-  bool verbose = false,
-  bool verboseHelp = false,
-  bool reportCrashes,
-  String sylphVersion,
-  Map<Type, Generator> overrides,
-}) {
+    List<String> args,
+    List<SylphCommand> commands, {
+      bool muteCommandLogging = false,
+      bool verbose = false,
+      bool verboseHelp = false,
+      bool reportCrashes,
+      String sylphVersion,
+      Map<Type, Generator> overrides,
+    }) {
   reportCrashes ??= !isRunningOnBot;
 
   if (muteCommandLogging) {
-// Remove the verbose option; for help and doctor, users don't need to see
-// verbose logs.
+    // Remove the verbose option; for help and doctor, users don't need to see
+    // verbose logs.
     args = List<String>.from(args);
-    args.removeWhere(
-        (String option) => option == '-v' || option == '--verbose');
+    args.removeWhere((String option) => option == '-v' || option == '--verbose');
   }
 
-  final SylphCommandRunner runner =
-      SylphCommandRunner(verboseHelp: verboseHelp);
+  final SylphCommandRunner runner = SylphCommandRunner(verboseHelp: verboseHelp);
   commands.forEach(runner.addCommand);
 
   return runInContext<int>(() async {
     // Initialize the system locale.
     final String systemLocale = await intl_standalone.findSystemLocale();
     intl.Intl.defaultLocale = intl.Intl.verifiedLocale(
-      systemLocale,
-      intl.NumberFormat.localeExists,
+      systemLocale, intl.NumberFormat.localeExists,
       onFailure: (String _) => 'en_US',
     );
 
-//    String getVersion() => flutterVersion ?? FlutterVersion.instance.getVersionString(redactUnknownBranches: true);
-    String getVersion() => sylphVersion ?? '0.6.0';
+    String getVersion() => sylphVersion ?? FlutterVersion.instance.getVersionString(redactUnknownBranches: true);
     Object firstError;
     StackTrace firstStackTrace;
     return await runZoned<Future<int>>(() async {
@@ -85,34 +91,34 @@ Future<int> run(
             error, stackTrace, verbose, args, reportCrashes, getVersion);
       }
     }, onError: (Object error, StackTrace stackTrace) async {
-// If sending a crash report throws an error into the zone, we don't want
-// to re-try sending the crash report with *that* error. Rather, we want
-// to send the original error that triggered the crash report.
+      // If sending a crash report throws an error into the zone, we don't want
+      // to re-try sending the crash report with *that* error. Rather, we want
+      // to send the original error that triggered the crash report.
       final Object e = firstError ?? error;
       final StackTrace s = firstStackTrace ?? stackTrace;
-
       await _handleToolError(e, s, verbose, args, reportCrashes, getVersion);
     });
   }, overrides: overrides);
 }
 
 Future<int> _handleToolError(
-  dynamic error,
-  StackTrace stackTrace,
-  bool verbose,
-  List<String> args,
-  bool reportCrashes,
-  String getSylphVersion(),
-) async {
+    dynamic error,
+    StackTrace stackTrace,
+    bool verbose,
+    List<String> args,
+    bool reportCrashes,
+    String getSylphVersion(),
+    ) async {
   if (error is UsageException) {
     printError('${error.message}\n');
-    printError(
-        "Run 'sylph -h' (or 'sylph <command> -h') for available sylph commands and options.");
+    printError("Run 'flutter -h' (or 'flutter <command> -h') for available flutter commands and options.");
     // Argument error exit code.
     return _exit(64);
   } else if (error is ToolExit) {
-    if (error.message != null) printError(error.message);
-    if (verbose) printError('\n$stackTrace\n');
+    if (error.message != null)
+      printError(error.message);
+    if (verbose)
+      printError('\n$stackTrace\n');
     return _exit(error.exitCode ?? 1);
   } else if (error is ProcessExit) {
     // We've caught an exit code.
@@ -142,22 +148,21 @@ Future<int> _handleToolError(
       );
 
       if (error is String)
-        stderr.writeln('Oops; sylph has exited unexpectedly: "$error".');
+        stderr.writeln('Oops; flutter has exited unexpectedly: "$error".');
       else
-        stderr.writeln('Oops; sylph has exited unexpectedly.');
+        stderr.writeln('Oops; flutter has exited unexpectedly.');
 
       try {
-        final File file =
-            await _createLocalCrashReport(args, error, stackTrace);
+        final File file = await _createLocalCrashReport(args, error, stackTrace);
         stderr.writeln(
           'Crash report written to ${file.path};\n'
-          'please let us know at https://github.com/mmcc007/sylph/issues.',
+              'please let us know at https://github.com/flutter/flutter/issues.',
         );
         return _exit(1);
       } catch (error) {
         stderr.writeln(
           'Unable to generate crash report due to secondary error: $error\n'
-          'please let us know at https://github.com/mmcc007/sylph/issues.',
+              'please let us know at https://github.com/flutter/flutter/issues.',
         );
         // Any exception throw here (including one thrown by `_exit()`) will
         // get caught by our zone's `onError` handler. In order to avoid an
@@ -178,29 +183,28 @@ Future<int> _handleToolError(
 FileSystem crashFileSystem = const LocalFileSystem();
 
 /// Saves the crash report to a local file.
-Future<File> _createLocalCrashReport(
-    List<String> args, dynamic error, StackTrace stackTrace) async {
-  File crashFile =
-      getUniqueFile(crashFileSystem.currentDirectory, 'sylph', 'log');
+Future<File> _createLocalCrashReport(List<String> args, dynamic error, StackTrace stackTrace) async {
+  File crashFile = getUniqueFile(crashFileSystem.currentDirectory, 'flutter', 'log');
 
   final StringBuffer buffer = StringBuffer();
 
-  buffer.writeln(
-      'Sylph crash report; please file at https://github.com/mmcc007/sylph/issues.\n');
+  buffer.writeln('Sylph crash report; please file at https://github.com/flutter/flutter/issues.\n');
 
   buffer.writeln('## command\n');
-  buffer.writeln('sylph ${args.join(' ')}\n');
+  buffer.writeln('flutter ${args.join(' ')}\n');
 
   buffer.writeln('## exception\n');
   buffer.writeln('${error.runtimeType}: $error\n');
   buffer.writeln('```\n$stackTrace```\n');
 
+//  buffer.writeln('## flutter doctor\n');
+//  buffer.writeln('```\n${await _doctorText()}```');
+
   try {
     await crashFile.writeAsString(buffer.toString());
   } on FileSystemException catch (_) {
     // Fallback to the system temporary directory.
-    crashFile =
-        getUniqueFile(crashFileSystem.systemTempDirectory, 'sylph', 'log');
+    crashFile = getUniqueFile(crashFileSystem.systemTempDirectory, 'flutter', 'log');
     try {
       await crashFile.writeAsString(buffer.toString());
     } on FileSystemException catch (e) {
@@ -212,8 +216,26 @@ Future<File> _createLocalCrashReport(
   return crashFile;
 }
 
+//Future<String> _doctorText() async {
+//  try {
+//    final BufferLogger logger = BufferLogger();
+//
+//    await context.run<bool>(
+//      body: () => doctor.diagnose(verbose: true),
+//      overrides: <Type, Generator>{
+//        Logger: () => logger,
+//      },
+//    );
+//
+//    return logger.statusText;
+//  } catch (error, trace) {
+//    return 'encountered exception: $error\n\n${trace.toString().trim()}\n';
+//  }
+//}
+
 Future<int> _exit(int code) async {
-  if (sylphUsage.isFirstRun) sylphUsage.printWelcome();
+  if (sylphUsage.isFirstRun)
+    sylphUsage.printWelcome();
 
   // Send any last analytics calls that are in progress without overly delaying
   // the tool's exit (we wait a maximum of 250ms).
