@@ -16,6 +16,7 @@ import 'package:mockito/mockito.dart';
 import 'package:platform/platform.dart';
 import 'package:process/process.dart';
 import 'package:reporting/reporting.dart';
+import 'package:sylph/runner.dart';
 import 'package:sylph/src/base/runner/sylph_command.dart';
 import 'package:sylph/src/base/runner/sylph_command_runner.dart';
 import 'package:sylph/src/base/user_messages.dart';
@@ -66,6 +67,7 @@ void main() {
           platform = FakePlatform(
             environment: <String, String>{
               'FLUTTER_ROOT': _kFlutterRoot,
+              'HOME': '/',
             },
             version: '1 2 3 4 5',
           );
@@ -81,7 +83,7 @@ void main() {
         FlutterVersion: () => MockFlutterVersion(),
         Usage: () => noOpUsage,
           UserMessages: () => UserMessages(),
-          Cache: () => Cache(),
+          Cache: () => Cache(kToolBase),
         },
       );
 
@@ -117,6 +119,7 @@ void main() {
         FileSystem: () => fs,
         Platform: () => platform,
         FlutterVersion: () => MockFlutterVersion(),
+        Cache: () => Cache(kToolBase),
       }, initializeFlutterRoot: false);
 
 //      testUsingContext('works if --local-engine is specified and --local-engine-src-path is determined by sky_engine', () async {
@@ -167,7 +170,7 @@ void main() {
       FlutterVersion: () => MockFlutterVersion(),
       Usage: () => FakeUsage(),
       UserMessages: () => UserMessages(),
-      Cache: () => Cache(),
+      Cache: () => Cache('.$kToolBase'),
     }, initializeFlutterRoot: false);
 
     group('version', () {
@@ -240,7 +243,7 @@ void main() {
         FlutterVersion: () => MockFlutterVersion(),
         Usage: () => FakeUsage(),
         UserMessages: () => UserMessages(),
-        Cache: () => Cache(),
+        Cache: () => Cache('.$kToolBase'),
       }, initializeFlutterRoot: false);
 
       testUsingContext('checks that output wrapping is turned off when not writing to a terminal', () async {
@@ -254,7 +257,7 @@ void main() {
         FlutterVersion: () => MockFlutterVersion(),
         Usage: () => FakeUsage(),
         UserMessages: () => UserMessages(),
-        Cache: () => Cache(),
+        Cache: () => Cache('.$kToolBase'),
       }, initializeFlutterRoot: false);
 
       testUsingContext('checks that output wrapping is turned off when set on the command line and writing to a terminal', () async {
@@ -268,7 +271,7 @@ void main() {
         FlutterVersion: () => MockFlutterVersion(),
         Usage: () => FakeUsage(),
         UserMessages: () => UserMessages(),
-        Cache: () => Cache(),
+        Cache: () => Cache('.$kToolBase'),
       }, initializeFlutterRoot: false);
 
       testUsingContext('checks that output wrapping is turned on when set on the command line, but not writing to a terminal', () async {
@@ -282,7 +285,7 @@ void main() {
         FlutterVersion: () => MockFlutterVersion(),
         Usage: () => FakeUsage(),
         UserMessages: () => UserMessages(),
-        Cache: () => Cache(),
+        Cache: () => Cache('.$kToolBase'),
       }, initializeFlutterRoot: false);
     });
   });

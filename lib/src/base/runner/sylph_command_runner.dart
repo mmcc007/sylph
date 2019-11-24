@@ -40,7 +40,7 @@ import 'package:tool_base/tool_base.dart';
 import '../version.dart';
 //import '../vmservice.dart';
 
-const String kFlutterRootEnvironmentVariableName = 'FLUTTER_ROOT'; // should point to //flutter/ (root of flutter/flutter repo)
+const String kFlutterRootEnvironmentVariableName = 'SYLPH_ROOT'; // should point to //flutter/ (root of flutter/flutter repo)
 const String kFlutterEngineEnvironmentVariableName = 'FLUTTER_ENGINE'; // should point to //engine/src/ (root of flutter/engine repo)
 const String kSnapshotFileName = 'flutter_tools.snapshot'; // in //flutter/bin/cache/
 const String kFlutterToolsScriptFileName = 'flutter_tools.dart'; // in //flutter/packages/flutter_tools/bin/
@@ -186,32 +186,33 @@ class SylphCommandRunner extends CommandRunner<void> {
   static String get defaultFlutterRoot {
     if (platform.environment.containsKey(kFlutterRootEnvironmentVariableName))
       return platform.environment[kFlutterRootEnvironmentVariableName];
-    try {
-      if (platform.script.scheme == 'data')
-        return '../..'; // we're running as a test
-
-      if (platform.script.scheme == 'package') {
-        final String packageConfigPath = Uri.parse(platform.packageConfig).toFilePath();
-        return fs.path.dirname(fs.path.dirname(fs.path.dirname(packageConfigPath)));
-      }
-
-      final String script = platform.script.toFilePath();
-      if (fs.path.basename(script) == kSnapshotFileName)
-        return fs.path.dirname(fs.path.dirname(fs.path.dirname(script)));
-      if (fs.path.basename(script) == kFlutterToolsScriptFileName)
-        return fs.path.dirname(fs.path.dirname(fs.path.dirname(fs.path.dirname(script))));
-
-      // If run from a bare script within the repo.
-      if (script.contains('flutter/packages/'))
-        return script.substring(0, script.indexOf('flutter/packages/') + 8);
-      if (script.contains('flutter/examples/'))
-        return script.substring(0, script.indexOf('flutter/examples/') + 8);
-    } catch (error) {
-      // we don't have a logger at the time this is run
-      // (which is why we don't use printTrace here)
-      print(userMessages.runnerNoRoot(error));
-    }
-    return '.';
+//    try {
+//      if (platform.script.scheme == 'data')
+//        return '../..'; // we're running as a test
+//
+//      if (platform.script.scheme == 'package') {
+//        final String packageConfigPath = Uri.parse(platform.packageConfig).toFilePath();
+//        return fs.path.dirname(fs.path.dirname(fs.path.dirname(packageConfigPath)));
+//      }
+//
+//      final String script = platform.script.toFilePath();
+//      if (fs.path.basename(script) == kSnapshotFileName)
+//        return fs.path.dirname(fs.path.dirname(fs.path.dirname(script)));
+//      if (fs.path.basename(script) == kFlutterToolsScriptFileName)
+//        return fs.path.dirname(fs.path.dirname(fs.path.dirname(fs.path.dirname(script))));
+//
+//      // If run from a bare script within the repo.
+//      if (script.contains('flutter/packages/'))
+//        return script.substring(0, script.indexOf('flutter/packages/') + 8);
+//      if (script.contains('flutter/examples/'))
+//        return script.substring(0, script.indexOf('flutter/examples/') + 8);
+//    } catch (error) {
+//      // we don't have a logger at the time this is run
+//      // (which is why we don't use printTrace here)
+//      print(userMessages.runnerNoRoot(error));
+//    }
+//    return '.';
+    return platform.environment['HOME'];
   }
 
   @override
@@ -367,7 +368,7 @@ class SylphCommandRunner extends CommandRunner<void> {
         logger.quiet = topLevelResults['quiet'];
 
         if (platform.environment['FLUTTER_ALREADY_LOCKED'] != 'true')
-          await Cache.lock();
+          await context.get<Cache>().lock();
 
         if (topLevelResults['suppress-analytics'])
           sylphUsage.suppressAnalytics = true;

@@ -27,11 +27,13 @@ import 'src/base/runner/sylph_command.dart';
 import 'src/context_runner.dart';
 
 const kAnalyticsUA = 'UA-150933570-1';
-const kSettings = 'sylph';
+const kToolName = 'sylph';
+const kToolBase = '.$kToolName';
+const kSettings= '$kToolName/settings'; // analytics adds a '.'
 const kProductId = 'Sylph';
 const String kCrashServerHost = 'clients2.mauricemccabe.com';
 const String kCrashEndpointPath = '/cr/report';
-final File configFile=fs.file('${platform.environment['HOME']}/.$kSettings');
+final File configFile=fs.file('${platform.environment['HOME']}/.$kToolBase');
 
 CrashReportSender _crashReportSender;
 

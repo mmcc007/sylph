@@ -75,7 +75,7 @@ void main() {
     }, overrides: <Type, Generator>{
       FileSystem: () => MemoryFileSystem(),
       SystemClock: () => clock,
-      Usage: () => Usage(kAnalyticsUA, kSettings),
+      Usage: () => Usage(kAnalyticsUA, kToolBase),
       Platform: () => FakePlatform(
         operatingSystem: 'linux',
         environment: <String, String>{

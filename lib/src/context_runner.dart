@@ -22,7 +22,7 @@ Future<T> runInContext<T>(
     fallbacks: <Type, Generator>{
       BotDetector: () => const BotDetector(),
       Bundle:()=>Bundle(),
-      Cache: () => Cache(),
+      Cache: () => Cache(kToolBase),
       ConcurrentJobs: () => ConcurrentJobs(),
       Config: () => Config(configFile),
       DeviceFarm:()=>DeviceFarm(),
