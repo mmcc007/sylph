@@ -48,16 +48,16 @@ const String kFlutterToolsScriptFileName = 'flutter_tools.dart'; // in //flutter
 
 class SylphCommandRunner extends CommandRunner<void> {
   SylphCommandRunner({ bool verboseHelp = false }) : super(
-    'flutter',
-    'Manage your Flutter app development.\n'
+    'sylph',
+    'Runs Flutter integration tests on real devices in cloud.\n'
         '\n'
         'Common commands:\n'
         '\n'
-        '  flutter create <output directory>\n'
-        '    Create a new Flutter project in the specified directory.\n'
+        '  sylph devices [options]\n'
+        '    Get a list of currently available devices.\n'
         '\n'
-        '  flutter run [options]\n'
-        '    Run your Flutter application on an attached device or in an emulator.',
+        '  sylph run [options]\n'
+        '    Run Flutter integration tests on pools of devices in cloud.',
   ) {
     argParser.addFlag('verbose',
         abbr: 'v',
