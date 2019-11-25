@@ -9,11 +9,22 @@ import 'dart:async';
 import 'package:meta/meta.dart';
 import 'package:tool_base/tool_base.dart';
 
+//import 'base/common.dart';
+//import 'base/context.dart';
+//import 'base/file_system.dart';
+//import 'base/io.dart';
+//import 'base/process.dart';
+//import 'base/process_manager.dart';
+//import 'base/time.dart';
+//import 'cache.dart';
+//import 'convert.dart';
+//import 'globals.dart';
+
 class FlutterVersion {
   @visibleForTesting
   FlutterVersion([this._clock = const SystemClock()]) {
-    _frameworkRevision = _runGit('git log -n 1 --pretty=format:%H');
-    _frameworkVersion = GitTagVersion.determine().frameworkVersionFor(_frameworkRevision);
+//    _frameworkRevision = _runGit('git log -n 1 --pretty=format:%H');
+//    _frameworkVersion = GitTagVersion.determine().frameworkVersionFor(_frameworkRevision);
   }
 
   final SystemClock _clock;
@@ -86,10 +97,10 @@ class FlutterVersion {
 
   Future<String> get frameworkDate => frameworkCommitDate;
 
-//  String get dartSdkVersion => Cache.instance.dartSdkVersion;
-//
-//  String get engineRevision => Cache.instance.engineRevision;
-//  String get engineRevisionShort => _shortGitRevision(engineRevision);
+  String get dartSdkVersion => Cache.instance.dartSdkVersion;
+
+  String get engineRevision => Cache.instance.engineRevision;
+  String get engineRevisionShort => _shortGitRevision(engineRevision);
 
   Future<void> ensureVersionFile() async {
     fs.file(fs.path.join(Cache.flutterRoot, 'version')).writeAsStringSync(_frameworkVersion);
@@ -100,16 +111,15 @@ class FlutterVersion {
     final String versionText = frameworkVersion == 'unknown' ? '' : ' $frameworkVersion';
     final String flutterText = 'Flutter$versionText • channel $channel • ${repositoryUrl ?? 'unknown source'}';
     final String frameworkText = 'Framework • revision $frameworkRevisionShort ($frameworkAge) • $frameworkCommitDate';
-//    final String engineText = 'Engine • revision $engineRevisionShort';
-//    final String toolsText = 'Tools • Dart $dartSdkVersion';
+    final String engineText = 'Engine • revision $engineRevisionShort';
+    final String toolsText = 'Tools • Dart $dartSdkVersion';
 
     // Flutter 1.10.2-pre.69 • channel master • https://github.com/flutter/flutter.git
     // Framework • revision 340c158f32 (84 minutes ago) • 2018-10-26 11:27:22 -0400
     // Engine • revision 9c46333e14
     // Tools • Dart 2.1.0 (build 2.1.0-dev.8.0 bf26f760b1)
 
-//    return '$flutterText\n$frameworkText\n$engineText\n$toolsText';
-    return '$flutterText\n$frameworkText';
+    return '$flutterText\n$frameworkText\n$engineText\n$toolsText';
   }
 
   Map<String, Object> toJson() => <String, Object>{
@@ -118,8 +128,8 @@ class FlutterVersion {
     'repositoryUrl': repositoryUrl ?? 'unknown source',
     'frameworkRevision': frameworkRevision,
     'frameworkCommitDate': frameworkCommitDate,
-//    'engineRevision': engineRevision,
-//    'dartSdkVersion': dartSdkVersion,
+    'engineRevision': engineRevision,
+    'dartSdkVersion': dartSdkVersion,
   };
 
   /// A date String describing the last framework commit.
@@ -139,45 +149,43 @@ class FlutterVersion {
     return ToolVersion.instance.getVersionDate();
   }
 
-//  /// The name of the temporary git remote used to check for the latest
-//  /// available Flutter framework version.
-//  ///
-//  /// In the absence of bugs and crashes a Flutter developer should never see
-//  /// this remote appear in their `git remote` list, but also if it happens to
-//  /// persist we do the proper clean-up for extra robustness.
-//  static const String _versionCheckRemote = '__flutter_version_check__';
-//
+  /// The name of the temporary git remote used to check for the latest
+  /// available Flutter framework version.
+  ///
+  /// In the absence of bugs and crashes a Flutter developer should never see
+  /// this remote appear in their `git remote` list, but also if it happens to
+  /// persist we do the proper clean-up for extra robustness.
+  static const String _versionCheckRemote = '__flutter_version_check__';
+
   /// The date of the latest framework commit in the remote repository.
   ///
   /// Throws [ToolExit] if a git command fails, for example, when the remote git
   /// repository is not reachable due to a network issue.
   static Future<String> fetchRemoteFrameworkCommitDate(String branch) async {
-//    await _removeVersionCheckRemoteIfExists();
-//    try {
-//      await _run(<String>[
-//        'git',
-//        'remote',
-//        'add',
-//        _versionCheckRemote,
-//        'https://github.com/flutter/flutter.git',
-//      ]);
-//      await _run(<String>['git', 'fetch', _versionCheckRemote, branch]);
-//      return _latestGitCommitDate('$_versionCheckRemote/$branch');
-      return _latestGitCommitDate(null);
-//    } finally {
-//      await _removeVersionCheckRemoteIfExists();
-//    }
-
+    await _removeVersionCheckRemoteIfExists();
+    try {
+      await _run(<String>[
+        'git',
+        'remote',
+        'add',
+        _versionCheckRemote,
+        'https://github.com/flutter/flutter.git',
+      ]);
+      await _run(<String>['git', 'fetch', _versionCheckRemote, branch]);
+      return _latestGitCommitDate('$_versionCheckRemote/$branch');
+    } finally {
+      await _removeVersionCheckRemoteIfExists();
+    }
   }
-//
-//  static Future<void> _removeVersionCheckRemoteIfExists() async {
-//    final List<String> remotes = (await _run(<String>['git', 'remote']))
-//        .split('\n')
-//        .map<String>((String name) => name.trim()) // to account for OS-specific line-breaks
-//        .toList();
-//    if (remotes.contains(_versionCheckRemote))
-//      await _run(<String>['git', 'remote', 'remove', _versionCheckRemote]);
-//  }
+
+  static Future<void> _removeVersionCheckRemoteIfExists() async {
+    final List<String> remotes = (await _run(<String>['git', 'remote']))
+        .split('\n')
+        .map<String>((String name) => name.trim()) // to account for OS-specific line-breaks
+        .toList();
+    if (remotes.contains(_versionCheckRemote))
+      await _run(<String>['git', 'remote', 'remove', _versionCheckRemote]);
+  }
 
   static FlutterVersion get instance => context.get<FlutterVersion>();
 
@@ -281,9 +289,9 @@ class FlutterVersion {
   /// writes shared cache files.
   Future<void> checkFlutterVersionFreshness() async {
     // Don't perform update checks if we're not on an official channel.
-//    if (!officialChannels.contains(channel)) {
-//      return;
-//    }
+    if (!officialChannels.contains(channel)) {
+      return;
+    }
 
     final DateTime localFrameworkCommitDate = DateTime.parse(await frameworkCommitDate);
     final Duration frameworkAge = _clock.now().difference(localFrameworkCommitDate);
@@ -407,6 +415,9 @@ class VersionCheckStamp {
   final DateTime lastTimeVersionWasChecked;
   final DateTime lastKnownRemoteVersion;
   final DateTime lastTimeWarningWasPrinted;
+
+  @override
+  toString() => 'lastTimeVersionWasChecked=$lastTimeVersionWasChecked, lastKnownRemoteVersion=$lastKnownRemoteVersion, lastTimeWarningWasPrinted=$lastTimeWarningWasPrinted';
 
   /// The prefix of the stamp file where we cache Flutter version check data.
   @visibleForTesting
