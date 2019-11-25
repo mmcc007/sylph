@@ -84,7 +84,7 @@ class FlutterVersion {
   String _frameworkVersion;
   String get frameworkVersion => _frameworkVersion;
 
-  String get frameworkDate => frameworkCommitDate;
+  Future<String> get frameworkDate => frameworkCommitDate;
 
 //  String get dartSdkVersion => Cache.instance.dartSdkVersion;
 //
@@ -123,58 +123,61 @@ class FlutterVersion {
   };
 
   /// A date String describing the last framework commit.
-  String get frameworkCommitDate => _latestGitCommitDate();
+  Future<String> get frameworkCommitDate => _latestGitCommitDate();
 
-  static String _latestGitCommitDate([ String branch ]) {
-    final List<String> args = <String>[
-      'git',
-      'log',
-      if (branch != null) branch,
-      '-n',
-      '1',
-      '--pretty=format:%ad',
-      '--date=iso',
-    ];
-    return _runSync(args, lenient: false);
+  static Future<String> _latestGitCommitDate([ String branch ]) async {
+//    final List<String> args = <String>[
+//      'git',
+//      'log',
+//      if (branch != null) branch,
+//      '-n',
+//      '1',
+//      '--pretty=format:%ad',
+//      '--date=iso',
+//    ];
+//    return _runSync(args, lenient: false);
+    return ToolVersion.instance.getVersionDate();
   }
 
-  /// The name of the temporary git remote used to check for the latest
-  /// available Flutter framework version.
-  ///
-  /// In the absence of bugs and crashes a Flutter developer should never see
-  /// this remote appear in their `git remote` list, but also if it happens to
-  /// persist we do the proper clean-up for extra robustness.
-  static const String _versionCheckRemote = '__flutter_version_check__';
-
+//  /// The name of the temporary git remote used to check for the latest
+//  /// available Flutter framework version.
+//  ///
+//  /// In the absence of bugs and crashes a Flutter developer should never see
+//  /// this remote appear in their `git remote` list, but also if it happens to
+//  /// persist we do the proper clean-up for extra robustness.
+//  static const String _versionCheckRemote = '__flutter_version_check__';
+//
   /// The date of the latest framework commit in the remote repository.
   ///
   /// Throws [ToolExit] if a git command fails, for example, when the remote git
   /// repository is not reachable due to a network issue.
   static Future<String> fetchRemoteFrameworkCommitDate(String branch) async {
-    await _removeVersionCheckRemoteIfExists();
-    try {
-      await _run(<String>[
-        'git',
-        'remote',
-        'add',
-        _versionCheckRemote,
-        'https://github.com/flutter/flutter.git',
-      ]);
-      await _run(<String>['git', 'fetch', _versionCheckRemote, branch]);
-      return _latestGitCommitDate('$_versionCheckRemote/$branch');
-    } finally {
-      await _removeVersionCheckRemoteIfExists();
-    }
-  }
+//    await _removeVersionCheckRemoteIfExists();
+//    try {
+//      await _run(<String>[
+//        'git',
+//        'remote',
+//        'add',
+//        _versionCheckRemote,
+//        'https://github.com/flutter/flutter.git',
+//      ]);
+//      await _run(<String>['git', 'fetch', _versionCheckRemote, branch]);
+//      return _latestGitCommitDate('$_versionCheckRemote/$branch');
+      return _latestGitCommitDate(null);
+//    } finally {
+//      await _removeVersionCheckRemoteIfExists();
+//    }
 
-  static Future<void> _removeVersionCheckRemoteIfExists() async {
-    final List<String> remotes = (await _run(<String>['git', 'remote']))
-        .split('\n')
-        .map<String>((String name) => name.trim()) // to account for OS-specific line-breaks
-        .toList();
-    if (remotes.contains(_versionCheckRemote))
-      await _run(<String>['git', 'remote', 'remove', _versionCheckRemote]);
   }
+//
+//  static Future<void> _removeVersionCheckRemoteIfExists() async {
+//    final List<String> remotes = (await _run(<String>['git', 'remote']))
+//        .split('\n')
+//        .map<String>((String name) => name.trim()) // to account for OS-specific line-breaks
+//        .toList();
+//    if (remotes.contains(_versionCheckRemote))
+//      await _run(<String>['git', 'remote', 'remove', _versionCheckRemote]);
+//  }
 
   static FlutterVersion get instance => context.get<FlutterVersion>();
 
@@ -278,11 +281,11 @@ class FlutterVersion {
   /// writes shared cache files.
   Future<void> checkFlutterVersionFreshness() async {
     // Don't perform update checks if we're not on an official channel.
-    if (!officialChannels.contains(channel)) {
-      return;
-    }
+//    if (!officialChannels.contains(channel)) {
+//      return;
+//    }
 
-    final DateTime localFrameworkCommitDate = DateTime.parse(frameworkCommitDate);
+    final DateTime localFrameworkCommitDate = DateTime.parse(await frameworkCommitDate);
     final Duration frameworkAge = _clock.now().difference(localFrameworkCommitDate);
     final bool installationSeemsOutdated = frameworkAge > versionAgeConsideredUpToDate(channel);
 
