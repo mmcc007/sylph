@@ -29,7 +29,7 @@ import 'src/context_runner.dart';
 const kAnalyticsUA = 'UA-150933570-1';
 const kToolName = 'sylph';
 const kToolBase = '.$kToolName';
-const kSettings= '$kToolName/settings'; // analytics adds a '.'
+const kSettings= '$kToolName/settings.json'; // analytics adds a '.'
 const kProductId = 'Sylph';
 const String kCrashServerHost = 'clients2.mauricemccabe.com';
 const String kCrashEndpointPath = '/cr/report';
@@ -60,6 +60,12 @@ Future<int> run(
       Map<Type, Generator> overrides,
     }) {
   reportCrashes ??= !isRunningOnBot;
+
+  // create settings
+  final settings = fs.file(kSettings);
+  if (!settings.existsSync())
+    settings.create(recursive: true);
+
 
   if (muteCommandLogging) {
     // Remove the verbose option; for help and doctor, users don't need to see
