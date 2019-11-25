@@ -34,6 +34,7 @@ Future<T> runInContext<T>(
       Stdio: () => const Stdio(),
       SystemClock: () => const SystemClock(),
       TimeoutConfiguration: () => const TimeoutConfiguration(),
+      ToolVersion: () => ToolVersion(kToolName, kSettings),
       Usage: () => Usage(kAnalyticsUA, kSettings),
       UserMessages: () => UserMessages(),
     },
