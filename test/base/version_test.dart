@@ -4,40 +4,25 @@
 
 import 'dart:convert';
 
-import 'package:collection/collection.dart' show ListEquality;
-//import 'package:flutter_tools/src/base/time.dart';
 import 'package:mockito/mockito.dart';
-import 'package:process/process.dart';
 import 'package:sylph/src/base/version.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_base_test/tool_base_test.dart';
-
-//import 'package:flutter_tools/src/base/context.dart';
-//import 'package:flutter_tools/src/base/io.dart';
-//import 'package:flutter_tools/src/base/logger.dart';
-//import 'package:flutter_tools/src/cache.dart';
-//import 'package:flutter_tools/src/version.dart';
-//
-//import '../src/common.dart';
-//import '../src/context.dart';
 
 final SystemClock _testClock = SystemClock.fixed(DateTime(2015, 1, 1));
 final DateTime _stampUpToDate = _testClock.ago(FlutterVersion.checkAgeConsideredUpToDate ~/ 2);
 final DateTime _stampOutOfDate = _testClock.ago(FlutterVersion.checkAgeConsideredUpToDate * 2);
 
 void main() {
-  MockProcessManager mockProcessManager;
   MockCache mockCache;
   MockToolVersion mockToolVersion;
 
   setUp(() {
-    mockProcessManager = MockProcessManager();
     mockCache = MockCache();
     mockToolVersion = MockToolVersion();
   });
 
-//  for (String channel in FlutterVersion.officialChannels) {
   final String channel = 'stable';
     DateTime getChannelUpToDateVersion() {
       return _testClock.ago(FlutterVersion.versionAgeConsideredUpToDate(channel) ~/ 2);
@@ -55,7 +40,6 @@ void main() {
 
       testUsingContext('prints nothing when Flutter installation looks fresh', () async {
         fakeData(
-          mockProcessManager,
           mockCache,
           localCommitDate: getChannelUpToDateVersion(),
           // Server will be pinged because we haven't pinged within last x days
@@ -68,14 +52,12 @@ void main() {
         _expectVersionMessage('');
       }, overrides: <Type, Generator>{
         FlutterVersion: () => FlutterVersion(_testClock),
-        ProcessManager: () => mockProcessManager,
         Cache: () => mockCache,
         ToolVersion: () => mockToolVersion,
       });
 
       testUsingContext('prints nothing when Flutter installation looks out-of-date but is actually up-to-date', () async {
         fakeData(
-          mockProcessManager,
           mockCache,
           localCommitDate: getChannelOutOfDateVersion(),
           stamp: VersionCheckStamp(
@@ -93,14 +75,12 @@ void main() {
         _expectVersionMessage('');
       }, overrides: <Type, Generator>{
         FlutterVersion: () => FlutterVersion(_testClock),
-        ProcessManager: () => mockProcessManager,
         Cache: () => mockCache,
         ToolVersion: () => mockToolVersion,
       });
 
       testUsingContext('does not ping server when version stamp is up-to-date', () async {
         fakeData(
-          mockProcessManager,
           mockCache,
           localCommitDate: getChannelOutOfDateVersion(),
           stamp: VersionCheckStamp(
@@ -116,14 +96,12 @@ void main() {
         _expectVersionMessage(FlutterVersion.newVersionAvailableMessage());
       }, overrides: <Type, Generator>{
         FlutterVersion: () => FlutterVersion(_testClock),
-        ProcessManager: () => mockProcessManager,
         Cache: () => mockCache,
         ToolVersion: () => mockToolVersion,
       });
 
       testUsingContext('does not print warning if printed recently', () async {
         fakeData(
-          mockProcessManager,
           mockCache,
           localCommitDate: getChannelOutOfDateVersion(),
           stamp: VersionCheckStamp(
@@ -143,14 +121,12 @@ void main() {
         _expectVersionMessage('');
       }, overrides: <Type, Generator>{
         FlutterVersion: () => FlutterVersion(_testClock),
-        ProcessManager: () => mockProcessManager,
         Cache: () => mockCache,
         ToolVersion: () => mockToolVersion,
       });
 
       testUsingContext('pings server when version stamp is missing then does not', () async {
         fakeData(
-          mockProcessManager,
           mockCache,
           localCommitDate: getChannelOutOfDateVersion(),
           remoteCommitDate: getChannelUpToDateVersion(),
@@ -165,7 +141,6 @@ void main() {
 
         // Immediate subsequent check is not expected to ping the server.
         fakeData(
-          mockProcessManager,
           mockCache,
           localCommitDate: getChannelOutOfDateVersion(),
           stamp: await VersionCheckStamp.load(),
@@ -175,14 +150,12 @@ void main() {
         _expectVersionMessage('');
       }, overrides: <Type, Generator>{
         FlutterVersion: () => FlutterVersion(_testClock),
-        ProcessManager: () => mockProcessManager,
         Cache: () => mockCache,
         ToolVersion: () => mockToolVersion,
       }, skip: true); // todo: mock at http with in-memory stamp
 
       testUsingContext('pings server when version stamp is out-of-date', () async {
         fakeData(
-          mockProcessManager,
           mockCache,
           localCommitDate: getChannelOutOfDateVersion(),
           stamp: VersionCheckStamp(
@@ -200,14 +173,12 @@ void main() {
         _expectVersionMessage(FlutterVersion.newVersionAvailableMessage());
       }, overrides: <Type, Generator>{
         FlutterVersion: () => FlutterVersion(_testClock),
-        ProcessManager: () => mockProcessManager,
         Cache: () => mockCache,
         ToolVersion: () => mockToolVersion,
       }, skip: true); // todo: mock at http with in-memory stamp
 
       testUsingContext('does not print warning when unable to connect to server if not out of date', () async {
         fakeData(
-          mockProcessManager,
           mockCache,
           localCommitDate: getChannelUpToDateVersion(),
           errorOnFetch: true,
@@ -221,14 +192,12 @@ void main() {
         _expectVersionMessage('');
       }, overrides: <Type, Generator>{
         FlutterVersion: () => FlutterVersion(_testClock),
-        ProcessManager: () => mockProcessManager,
         Cache: () => mockCache,
         ToolVersion: () => mockToolVersion,
       });
 
       testUsingContext('prints warning when unable to connect to server if really out of date', () async {
         fakeData(
-          mockProcessManager,
           mockCache,
           localCommitDate: getChannelOutOfDateVersion(),
           errorOnFetch: true,
@@ -242,14 +211,12 @@ void main() {
         _expectVersionMessage(FlutterVersion.versionOutOfDateMessage(_testClock.now().difference(getChannelOutOfDateVersion())));
       }, overrides: <Type, Generator>{
         FlutterVersion: () => FlutterVersion(_testClock),
-        ProcessManager: () => mockProcessManager,
         Cache: () => mockCache,
         ToolVersion: () => mockToolVersion,
       });
 
       testUsingContext('versions comparison', () async {
         fakeData(
-          mockProcessManager,
           mockCache,
           localCommitDate: getChannelOutOfDateVersion(),
           errorOnFetch: true,
@@ -259,10 +226,10 @@ void main() {
         );
         final FlutterVersion version = FlutterVersion.instance;
 
-        when(mockProcessManager.runSync(
-          <String>['git', 'merge-base', '--is-ancestor', 'abcdef', '123456'],
-          workingDirectory: anyNamed('workingDirectory'),
-        )).thenReturn(ProcessResult(1, 0, '', ''));
+//        when(mockProcessManager.runSync(
+//          <String>['git', 'merge-base', '--is-ancestor', 'abcdef', '123456'],
+//          workingDirectory: anyNamed('workingDirectory'),
+//        )).thenReturn(ProcessResult(1, 0, '', ''));
 
 //        expect(
 //            version.checkRevisionAncestry(
@@ -270,14 +237,13 @@ void main() {
 //              tentativeAncestorRevision: 'abcdef',
 //            ),
 //            true);
-
-        verify(mockProcessManager.runSync(
-          <String>['git', 'merge-base', '--is-ancestor', 'abcdef', '123456'],
-          workingDirectory: anyNamed('workingDirectory'),
-        ));
+//
+//        verify(mockProcessManager.runSync(
+//          <String>['git', 'merge-base', '--is-ancestor', 'abcdef', '123456'],
+//          workingDirectory: anyNamed('workingDirectory'),
+//        ));
       }, overrides: <Type, Generator>{
         FlutterVersion: () => FlutterVersion(_testClock),
-        ProcessManager: () => mockProcessManager,
         ToolVersion: () => mockToolVersion,
       }, skip: true);
     });
@@ -290,28 +256,28 @@ void main() {
       }
 
       testUsingContext('loads blank when stamp file missing', () async {
-        fakeData(mockProcessManager, mockCache, channel: channel);
+        fakeData(
+            mockCache, channel: channel);
+
         _expectDefault(await VersionCheckStamp.load());
       }, overrides: <Type, Generator>{
         FlutterVersion: () => FlutterVersion(_testClock),
-        ProcessManager: () => mockProcessManager,
         Cache: () => mockCache,
         ToolVersion: () => mockToolVersion,
       });
 
       testUsingContext('loads blank when stamp file is malformed JSON', () async {
-        fakeData(mockProcessManager, mockCache, stampJson: '<', channel: channel);
+        fakeData(
+            mockCache, stampJson: '<', channel: channel);
         _expectDefault(await VersionCheckStamp.load());
       }, overrides: <Type, Generator>{
         FlutterVersion: () => FlutterVersion(_testClock),
-        ProcessManager: () => mockProcessManager,
         Cache: () => mockCache,
         ToolVersion: () => mockToolVersion,
       });
 
       testUsingContext('loads blank when stamp file is well-formed but invalid JSON', () async {
         fakeData(
-          mockProcessManager,
           mockCache,
           stampJson: '[]',
           channel: channel,
@@ -319,14 +285,12 @@ void main() {
         _expectDefault(await VersionCheckStamp.load());
       }, overrides: <Type, Generator>{
         FlutterVersion: () => FlutterVersion(_testClock),
-        ProcessManager: () => mockProcessManager,
         Cache: () => mockCache,
         ToolVersion: () => mockToolVersion,
       });
 
       testUsingContext('loads valid JSON', () async {
         fakeData(
-          mockProcessManager,
           mockCache,
           stampJson: '''
       {
@@ -344,14 +308,12 @@ void main() {
         expect(stamp.lastTimeWarningWasPrinted, _testClock.now());
       }, overrides: <Type, Generator>{
         FlutterVersion: () => FlutterVersion(_testClock),
-        ProcessManager: () => mockProcessManager,
         Cache: () => mockCache,
         ToolVersion: () => mockToolVersion,
       });
 
       testUsingContext('stores version stamp', () async {
         fakeData(
-          mockProcessManager,
           mockCache,
           expectSetStamp: true,
           channel: channel,
@@ -372,14 +334,12 @@ void main() {
         expect(storedStamp.lastTimeWarningWasPrinted, _testClock.now());
       }, overrides: <Type, Generator>{
         FlutterVersion: () => FlutterVersion(_testClock),
-        ProcessManager: () => mockProcessManager,
         Cache: () => mockCache,
         ToolVersion: () => mockToolVersion,
       });
 
       testUsingContext('overwrites individual fields', () async {
         fakeData(
-          mockProcessManager,
           mockCache,
           expectSetStamp: true,
           channel: channel,
@@ -404,35 +364,10 @@ void main() {
         expect(storedStamp.lastTimeWarningWasPrinted, _testClock.now());
       }, overrides: <Type, Generator>{
         FlutterVersion: () => FlutterVersion(_testClock),
-        ProcessManager: () => mockProcessManager,
         Cache: () => mockCache,
         ToolVersion: () => mockToolVersion,
       });
     });
-//  }
-
-//  testUsingContext('GitTagVersion', () {
-//    const String hash = 'abcdef';
-//    expect(GitTagVersion.parse('v1.2.3-4-g$hash').frameworkVersionFor(hash), '1.2.4-pre.4');
-//    expect(GitTagVersion.parse('v98.76.54-32-g$hash').frameworkVersionFor(hash), '98.76.55-pre.32');
-//    expect(GitTagVersion.parse('v10.20.30-0-g$hash').frameworkVersionFor(hash), '10.20.30');
-//    expect(GitTagVersion.parse('v1.2.3+hotfix.1-4-g$hash').frameworkVersionFor(hash), '1.2.3+hotfix.2-pre.4');
-//    expect(GitTagVersion.parse('v7.2.4+hotfix.8-0-g$hash').frameworkVersionFor(hash), '7.2.4+hotfix.8');
-//    expect(testLogger.traceText, '');
-//    expect(GitTagVersion.parse('x1.2.3-4-g$hash').frameworkVersionFor(hash), '0.0.0-unknown');
-//    expect(GitTagVersion.parse('v1.0.0-unknown-0-g$hash').frameworkVersionFor(hash), '0.0.0-unknown');
-//    expect(GitTagVersion.parse('beta-1-g$hash').frameworkVersionFor(hash), '0.0.0-unknown');
-//    expect(GitTagVersion.parse('v1.2.3-4-gx$hash').frameworkVersionFor(hash), '0.0.0-unknown');
-//    expect(testLogger.statusText, '');
-//    expect(testLogger.errorText, '');
-//    expect(
-//      testLogger.traceText,
-//      'Could not interpret results of "git describe": x1.2.3-4-gabcdef\n'
-//          'Could not interpret results of "git describe": v1.0.0-unknown-0-gabcdef\n'
-//          'Could not interpret results of "git describe": beta-1-gabcdef\n'
-//          'Could not interpret results of "git describe": v1.2.3-4-gxabcdef\n',
-//    );
-//  });
 }
 
 void _expectVersionMessage(String message) {
@@ -442,7 +377,6 @@ void _expectVersionMessage(String message) {
 }
 
 void fakeData(
-    ProcessManager pm,
     Cache cache, {
       DateTime localCommitDate,
       DateTime remoteCommitDate,
@@ -461,14 +395,6 @@ void fakeData(
   print('expectSetStamp=$expectSetStamp');
   print('expectServerPing=$expectServerPing');
   print('channel=$channel');
-
-  ProcessResult success(String standardOutput) {
-    return ProcessResult(1, 0, standardOutput, '');
-  }
-
-  ProcessResult failure(int exitCode) {
-    return ProcessResult(1, exitCode, '', 'error');
-  }
 
   when(cache.getStampFor(any)).thenAnswer((Invocation invocation) {
     expect(invocation.positionalArguments.single, VersionCheckStamp.flutterVersionCheckStampFile);
@@ -497,39 +423,8 @@ void fakeData(
 
   when(ToolVersion.instance.getVersionDate()).thenAnswer((_){
     print('called ToolVersion.instance.getVersionDate()');
-//    String date;
-//    if (stamp != null && remoteCommitDate == null) {
-//      date = '${stamp.lastKnownRemoteVersion}';
-//    } else if (localCommitDate != null) {
-//      date = '$localCommitDate';
-//    } else {
-//      if (stampJson != null) {
-//        date = stamp.toJson()['lastKnownRemoteVersion'];
-////        date = '$remoteCommitDate';
-//       } else if (remoteCommitDate != null) {
-//        date = '$remoteCommitDate';
-//      } else {
-//        print('unknown');
-//      }
-//    }
-//  return Future.value(date);
-//    if (errorOnFetch) {
-//      throw HttpException('connection down');
-//    }
     return Future.value(
           '${localCommitDate == null ? remoteCommitDate : localCommitDate}');
-
-//    if (stamp!=null && remoteCommitDate != null) {
-////      return Future.value('${stamp.lastKnownRemoteVersion}');
-//      return Future.value('$remoteCommitDate');
-//    }
-//    String date;
-//    if ((remoteCommitDate != null)) {
-//      date = '$remoteCommitDate';
-//    } else {
-//      date = '$localCommitDate';
-//    }
-//    return Future.value(date);
   });
 
     when(ToolVersion.instance.getVersionDate(forceRemote: anyNamed('forceRemote')))
@@ -546,67 +441,7 @@ void fakeData(
       return Future.value(
           '${localCommitDate == null ? remoteCommitDate : localCommitDate}');
     });
-
-
-  final Answering<ProcessResult> syncAnswer = (Invocation invocation) {
-    bool argsAre(String a1, [ String a2, String a3, String a4, String a5, String a6, String a7, String a8 ]) {
-      const ListEquality<String> equality = ListEquality<String>();
-      final List<String> args = invocation.positionalArguments.single;
-      final List<String> expectedArgs = <String>[a1, a2, a3, a4, a5, a6, a7, a8].where((String arg) => arg != null).toList();
-      return equality.equals(args, expectedArgs);
-    }
-
-    if (argsAre('git', 'log', '-n', '1', '--pretty=format:%ad', '--date=iso')) {
-      return success(localCommitDate.toString());
-    } else if (argsAre('git', 'remote')) {
-      return success('');
-    } else if (argsAre('git', 'remote', 'add', '__flutter_version_check__', 'https://github.com/flutter/flutter.git')) {
-      return success('');
-    } else if (argsAre('git', 'fetch', '__flutter_version_check__', channel)) {
-      if (!expectServerPing) {
-        fail('Did not expect server ping');
-      }
-      return errorOnFetch ? failure(128) : success('');
-    } else if (remoteCommitDate != null && argsAre('git', 'log', '__flutter_version_check__/$channel', '-n', '1', '--pretty=format:%ad', '--date=iso')) {
-      return success(remoteCommitDate.toString());
-    }
-
-    throw StateError('Unexpected call to ProcessManager.run(${invocation.positionalArguments}, ${invocation.namedArguments})');
-  };
-
-  when(pm.runSync(any, workingDirectory: anyNamed('workingDirectory'))).thenAnswer(syncAnswer);
-  when(pm.run(any, workingDirectory: anyNamed('workingDirectory'))).thenAnswer((Invocation invocation) async {
-    return syncAnswer(invocation);
-  });
-
-  when(pm.runSync(
-    <String>['git', 'rev-parse', '--abbrev-ref', '--symbolic', '@{u}'],
-    workingDirectory: anyNamed('workingDirectory'),
-    environment: anyNamed('environment'),
-  )).thenReturn(ProcessResult(101, 0, channel, ''));
-  when(pm.runSync(
-    <String>['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
-    workingDirectory: anyNamed('workingDirectory'),
-    environment: anyNamed('environment'),
-  )).thenReturn(ProcessResult(102, 0, 'branch', ''));
-  when(pm.runSync(
-    <String>['git', 'log', '-n', '1', '--pretty=format:%H'],
-    workingDirectory: anyNamed('workingDirectory'),
-    environment: anyNamed('environment'),
-  )).thenReturn(ProcessResult(103, 0, '1234abcd', ''));
-  when(pm.runSync(
-    <String>['git', 'log', '-n', '1', '--pretty=format:%ar'],
-    workingDirectory: anyNamed('workingDirectory'),
-    environment: anyNamed('environment'),
-  )).thenReturn(ProcessResult(104, 0, '1 second ago', ''));
-  when(pm.runSync(
-    <String>['git', 'describe', '--match', 'v*.*.*', '--first-parent', '--long', '--tags'],
-    workingDirectory: anyNamed('workingDirectory'),
-    environment: anyNamed('environment'),
-  )).thenReturn(ProcessResult(105, 0, 'v0.1.2-3-1234abcd', ''));
 }
-
-class MockProcessManager extends Mock implements ProcessManager {}
 
 class MockCache extends Mock implements Cache {}
 
