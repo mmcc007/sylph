@@ -394,11 +394,11 @@ class SylphCommandRunner extends CommandRunner<void> {
         if (topLevelResults['version']) {
           sylphUsage.sendCommand('version');
           String status;
-          if (topLevelResults['machine']) {
-            status = const JsonEncoder.withIndent('  ').convert(FlutterVersion.instance.toJson());
-          } else {
+//          if (topLevelResults['machine']) {
+//            status = const JsonEncoder.withIndent('  ').convert(FlutterVersion.instance.toJson());
+//          } else {
             status = FlutterVersion.instance.toString();
-          }
+//          }
           printStatus(status);
           return;
         }
