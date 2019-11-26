@@ -25,6 +25,8 @@ class FlutterVersion {
   FlutterVersion([this._clock = const SystemClock()]) {
 //    _frameworkRevision = _runGit('git log -n 1 --pretty=format:%H');
 //    _frameworkVersion = GitTagVersion.determine().frameworkVersionFor(_frameworkRevision);
+  final toolVersion = context.get<ToolVersion>();
+  _frameworkVersion = toolVersion.getInstalledVersion();
   }
 
   final SystemClock _clock;
@@ -146,7 +148,12 @@ class FlutterVersion {
 //      '--date=iso',
 //    ];
 //    return _runSync(args, lenient: false);
-    return ToolVersion.instance.getVersionDate();
+    try {
+      // defaults to local fetch
+      return ToolVersion.instance.getVersionDate();
+    } catch (e){
+      throw VersionCheckError(e);
+    }
   }
 
   /// The name of the temporary git remote used to check for the latest
@@ -175,6 +182,12 @@ class FlutterVersion {
       return _latestGitCommitDate('$_versionCheckRemote/$branch');
     } finally {
       await _removeVersionCheckRemoteIfExists();
+    }
+    try {
+      // defaults to remote fetch
+      return ToolVersion.instance.getVersionDate(forceRemote: true);
+    } catch (e){
+      throw VersionCheckError(e);
     }
   }
 

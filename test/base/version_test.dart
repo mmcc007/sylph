@@ -512,7 +512,12 @@ void fakeData(
 //      }
 //    }
 //  return Future.value(date);
-    return Future.value('${localCommitDate == null?remoteCommitDate:localCommitDate}');
+//    if (errorOnFetch) {
+//      throw HttpException('connection down');
+//    }
+    return Future.value(
+          '${localCommitDate == null ? remoteCommitDate : localCommitDate}');
+
 //    if (stamp!=null && remoteCommitDate != null) {
 ////      return Future.value('${stamp.lastKnownRemoteVersion}');
 //      return Future.value('$remoteCommitDate');
