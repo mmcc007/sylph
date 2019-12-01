@@ -13,10 +13,10 @@ import 'package:file/memory.dart';
 //import 'package:flutter_tools/src/runner/flutter_command_runner.dart';
 //import 'package:flutter_tools/src/version.dart';
 import 'package:mockito/mockito.dart';
-import 'package:platform/platform.dart';
+//import 'package:platform/platform.dart';
 import 'package:process/process.dart';
 import 'package:reporting/reporting.dart';
-import 'package:sylph/runner.dart';
+//import 'package:sylph/runner.dart';
 import 'package:sylph/src/base/runner/sylph_command.dart';
 import 'package:sylph/src/base/runner/sylph_command_runner.dart';
 import 'package:sylph/src/base/user_messages.dart';
@@ -33,7 +33,7 @@ import '../../src/utils.dart';
 //import '../../src/context.dart';
 //import 'utils.dart';
 
-const String _kFlutterRoot = '/flutter/flutter';
+//const String _kFlutterRoot = '/flutter/flutter';
 //const String _kEngineRoot = '/flutter/engine';
 //const String _kArbitraryEngineRoot = '/arbitrary/engine';
 const String _kProjectRoot = '/project';
@@ -43,12 +43,10 @@ void main() {
   group('FlutterCommandRunner', () {
     Testbed testbed;
     NoOpUsage noOpUsage;
-    FakeFlutterVersion fakeFlutterVersion;
     MemoryFileSystem fs;
-    Platform platform;
+//    Platform platform;
     SylphCommandRunner runner;
-    ProcessManager processManager;
-    FakeCommand fakeCommand = FakeCommand();
+    FakeCommand fakeCommand;
 
     setUpAll(() {
       Cache.disableLocking();
@@ -58,32 +56,30 @@ void main() {
       testbed = Testbed(
         setup: () async {
           noOpUsage=NoOpUsage();
-          fakeFlutterVersion=FakeFlutterVersion();
           fs = MemoryFileSystem();
-          fs.directory(_kFlutterRoot).createSync(recursive: true);
+//          fs.directory(_kFlutterRoot).createSync(recursive: true);
           fs.directory(_kProjectRoot).createSync(recursive: true);
           fs.currentDirectory = _kProjectRoot;
-
-          platform = FakePlatform(
-            environment: <String, String>{
-              'FLUTTER_ROOT': _kFlutterRoot,
-              'HOME': '/',
-            },
-            version: '1 2 3 4 5',
-          );
+//
+//          platform = FakePlatform(
+//            environment: <String, String>{
+//              'FLUTTER_ROOT': _kFlutterRoot,
+//              'HOME': '/',
+//            },
+//            version: '1 2 3 4 5',
+//          );
 
           fakeCommand = FakeCommand();
           runner = createTestCommandRunner(DummySylphCommand());
           runner.addCommand(fakeCommand);
-          processManager = MockProcessManager();
         },
         overrides: <Type, Generator>{
-        FileSystem: () => fs,
-        Platform: () => platform,
+//        FileSystem: () => fs,
+//        Platform: () => platform,
         FlutterVersion: () => MockFlutterVersion(),
         Usage: () => noOpUsage,
           UserMessages: () => UserMessages(),
-          Cache: () => Cache(kToolBase),
+          Cache: () => Cache(),
         },
       );
 
@@ -100,27 +96,16 @@ void main() {
         await runner.run(<String>['dummy']);
 
         expect(versionChecked, isTrue);
-      }), overrides: <Type, Generator>{
-//        FileSystem: () => fs,
-//        Platform: () => platform,
-//        FlutterVersion: () => MockFlutterVersion(),
-//        Usage: () => FakeUsage(),
-//        UserMessages: () => UserMessages(),
-//        Cache: () => Cache(),
-      }, initializeFlutterRoot: false);
+      }));
 
-      testUsingContext('throw tool exit if the version file cannot be written', () async {
+      testUsingContext('throw tool exit if the version file cannot be written', () => testbed.run(() async {
         final MockFlutterVersion version = FlutterVersion.instance;
         when(version.ensureVersionFile()).thenThrow(const FileSystemException());
 
         expect(() async => await runner.run(<String>['dummy']), throwsA(isA<ToolExit>()));
 
-      }, overrides: <Type, Generator>{
-        FileSystem: () => fs,
-        Platform: () => platform,
-        FlutterVersion: () => MockFlutterVersion(),
-        Cache: () => Cache(kToolBase),
-      }, initializeFlutterRoot: false);
+      }));
+
 
 //      testUsingContext('works if --local-engine is specified and --local-engine-src-path is determined by sky_engine', () async {
 //        fs.directory('$_kArbitraryEngineRoot/src/out/ios_debug/gen/dart-pkg/sky_engine/lib/').createSync(recursive: true);
@@ -156,7 +141,7 @@ void main() {
 //      }, initializeFlutterRoot: false);
     });
 
-    testUsingContext('Doesnt crash on invalid .packages file', () async {
+    testUsingContext('Doesnt crash on invalid .packages file', () => testbed.run(() async {
       fs.file('pubspec.yaml').createSync();
       fs.file('.packages')
         ..createSync()
@@ -164,14 +149,8 @@ void main() {
 
       await runner.run(<String>['dummy']);
 
-    }, overrides: <Type, Generator>{
-      FileSystem: () => fs,
-      Platform: () => platform,
-      FlutterVersion: () => MockFlutterVersion(),
-      Usage: () => FakeUsage(),
-      UserMessages: () => UserMessages(),
-      Cache: () => Cache('.$kToolBase'),
-    }, initializeFlutterRoot: false);
+    }));
+
 
     group('version', () {
 //      testUsingContext('checks that Flutter toJson output reports the flutter framework version', () async {
@@ -203,21 +182,21 @@ void main() {
 //      }, initializeFlutterRoot: false);
     });
 
-    group('getRepoPackages', () {
-      setUp(() {
-        fs.directory(fs.path.join(_kFlutterRoot, 'examples'))
-            .createSync(recursive: true);
-        fs.directory(fs.path.join(_kFlutterRoot, 'packages'))
-            .createSync(recursive: true);
-        fs.directory(fs.path.join(_kFlutterRoot, 'dev', 'tools', 'aatool'))
-            .createSync(recursive: true);
-
-        fs.file(fs.path.join(_kFlutterRoot, 'dev', 'tools', 'pubspec.yaml'))
-            .createSync();
-        fs.file(fs.path.join(_kFlutterRoot, 'dev', 'tools', 'aatool', 'pubspec.yaml'))
-            .createSync();
-      });
-
+//    group('getRepoPackages', () {
+//      setUp(() {
+//        fs.directory(fs.path.join(_kFlutterRoot, 'examples'))
+//            .createSync(recursive: true);
+//        fs.directory(fs.path.join(_kFlutterRoot, 'packages'))
+//            .createSync(recursive: true);
+//        fs.directory(fs.path.join(_kFlutterRoot, 'dev', 'tools', 'aatool'))
+//            .createSync(recursive: true);
+//
+//        fs.file(fs.path.join(_kFlutterRoot, 'dev', 'tools', 'pubspec.yaml'))
+//            .createSync();
+//        fs.file(fs.path.join(_kFlutterRoot, 'dev', 'tools', 'aatool', 'pubspec.yaml'))
+//            .createSync();
+//      });
+//
 //      testUsingContext('', () {
 //        final List<String> packagePaths = runner.getRepoPackages()
 //            .map((Directory d) => d.path).toList();
@@ -229,63 +208,35 @@ void main() {
 //        FileSystem: () => fs,
 //        Platform: () => platform,
 //      }, initializeFlutterRoot: false);
-    });
+//    });
 
     group('wrapping', () {
-      testUsingContext('checks that output wrapping is turned on when writing to a terminal', () async {
-//        final FakeCommand fakeCommand = FakeCommand();
-//        runner.addCommand(fakeCommand);
+      testUsingContext('checks that output wrapping is turned on when writing to a terminal', () => testbed.run(() async {
         await runner.run(<String>['fake']);
         expect(fakeCommand.preferences.wrapText, isTrue);
-      }, overrides: <Type, Generator>{
-        FileSystem: () => fs,
+      }), overrides: <Type, Generator>{
         Stdio: () => FakeStdio(hasFakeTerminal: true),
-        FlutterVersion: () => MockFlutterVersion(),
-        Usage: () => FakeUsage(),
-        UserMessages: () => UserMessages(),
-        Cache: () => Cache('.$kToolBase'),
-      }, initializeFlutterRoot: false);
+      });
 
-      testUsingContext('checks that output wrapping is turned off when not writing to a terminal', () async {
-//        final FakeCommand fakeCommand = FakeCommand();
-//        runner.addCommand(fakeCommand);
+      testUsingContext('checks that output wrapping is turned off when not writing to a terminal', () => testbed.run(() async {
         await runner.run(<String>['fake']);
         expect(fakeCommand.preferences.wrapText, isFalse);
-      }, overrides: <Type, Generator>{
-        FileSystem: () => fs,
+      }), overrides: <Type, Generator>{
         Stdio: () => FakeStdio(hasFakeTerminal: false),
-        FlutterVersion: () => MockFlutterVersion(),
-        Usage: () => FakeUsage(),
-        UserMessages: () => UserMessages(),
-        Cache: () => Cache('.$kToolBase'),
-      }, initializeFlutterRoot: false);
+      });
 
-      testUsingContext('checks that output wrapping is turned off when set on the command line and writing to a terminal', () async {
-//        final FakeCommand fakeCommand = FakeCommand();
-//        runner.addCommand(fakeCommand);
+      testUsingContext('checks that output wrapping is turned off when set on the command line and writing to a terminal', () => testbed.run(() async {
         await runner.run(<String>['--no-wrap', 'fake']);
         expect(fakeCommand.preferences.wrapText, isFalse);
-      }, overrides: <Type, Generator>{
-        FileSystem: () => fs,
+      }), overrides: <Type, Generator>{
         Stdio: () => FakeStdio(hasFakeTerminal: true),
-        FlutterVersion: () => MockFlutterVersion(),
-        Usage: () => FakeUsage(),
-        UserMessages: () => UserMessages(),
-        Cache: () => Cache('.$kToolBase'),
-      }, initializeFlutterRoot: false);
+      });
 
-      testUsingContext('checks that output wrapping is turned on when set on the command line, but not writing to a terminal', () async {
-//        final FakeCommand fakeCommand = FakeCommand();
-//        runner.addCommand(fakeCommand);
+      testUsingContext('checks that output wrapping is turned on when set on the command line, but not writing to a terminal', () => testbed.run(() async {
         await runner.run(<String>['--wrap', 'fake']);
         expect(fakeCommand.preferences.wrapText, isTrue);
-      }, overrides: <Type, Generator>{
-        FileSystem: () => fs,
+      }), overrides: <Type, Generator>{
         Stdio: () => FakeStdio(hasFakeTerminal: false),
-        FlutterVersion: () => MockFlutterVersion(),
-        Usage: () => FakeUsage(),
-        UserMessages: () => UserMessages(),
-        Cache: () => Cache('.$kToolBase'),
       }, initializeFlutterRoot: false);
     });
   });
