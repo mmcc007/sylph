@@ -3,6 +3,8 @@ import 'package:file/memory.dart';
 import 'package:mockito/mockito.dart';
 import 'package:process/process.dart';
 import 'package:reporting/reporting.dart';
+import 'package:sylph/src/base/user_messages.dart';
+import 'package:sylph/src/base/version.dart';
 import 'package:sylph/src/bundle.dart';
 import 'package:sylph/src/commands/run.dart';
 import 'package:sylph/src/config.dart';
@@ -20,6 +22,8 @@ const String _kTempDir = '/tmp/sylph';
 
 main() {
   group('run', () {
+    Testbed testbed;
+    NoOpUsage noOpUsage;
     MockClock clock;
     List<int> mockTimes;
     MemoryFileSystem fs;
@@ -28,7 +32,36 @@ main() {
     MockBundle mockBundle;
     MockProcess mockProcess;
 
+
+    setUpAll(() {
+      Cache.disableLocking();
+    });
+
     setUp(() {
+      testbed = Testbed(
+          setup: () async {
+            noOpUsage = NoOpUsage();
+            fs = MemoryFileSystem();
+            fs.directory(_kProjectRoot).createSync(recursive: true);
+            fs.directory(_kTempDir).createSync(recursive: true);
+            fs.currentDirectory = _kProjectRoot;
+            mockDeviceFarm = MockDeviceFarm();
+            mockProcessManager = MockProcessManager();
+            mockBundle = MockBundle();
+            mockProcess = MockProcess();
+            clock = MockClock();
+            when(clock.now()).thenAnswer((Invocation _) =>
+                DateTime.fromMillisecondsSinceEpoch(mockTimes.removeAt(0)));
+            mockTimes = <int>[1000, 2000, 3000, 4000, 5000, 6000];
+          }, overrides: <Type, Generator>{
+        FlutterVersion: () => MockFlutterVersion(),
+        Usage: () => noOpUsage,
+        UserMessages: () => UserMessages(),
+        Cache: () => Cache(),
+//        FileSystem: () => MemoryFileSystem(),
+//        Logger: () => BufferLogger(),
+      });
+      noOpUsage = NoOpUsage();
       fs = MemoryFileSystem();
       fs.directory(_kProjectRoot).createSync(recursive: true);
       fs.directory(_kTempDir).createSync(recursive: true);
@@ -43,7 +76,8 @@ main() {
       mockTimes = <int>[1000, 2000, 3000, 4000, 5000, 6000];
     });
 
-    testUsingContext('normal run', () async {
+//    testUsingContext('normal run', () => testbed.run(() async {
+      testUsingContext('normal run', () async {
       final configFile = fs.file('$_kProjectRoot/sylph.yaml');
       configFile.createSync();
       configFile.writeAsStringSync(configStr);
@@ -94,38 +128,39 @@ main() {
           createTestCommandRunner(runCommand);
       await commandRunner.run(<String>[runCommand.name]);
       expect(testLogger.statusText, contains(' succeeded.\n'));
+      print(testLogger.statusText);
 
-//      verify(mockBundle.bundleFlutterTests(any)).called(1);
-//      verify(mockProcessManager.runSync(
-//        any,
-//        environment: anyNamed('environment'),
-//        workingDirectory: anyNamed('workingDirectory'),
-//      )).called(3);
-//      verify(mockProcessManager.start(
-//        any,
-//        environment: anyNamed('environment'),
-//        workingDirectory: anyNamed('workingDirectory'),
-//      )).called(1);
-//      verify(mockDeviceFarm.getDeviceFarmDevices()).called(1);
-//      verify(mockDeviceFarm.runReport(any)).called(1);
+      verify(mockBundle.bundleFlutterTests(any)).called(1);
+      verify(mockProcessManager.runSync(
+        any,
+        environment: anyNamed('environment'),
+        workingDirectory: anyNamed('workingDirectory'),
+      )).called(3);
+      verify(mockProcessManager.start(
+        any,
+        environment: anyNamed('environment'),
+        workingDirectory: anyNamed('workingDirectory'),
+      )).called(1);
+      verify(mockDeviceFarm.getDeviceFarmDevices()).called(1);
+      verify(mockDeviceFarm.runReport(any)).called(1);
     }, overrides: <Type, Generator>{
       FileSystem: () => fs,
       SystemClock: () => clock,
-      Usage: () => FakeUsage(),
       DeviceFarm: () => mockDeviceFarm,
       ProcessManager: () => mockProcessManager,
       Bundle: () => mockBundle,
-//      Platform: () =>
-//          FakePlatform.fromPlatform(const LocalPlatform())..environment = {},
-    });
+        FlutterVersion: () => MockFlutterVersion(),
+        Usage: () => noOpUsage,
+        UserMessages: () => UserMessages(),
+      });
 
-    testUsingContext('help', () async {
+    testUsingContext('help', () => testbed.run(() async {
       final RunCommand runCommand = RunCommand();
       final CommandRunner<void> commandRunner =
           createTestCommandRunner(runCommand);
       await commandRunner.run(<String>['help', runCommand.name]);
       expect(testLogger.statusText, isEmpty);
-    });
+    }));
   });
 }
 
