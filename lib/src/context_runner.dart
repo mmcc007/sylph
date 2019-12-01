@@ -22,7 +22,7 @@ Future<T> runInContext<T>(
     fallbacks: <Type, Generator>{
       BotDetector: () => const BotDetector(),
       Bundle:()=>Bundle(),
-      Cache: () => Cache(kToolBase),
+      Cache: () => Cache(),
       ConcurrentJobs: () => ConcurrentJobs(),
       Config: () => Config(configFile),
       DeviceFarm:()=>DeviceFarm(),
@@ -35,7 +35,7 @@ Future<T> runInContext<T>(
       SystemClock: () => const SystemClock(),
       TimeoutConfiguration: () => const TimeoutConfiguration(),
       ToolVersion: () => ToolVersion(kToolName, kSettings),
-      Usage: () => Usage(kAnalyticsUA, kSettings),
+      Usage: () => Usage(kAnalyticsUA, kSettingsAnalytics),
       UserMessages: () => UserMessages(),
     },
   );

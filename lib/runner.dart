@@ -29,11 +29,12 @@ import 'src/context_runner.dart';
 const kAnalyticsUA = 'UA-150933570-1';
 const kToolName = 'sylph';
 const kToolBase = '.$kToolName';
-const kSettings= '$kToolName/settings.json'; // analytics adds a '.'
+const kSettings = 'settings.json';
+const kSettingsAnalytics= '$kToolName/$kSettings'; // analytics adds a '.'
 const kProductId = 'Sylph';
 const String kCrashServerHost = 'clients2.mauricemccabe.com';
 const String kCrashEndpointPath = '/cr/report';
-final File configFile=fs.file('${platform.environment['HOME']}/.$kToolBase');
+final File configFile=fs.file('${SylphCommandRunner.defaultFlutterRoot}/$kSettings');
 
 CrashReportSender _crashReportSender;
 
@@ -61,10 +62,10 @@ Future<int> run(
     }) {
   reportCrashes ??= !isRunningOnBot;
 
-  // create settings
-  final settings = fs.file(kSettings);
-  if (!settings.existsSync())
-    settings.create(recursive: true);
+//  // create settings
+//  final settings = fs.file(kSettingsAnalytics);
+//  if (!settings.existsSync())
+//    settings.create(recursive: true);
 
 
   if (muteCommandLogging) {

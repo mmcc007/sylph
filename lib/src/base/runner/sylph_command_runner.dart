@@ -13,6 +13,7 @@ import 'package:file/file.dart';
 import 'package:platform/platform.dart';
 import 'package:process/process.dart';
 import 'package:reporting/reporting.dart';
+import 'package:sylph/runner.dart';
 import 'package:sylph/src/base/user_messages.dart';
 import 'package:tool_base/tool_base.dart';
 
@@ -212,7 +213,7 @@ class SylphCommandRunner extends CommandRunner<void> {
 //      print(userMessages.runnerNoRoot(error));
 //    }
 //    return '.';
-    return platform.environment['HOME'];
+    return fs.path.join(platform.environment['HOME'], kToolBase );
   }
 
   @override
