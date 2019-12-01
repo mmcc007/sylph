@@ -7,9 +7,12 @@
 
 import 'package:args/command_runner.dart';
 import 'package:fake_process_manager/fake_process_manager.dart';
+import 'package:file/memory.dart';
 import 'package:mockito/mockito.dart';
 import 'package:process/process.dart';
 import 'package:reporting/reporting.dart';
+import 'package:sylph/src/base/user_messages.dart';
+import 'package:sylph/src/base/version.dart';
 import 'package:sylph/src/commands/devices.dart';
 import 'package:sylph/src/device_farm.dart';
 import 'package:test/test.dart';
@@ -21,16 +24,37 @@ import '../src/mocks.dart';
 
 main() {
   group('devices', () {
+    Testbed testbed;
+    NoOpUsage noOpUsage;
     MockClock clock;
     List<int> mockTimes;
     FakeProcessManager fakeProcessManager;
 
+    setUpAll(() {
+      Cache.disableLocking();
+    });
+
     setUp(() {
-      clock = MockClock();
-      when(clock.now()).thenAnswer((Invocation _) =>
-          DateTime.fromMillisecondsSinceEpoch(mockTimes.removeAt(0)));
-      mockTimes = <int>[1000, 2000];
-      fakeProcessManager = FakeProcessManager();
+      testbed = Testbed(
+        setup: () async {
+          noOpUsage=NoOpUsage();
+          clock = MockClock();
+          when(clock.now()).thenAnswer((Invocation _) =>
+              DateTime.fromMillisecondsSinceEpoch(mockTimes.removeAt(0)));
+          mockTimes = <int>[1000, 2000];
+          fakeProcessManager = FakeProcessManager();
+        }, overrides: <Type, Generator>{
+        FlutterVersion: () => MockFlutterVersion(),
+        Usage: () => noOpUsage,
+        UserMessages: () => UserMessages(),
+        Cache: () => Cache(),
+        FileSystem: () => MemoryFileSystem(),
+        Logger: () => BufferLogger(),
+        SystemClock: () => clock,
+        ProcessManager: () => fakeProcessManager,
+        DeviceFarm:()=>DeviceFarm(),
+      },);
+
     });
 
     final calls = [
@@ -74,7 +98,7 @@ main() {
               '')),
     ];
 
-    testUsingContext('lists all devices in cloud', () async {
+    testUsingContext('lists all devices in cloud', () => testbed.run(() async {
       fakeProcessManager.calls = calls;
       final DevicesCommand devicesCommand = DevicesCommand();
       final CommandRunner<void> commandRunner =
@@ -82,14 +106,9 @@ main() {
       await commandRunner.run(<String>[devicesCommand.name]);
       fakeProcessManager.verifyCalls();
       expect(testLogger.statusText, contains('2 devices\n'));
-    }, overrides: <Type, Generator>{
-      ProcessManager: () => fakeProcessManager,
-      SystemClock: () => clock,
-      Usage: () => FakeUsage(),
-      DeviceFarm:()=>DeviceFarm(),
-    });
+    }));
 
-    testUsingContext('lists android devices in cloud', () async {
+    testUsingContext('lists android devices in cloud', () => testbed.run(() async {
       fakeProcessManager.calls = calls;
       final DevicesCommand devicesCommand = DevicesCommand();
       final CommandRunner<void> commandRunner =
@@ -98,14 +117,9 @@ main() {
       fakeProcessManager.verifyCalls();
       expect(testLogger.statusText, contains('deviceType:android'));
       expect(testLogger.statusText, isNot(contains('deviceType:ios')));
-    }, overrides: <Type, Generator>{
-      ProcessManager: () => fakeProcessManager,
-      SystemClock: () => clock,
-      Usage: () => FakeUsage(),
-      DeviceFarm:()=>DeviceFarm(),
-    });
+    }));
 
-    testUsingContext('lists ios devices in cloud', () async {
+    testUsingContext('lists ios devices in cloud', () => testbed.run(() async {
       fakeProcessManager.calls = calls;
       final DevicesCommand devicesCommand = DevicesCommand();
       final CommandRunner<void> commandRunner =
@@ -114,14 +128,9 @@ main() {
       fakeProcessManager.verifyCalls();
       expect(testLogger.statusText, contains('deviceType:ios'));
       expect(testLogger.statusText, isNot(contains('deviceType:android')));
-    }, overrides: <Type, Generator>{
-      ProcessManager: () => fakeProcessManager,
-      SystemClock: () => clock,
-      Usage: () => FakeUsage(),
-      DeviceFarm:()=>DeviceFarm(),
-    });
+    }));
 
-    testUsingContext('lists ios devices in cloud using option', () async {
+    testUsingContext('lists ios devices in cloud using option', () => testbed.run(() async {
       fakeProcessManager.calls = calls;
       final DevicesCommand devicesCommand = DevicesCommand();
       final CommandRunner<void> commandRunner =
@@ -130,14 +139,9 @@ main() {
       fakeProcessManager.verifyCalls();
       expect(testLogger.statusText, contains('deviceType:ios'));
       expect(testLogger.statusText, isNot(contains('deviceType:android')));
-    }, overrides: <Type, Generator>{
-      ProcessManager: () => fakeProcessManager,
-      SystemClock: () => clock,
-      Usage: () => FakeUsage(),
-      DeviceFarm:()=>DeviceFarm(),
-    });
+    }));
 
-    testUsingContext('catches bad param', () async {
+    testUsingContext('catches bad param', () => testbed.run(() async {
       final DevicesCommand devicesCommand = DevicesCommand();
       final CommandRunner<void> commandRunner =
           createTestCommandRunner(devicesCommand);
@@ -145,21 +149,15 @@ main() {
           () async =>
               await commandRunner.run(<String>[devicesCommand.name, 'xxx']),
           throwsA(isA<ToolExit>()));
-    }, overrides: <Type, Generator>{
-      SystemClock: () => clock,
-      Usage: () => FakeUsage(),
-    });
+    }));
 
-    testUsingContext('shows help', () async {
+    testUsingContext('shows help', () => testbed.run(() async {
       final DevicesCommand devicesCommand = DevicesCommand();
       final CommandRunner<void> commandRunner =
           createTestCommandRunner(devicesCommand);
       await commandRunner.run(<String>['help', devicesCommand.name]);
       expect(
           testLogger.statusText, isEmpty);
-    }, overrides: <Type, Generator>{
-      SystemClock: () => clock,
-      Usage: () => FakeUsage(),
-    });
+    }));
   });
 }
