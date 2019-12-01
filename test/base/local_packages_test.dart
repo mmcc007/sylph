@@ -6,7 +6,7 @@ import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_base_test/tool_base_test.dart';
 
-import '../src/common.dart';
+//import '../src/common.dart';
 
 main() {
   group('local package manager', () {
@@ -97,6 +97,7 @@ environment:
       runLocalPackageManager(appSrcDir, appDstDir);
       expect(cmd(['flutter', 'packages', 'get'], workingDirectory: appDstDir),
           isNotEmpty);
-    }, skip: isCI());
+//    }, skip: isCI());
+  });
   });
 }
