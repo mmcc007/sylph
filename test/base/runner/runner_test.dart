@@ -1,28 +1,27 @@
-/*
- * Copyright 2019 The Sylph Authors. All rights reserved.
- *  Sylph runs Flutter integration tests on real devices in the cloud.
- *  Use of this source code is governed by a GPL-style license that can be
- *  found in the LICENSE file.
- */
+// Copyright 2019 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 import 'dart:async';
 
 import 'package:file/memory.dart';
-//import 'package:flutter_tools/runner.dart' as runner;
-//import 'package:flutter_tools/src/base/file_system.dart';
-//import 'package:flutter_tools/src/base/io.dart' as io;
-//import 'package:flutter_tools/src/base/common.dart';
-//import 'package:flutter_tools/src/cache.dart';
-//import 'package:flutter_tools/src/reporting/reporting.dart';
-//import 'package:flutter_tools/src/runner/flutter_command.dart';
-import 'package:platform/platform.dart';
 import 'package:reporting/reporting.dart';
+//import 'package:tool_base/runner.dart' as runner;
 import 'package:sylph/runner.dart' as runner;
 import 'package:sylph/src/base/runner/sylph_command.dart';
+import 'package:sylph/src/base/version.dart';
 import 'package:test/test.dart';
+import 'package:tool_base/src/base/file_system.dart';
 import 'package:tool_base/src/base/io.dart' as io;
+import 'package:tool_base/src/base/common.dart';
+import 'package:tool_base/src/cache.dart';
 import 'package:tool_base/tool_base.dart';
+//import 'package:tool_base/src/reporting/reporting.dart';
+//import 'package:tool_base/src/runner/flutter_command.dart';
 import 'package:tool_base_test/tool_base_test.dart';
+import 'package:platform/platform.dart';
+
+import '../../src/mocks.dart';
 
 //import '../../src/common.dart';
 //import '../../src/context.dart';
@@ -34,13 +33,13 @@ void main() {
       // Instead of exiting with dart:io exit(), this causes an exception to
       // be thrown, which we catch with the onError callback in the zone below.
       io.setExitFunctionForTests((int _) { throw 'test exit';});
-//      Cache.disableLocking();
+      Cache.disableLocking();
     });
 
     tearDown(() {
       runner.crashFileSystem = const LocalFileSystem();
       io.restoreExitFunction();
-//      Cache.enableLocking();
+      Cache.enableLocking();
     });
 
     testUsingContext('error handling', () async {
@@ -48,21 +47,21 @@ void main() {
       // runner.run() asynchronously calls the exit function set above, so we
       // catch it in a zone.
       unawaited(runZoned<Future<void>>(() {
-          unawaited(runner.run(
-            <String>['test'],
-            <SylphCommand>[
-              CrashingSylphCommand(),
-            ],
-            // This flutterVersion disables crash reporting.
-            sylphVersion: '[user-branch]/',
-            reportCrashes: true,
-          ));
-          return null;
-        },
-        onError: (Object error) {
-          expect(error, 'test exit');
-          completer.complete();
-        }));
+        unawaited(runner.run(
+          <String>['test'],
+          <SylphCommand>[
+            CrashingSylphCommand(),
+          ],
+          // This flutterVersion disables crash reporting.
+          sylphVersion: '[user-branch]/',
+          reportCrashes: true,
+        ));
+        return null;
+      },
+          onError: (Object error) {
+            expect(error, 'test exit');
+            completer.complete();
+          }));
       await completer.future;
 
       // This is the main check of this test.
@@ -77,9 +76,12 @@ void main() {
       Platform: () => FakePlatform(environment: <String, String>{
         'FLUTTER_ANALYTICS_LOG_FILE': 'test',
         'FLUTTER_ROOT': '/',
+        'HOME': '/',
       }),
       FileSystem: () => MemoryFileSystem(),
       Usage: () => CrashingUsage(),
+      FlutterVersion: () => MockFlutterVersion(),
+//      Logger: () => BufferLogger(),
     });
   });
 }
