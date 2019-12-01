@@ -32,7 +32,6 @@ main() {
     MockBundle mockBundle;
     MockProcess mockProcess;
 
-
     setUpAll(() {
       Cache.disableLocking();
     });
@@ -53,114 +52,99 @@ main() {
             when(clock.now()).thenAnswer((Invocation _) =>
                 DateTime.fromMillisecondsSinceEpoch(mockTimes.removeAt(0)));
             mockTimes = <int>[1000, 2000, 3000, 4000, 5000, 6000];
-          }, overrides: <Type, Generator>{
-        FlutterVersion: () => MockFlutterVersion(),
-        Usage: () => noOpUsage,
-        UserMessages: () => UserMessages(),
-        Cache: () => Cache(),
-//        FileSystem: () => MemoryFileSystem(),
-//        Logger: () => BufferLogger(),
-      });
-      noOpUsage = NoOpUsage();
-      fs = MemoryFileSystem();
-      fs.directory(_kProjectRoot).createSync(recursive: true);
-      fs.directory(_kTempDir).createSync(recursive: true);
-      fs.currentDirectory = _kProjectRoot;
-      mockDeviceFarm = MockDeviceFarm();
-      mockProcessManager = MockProcessManager();
-      mockBundle = MockBundle();
-      mockProcess = MockProcess();
-      clock = MockClock();
-      when(clock.now()).thenAnswer((Invocation _) =>
-          DateTime.fromMillisecondsSinceEpoch(mockTimes.removeAt(0)));
-      mockTimes = <int>[1000, 2000, 3000, 4000, 5000, 6000];
+          },
+          overrides: <Type, Generator>{
+            FileSystem: () => fs,
+            SystemClock: () => clock,
+            DeviceFarm: () => mockDeviceFarm,
+            ProcessManager: () => mockProcessManager,
+            Bundle: () => mockBundle,
+            FlutterVersion: () => MockFlutterVersion(),
+            Usage: () => noOpUsage,
+            UserMessages: () => UserMessages(),
+          });
     });
 
-//    testUsingContext('normal run', () => testbed.run(() async {
-      testUsingContext('normal run', () async {
-      final configFile = fs.file('$_kProjectRoot/sylph.yaml');
-      configFile.createSync();
-      configFile.writeAsStringSync(configStr);
-      final config = Config(configPath: configFile.path);
-      fs.file(config.testSuites[0].main).createSync(recursive: true);
-      fs.file(config.testSuites[0].tests[0]).createSync();
-      final pubspec = fs.file('pubspec.yaml');
-      pubspec.createSync();
-      pubspec.writeAsStringSync('name: test_app');
+    testUsingContext(
+        'normal run',
+        () => testbed.run(() async {
+//      testUsingContext('normal run', () async {
+              final configFile = fs.file('$_kProjectRoot/sylph.yaml');
+              configFile.createSync();
+              configFile.writeAsStringSync(configStr);
+              final config = Config(configPath: configFile.path);
+              fs.file(config.testSuites[0].main).createSync(recursive: true);
+              fs.file(config.testSuites[0].tests[0]).createSync();
+              final pubspec = fs.file('pubspec.yaml');
+              pubspec.createSync();
+              pubspec.writeAsStringSync('name: test_app');
 
-      when(mockBundle.bundleFlutterTests(any)).thenReturn('size in MB');
-      when(mockProcessManager.runSync(
-        any,
-        environment: anyNamed('environment'),
-        workingDirectory: anyNamed('workingDirectory'),
-      )).thenReturn(exitsHappy);
+              when(mockBundle.bundleFlutterTests(any)).thenReturn('size in MB');
+              when(mockProcessManager.runSync(
+                any,
+                environment: anyNamed('environment'),
+                workingDirectory: anyNamed('workingDirectory'),
+              )).thenReturn(exitsHappy);
 
-      when(mockProcessManager.start(
-        any,
-        environment: anyNamed('environment'),
-        workingDirectory: anyNamed('workingDirectory'),
-      )).thenAnswer((_) async => mockProcess);
+              when(mockProcessManager.start(
+                any,
+                environment: anyNamed('environment'),
+                workingDirectory: anyNamed('workingDirectory'),
+              )).thenAnswer((_) async => mockProcess);
 
-      when(mockDeviceFarm.getDeviceFarmDevices()).thenReturn([
-        DeviceFarmDevice(
-          'Samsung Galaxy Note 4 SM-N910H',
-          'SM-N910H',
-          v.Version(5, 0, 1),
-          DeviceType.android,
-          FormFactor.phone,
-          'AVAILABLE',
-          'arn1',
-        ),
-        DeviceFarmDevice(
-          'Apple iPhone 6 Plus',
-          'A1522',
-          v.Version(10, 0, 2),
-          DeviceType.ios,
-          FormFactor.phone,
-          'AVAILABLE',
-          'arn2',
-        )
-      ]);
-      when(mockDeviceFarm.runReport(any)).thenReturn(true);
+              when(mockDeviceFarm.getDeviceFarmDevices()).thenReturn([
+                DeviceFarmDevice(
+                  'Samsung Galaxy Note 4 SM-N910H',
+                  'SM-N910H',
+                  v.Version(5, 0, 1),
+                  DeviceType.android,
+                  FormFactor.phone,
+                  'AVAILABLE',
+                  'arn1',
+                ),
+                DeviceFarmDevice(
+                  'Apple iPhone 6 Plus',
+                  'A1522',
+                  v.Version(10, 0, 2),
+                  DeviceType.ios,
+                  FormFactor.phone,
+                  'AVAILABLE',
+                  'arn2',
+                )
+              ]);
+              when(mockDeviceFarm.runReport(any)).thenReturn(true);
 
-      final RunCommand runCommand = RunCommand();
-      final CommandRunner<void> commandRunner =
-          createTestCommandRunner(runCommand);
-      await commandRunner.run(<String>[runCommand.name]);
-      expect(testLogger.statusText, contains(' succeeded.\n'));
-      print(testLogger.statusText);
+              final RunCommand runCommand = RunCommand();
+              final CommandRunner<void> commandRunner =
+                  createTestCommandRunner(runCommand);
+              await commandRunner.run(<String>[runCommand.name]);
+              expect(testLogger.statusText, contains(' succeeded.\n'));
+              print(testLogger.statusText);
 
-      verify(mockBundle.bundleFlutterTests(any)).called(1);
-      verify(mockProcessManager.runSync(
-        any,
-        environment: anyNamed('environment'),
-        workingDirectory: anyNamed('workingDirectory'),
-      )).called(3);
-      verify(mockProcessManager.start(
-        any,
-        environment: anyNamed('environment'),
-        workingDirectory: anyNamed('workingDirectory'),
-      )).called(1);
-      verify(mockDeviceFarm.getDeviceFarmDevices()).called(1);
-      verify(mockDeviceFarm.runReport(any)).called(1);
-    }, overrides: <Type, Generator>{
-      FileSystem: () => fs,
-      SystemClock: () => clock,
-      DeviceFarm: () => mockDeviceFarm,
-      ProcessManager: () => mockProcessManager,
-      Bundle: () => mockBundle,
-        FlutterVersion: () => MockFlutterVersion(),
-        Usage: () => noOpUsage,
-        UserMessages: () => UserMessages(),
-      });
+              verify(mockBundle.bundleFlutterTests(any)).called(1);
+              verify(mockProcessManager.runSync(
+                any,
+                environment: anyNamed('environment'),
+                workingDirectory: anyNamed('workingDirectory'),
+              )).called(3);
+              verify(mockProcessManager.start(
+                any,
+                environment: anyNamed('environment'),
+                workingDirectory: anyNamed('workingDirectory'),
+              )).called(1);
+              verify(mockDeviceFarm.getDeviceFarmDevices()).called(1);
+              verify(mockDeviceFarm.runReport(any)).called(1);
+            }));
 
-    testUsingContext('help', () => testbed.run(() async {
-      final RunCommand runCommand = RunCommand();
-      final CommandRunner<void> commandRunner =
-          createTestCommandRunner(runCommand);
-      await commandRunner.run(<String>['help', runCommand.name]);
-      expect(testLogger.statusText, isEmpty);
-    }));
+    testUsingContext(
+        'help',
+        () => testbed.run(() async {
+              final RunCommand runCommand = RunCommand();
+              final CommandRunner<void> commandRunner =
+                  createTestCommandRunner(runCommand);
+              await commandRunner.run(<String>['help', runCommand.name]);
+              expect(testLogger.statusText, isEmpty);
+            }));
   });
 }
 
