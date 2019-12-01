@@ -11,9 +11,12 @@
 //import 'package:flutter_tools/src/reporting/reporting.dart';
 //import 'package:flutter_tools/src/runner/flutter_command.dart';
 //import 'package:flutter_tools/src/version.dart';
+import 'package:file/memory.dart';
 import 'package:mockito/mockito.dart';
 import 'package:reporting/reporting.dart';
 import 'package:sylph/src/base/runner/sylph_command.dart';
+import 'package:sylph/src/base/user_messages.dart';
+import 'package:sylph/src/base/version.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_base_test/tool_base_test.dart';
@@ -25,19 +28,30 @@ import '../../src/utils.dart';
 
 void main() {
   group('Flutter Command', () {
+    Testbed testbed;
 //    MockitoCache cache;
     MockitoUsage usage;
     MockClock clock;
     List<int> mockTimes;
 
     setUp(() {
+      testbed = Testbed(
+        setup: () async {
+          clock = MockClock();
+          when(clock.now()).thenAnswer((Invocation _) =>
+              DateTime.fromMillisecondsSinceEpoch(mockTimes.removeAt(0)));
+          mockTimes = <int>[1000, 2000];
+          usage = MockitoUsage();
+          when(usage.isFirstRun).thenReturn(false);
+        }, overrides: <Type, Generator>{
+        FlutterVersion: () => MockFlutterVersion(),
+        Usage: () => usage,
+        UserMessages: () => UserMessages(),
+        Cache: () => Cache(),
+        FileSystem: () => MemoryFileSystem(),
+              SystemClock: () => clock,
+      });
 //      cache = MockitoCache();
-      usage = MockitoUsage();
-      clock = MockClock();
-      when(usage.isFirstRun).thenReturn(false);
-      when(clock.now()).thenAnswer(
-        (Invocation _) => DateTime.fromMillisecondsSinceEpoch(mockTimes.removeAt(0))
-      );
     });
 
 //    testUsingContext('honors shouldUpdateCache false', () async {
@@ -58,7 +72,7 @@ void main() {
 //      Cache: () => cache,
 //    });
 
-    testUsingContext('reports command that results in success', () async {
+    testUsingContext('reports command that results in success', () => testbed.run(() async {
       // Crash if called a third time which is unexpected.
       mockTimes = <int>[1000, 2000];
 
@@ -71,13 +85,9 @@ void main() {
 
       verify(usage.sendCommand(captureAny, parameters: captureAnyNamed('parameters')));
       verify(usage.sendEvent(captureAny, 'success'));
-    },
-    overrides: <Type, Generator>{
-      SystemClock: () => clock,
-      Usage: () => usage,
-    });
+    }));
 
-    testUsingContext('reports command that results in warning', () async {
+    testUsingContext('reports command that results in warning', () => testbed.run(() async {
       // Crash if called a third time which is unexpected.
       mockTimes = <int>[1000, 2000];
 
@@ -90,13 +100,9 @@ void main() {
 
       verify(usage.sendCommand(captureAny, parameters: captureAnyNamed('parameters')));
       verify(usage.sendEvent(captureAny, 'warning'));
-    },
-    overrides: <Type, Generator>{
-      SystemClock: () => clock,
-      Usage: () => usage,
-    });
+    }));
 
-    testUsingContext('reports command that results in failure', () async {
+    testUsingContext('reports command that results in failure', () => testbed.run(() async {
       // Crash if called a third time which is unexpected.
       mockTimes = <int>[1000, 2000];
 
@@ -112,13 +118,9 @@ void main() {
         verify(usage.sendCommand(captureAny, parameters: captureAnyNamed('parameters')));
         verify(usage.sendEvent(captureAny, 'fail'));
       }
-    },
-    overrides: <Type, Generator>{
-      SystemClock: () => clock,
-      Usage: () => usage,
-    });
+    }));
 
-    testUsingContext('reports command that results in error', () async {
+    testUsingContext('reports command that results in error', () => testbed.run(() async {
       // Crash if called a third time which is unexpected.
       mockTimes = <int>[1000, 2000];
 
@@ -136,13 +138,9 @@ void main() {
         verify(usage.sendCommand(captureAny, parameters: captureAnyNamed('parameters')));
         verify(usage.sendEvent(captureAny, 'fail'));
       }
-    },
-    overrides: <Type, Generator>{
-      SystemClock: () => clock,
-      Usage: () => usage,
-    });
+    }));
 
-    testUsingContext('report execution timing by default', () async {
+    testUsingContext('report execution timing by default', () => testbed.run(() async {
       // Crash if called a third time which is unexpected.
       mockTimes = <int>[1000, 2000];
 
@@ -161,13 +159,9 @@ void main() {
           null
         ],
       );
-    },
-    overrides: <Type, Generator>{
-      SystemClock: () => clock,
-      Usage: () => usage,
-    });
+    }));
 
-    testUsingContext('no timing report without usagePath', () async {
+    testUsingContext('no timing report without usagePath', () => testbed.run(() async {
       // Crash if called a third time which is unexpected.
       mockTimes = <int>[1000, 2000];
 
@@ -178,13 +172,9 @@ void main() {
       verifyNever(usage.sendTiming(
                    any, any, any,
                    label: anyNamed('label')));
-    },
-    overrides: <Type, Generator>{
-      SystemClock: () => clock,
-      Usage: () => usage,
-    });
+    }));
 
-    testUsingContext('report additional SylphCommandResult data', () async {
+    testUsingContext('report additional SylphCommandResult data', () => testbed.run(() async {
       // Crash if called a third time which is unexpected.
       mockTimes = <int>[1000, 2000];
 
@@ -211,13 +201,9 @@ void main() {
           'success-blah1-blah2-blah3',
         ],
       );
-    },
-    overrides: <Type, Generator>{
-      SystemClock: () => clock,
-      Usage: () => usage,
-    });
+    }));
 
-    testUsingContext('report failed execution timing too', () async {
+    testUsingContext('report failed execution timing too', () => testbed.run(() async {
       // Crash if called a third time which is unexpected.
       mockTimes = <int>[1000, 2000];
 
@@ -247,11 +233,7 @@ void main() {
           ],
         );
       }
-    },
-    overrides: <Type, Generator>{
-      SystemClock: () => clock,
-      Usage: () => usage,
-    });
+    }));
   });
 }
 
