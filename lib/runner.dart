@@ -157,21 +157,21 @@ Future<int> _handleToolError(
       );
 
       if (error is String)
-        stderr.writeln('Oops; flutter has exited unexpectedly: "$error".');
+        stderr.writeln('Oops; sylph has exited unexpectedly: "$error".');
       else
-        stderr.writeln('Oops; flutter has exited unexpectedly.');
+        stderr.writeln('Oops; sylph has exited unexpectedly.');
 
       try {
         final File file = await _createLocalCrashReport(args, error, stackTrace);
         stderr.writeln(
           'Crash report written to ${file.path};\n'
-              'please let us know at https://github.com/flutter/flutter/issues.',
+              'please let us know at https://github.com/mmcc007/sylph/issues.',
         );
         return _exit(1);
       } catch (error) {
         stderr.writeln(
           'Unable to generate crash report due to secondary error: $error\n'
-              'please let us know at https://github.com/flutter/flutter/issues.',
+              'please let us know at https://github.com/mmcc007/sylph/issues.',
         );
         // Any exception throw here (including one thrown by `_exit()`) will
         // get caught by our zone's `onError` handler. In order to avoid an
