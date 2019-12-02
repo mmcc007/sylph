@@ -66,10 +66,10 @@ dependencies:
 
     testUsingContext(
         'cleanup local dependencies of dependencies if at different directory levels',
-        () {
-      runLocalPackageManager(appSrcDir, appDstDir);
+            () {
+          runLocalPackageManager(appSrcDir, appDstDir);
 
-      final expectedPubSpecLocal = '''
+          final expectedPubSpecLocal = '''
 name: "local_package"
 dependencies: 
   shared_package: 
@@ -77,27 +77,23 @@ dependencies:
 environment: 
   sdk: ">=2.0.0 <3.0.0"
 ''';
-      expect(
-          fs.file('$appDstDir/local_package/pubspec.yaml').readAsStringSync(),
-          expectedPubSpecLocal);
+          expect(
+              fs.file('$appDstDir/local_package/pubspec.yaml')
+                  .readAsStringSync(),
+              expectedPubSpecLocal);
 
-      final expectedPubSpecShared = '''
+          final expectedPubSpecShared = '''
 name: "shared_package"
 dependencies: 
   path: "^1.6.4"
 environment: 
   sdk: ">=2.0.0 <3.0.0"
 ''';
-      expect(
-          fs.file('$appDstDir/shared_package/pubspec.yaml').readAsStringSync(),
-          expectedPubSpecShared);
-    });
-
-    testUsingContext('get dependencies in new project', () {
-      runLocalPackageManager(appSrcDir, appDstDir);
-      expect(cmd(['flutter', 'packages', 'get'], workingDirectory: appDstDir),
-          isNotEmpty);
-//    }, skip: isCI());
+          expect(
+              fs.file('$appDstDir/shared_package/pubspec.yaml')
+                  .readAsStringSync(),
+              expectedPubSpecShared);
+        });
   });
-  });
+});
 }
