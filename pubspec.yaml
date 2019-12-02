@@ -17,7 +17,7 @@ dependencies:
   duration: ^2.0.8
   version: ^1.0.3
   yamlicious: ^0.1.0
-  tool_base: ^1.9.5+2
+  tool_base: ^1.9.5+3
 #  tool_base:
 #    path: ../tool_base
   process: ^3.0.9
@@ -27,6 +27,8 @@ dependencies:
   reporting:
     git: https://github.com/mmcc007/reporting.git
 #    path: ../reporting
+  http: ^0.12.0+2
+  pub_semver: ^1.4.2
 
 dev_dependencies:
   test: ^1.0.0
@@ -34,8 +36,7 @@ dev_dependencies:
   tool_base_test:
     git: https://github.com/mmcc007/tool_base_test.git
 #    path: ../tool_base_test
-  fake_process_manager:
-    git: https://github.com/mmcc007/fake_process_manager.git
+  fake_process_manager: ^0.1.0+1
 #    path: ../fake_process_manager
   mockito: ^4.1.0
   file: ^5.0.7
