@@ -20,28 +20,13 @@ pub global activate sylph
 ```
 
 # Usage
+```bash
+sylph devices # generates a list of real devices in cloud
+sylph run # runs integration tests in cloud
 ```
-sylph
-```
-or, if not using the default config file:
-```
-sylph -c <path to config file>
-```
-
-General usage:
-```
-usage: sylph [--help] [--config <config file>] [--devices <all|android|ios>] [--verbose]
-
-sample usage: sylph
-
--c, --config=<sylph.yaml>          Path to config file.
-                                   (defaults to "sylph.yaml")
-
--d, --devices=<all|android|ios>    List devices available in cloud.
-                                   [all, android, ios]
-
--v, --verbose                      Noisy logging, including all shell commands executed.
--h, --help                         Display this help information.
+or, if not using the default `sylph.yaml` config file:
+```bash
+sylph run -c <name of config file>
 ```
 
 # Dependencies
@@ -240,5 +225,3 @@ https://ci.appveyor.com/project/mmcc007/sylph
 When contributing to this repository, please feel free to discuss via issue or pull request.
 
 [Issues](https://github.com/mmcc007/screenshots/issues) and [pull requests](https://github.com/mmcc007/screenshots/pulls) are welcome.
-
-Your feedback is used to guide where development effort is focused. So feel free to create as many issues and pull requests as you want. You should expect a timely and considered response.
