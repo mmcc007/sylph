@@ -237,7 +237,7 @@ Future<void> verifyCrashReportSent(RequestInfo crashInfo) async {
   (await tools.crashFileSystem.directory('/').list(recursive: true).toList())
       .map((FileSystemEntity e) => e.path).toList();
   expect(writtenFiles, hasLength(1));
-  expect(writtenFiles, contains('flutter_01.log'));
+  expect(writtenFiles, contains('sylph_01.log'));
 }
 
 class MockCrashReportSender extends MockClient {
