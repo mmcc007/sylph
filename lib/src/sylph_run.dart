@@ -54,13 +54,13 @@ Future<bool> sylphRun(
   final sylphRunTimeout = config.sylphTimeout;
 
   // Setup project (if needed)
-  final projectArn = setupProject(config.projectName, config.defaultJobTimeout);
+  final projectArn = df.setupProject(config.projectName, config.defaultJobTimeout);
 
   // Unpack resources used for building debug .ipa and to bundle tests
   await unpackResources(config.tmpDir, isIosPoolTypeActive);
 
   // Bundle tests
-  bundleFlutterTests(config);
+  bundle.bundleFlutterTests(config);
 
   for (var testSuite in config.testSuites) {
     bool isConcurrentRun() => config.concurrentRuns ?? false;
@@ -141,7 +141,7 @@ Future<bool> runSylphJob(
   final devicePool = config.getDevicePool(poolName);
 
   // Setup device pool
-  String devicePoolArn = setupDevicePool(devicePool, projectArn);
+  String devicePoolArn = df.setupDevicePool(devicePool, projectArn);
 
   final tmpDir = config.tmpDir;
 
@@ -159,7 +159,7 @@ Future<bool> runSylphJob(
   // 1. Upload test package
   final testBundlePath = '$tmpDir/$kTestBundleZip';
   printStatus('Uploading tests: $testBundlePath ...');
-  String testPackageArn = await uploadFile(
+  String testPackageArn = await df.uploadFile(
       projectArn, testBundlePath, 'APPIUM_PYTHON_TEST_PACKAGE');
 
   // 2. Upload custom test spec yaml
@@ -168,7 +168,7 @@ Future<bool> runSylphJob(
   setTestSpecVars(testSuite, testSpecPath);
   printStatus('Uploading test specification: $testSpecPath ...');
   String testSpecArn =
-      await uploadFile(projectArn, testSpecPath, 'APPIUM_PYTHON_TEST_SPEC');
+      await df.uploadFile(projectArn, testSpecPath, 'APPIUM_PYTHON_TEST_SPEC');
 
   // run tests and report
   return _runTests(
@@ -205,7 +205,7 @@ Future<String> _buildUploadApp(String projectArn, DeviceType poolType,
     await streamCmd(command);
     // Upload apk
     printStatus('Uploading debug android app: $kDebugApkPath ...');
-    appArn = await uploadFile(projectArn, kDebugApkPath, 'ANDROID_APP');
+    appArn = await df.uploadFile(projectArn, kDebugApkPath, 'ANDROID_APP');
   } else {
     printStatus(
         'Building debug .ipa from $mainPath${isEmpty(flavor) ? '' : ' with flavor $flavor'}...');
@@ -218,7 +218,7 @@ Future<String> _buildUploadApp(String projectArn, DeviceType poolType,
     await streamCmd(command);
     // Upload ipa
     printStatus('Uploading debug iOS app: $kDebugIpaPath ...');
-    appArn = await uploadFile(projectArn, kDebugIpaPath, 'IOS_APP');
+    appArn = await df.uploadFile(projectArn, kDebugIpaPath, 'IOS_APP');
   }
   return appArn;
 }
@@ -239,18 +239,18 @@ Future<bool> _runTests(
   bool runSucceeded = false;
   // Schedule run
   printStatus('Starting run \'$runName\' on AWS Device Farms...');
-  String runArn = scheduleRun(runName, projectArn, appArn, devicePoolArn,
+  String runArn = df.scheduleRun(runName, projectArn, appArn, devicePoolArn,
       testSpecArn, testPackageArn, jobTimeout);
 
   // Monitor run progress
-  final run = runStatus(runArn, sylphRunTimeout, poolName);
+  final run = df.runStatus(runArn, sylphRunTimeout, poolName);
 
   // Output run result
-  runSucceeded = runReport(await run);
+  runSucceeded = df.runReport(await run);
 
   // Download artifacts
   printStatus('Downloading artifacts...');
-  downloadJobArtifacts(runArn, artifactsDir);
+  df.downloadJobArtifacts(runArn, artifactsDir);
   return runSucceeded;
 }
 

@@ -4,6 +4,7 @@ import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:file/memory.dart';
 import 'package:process/process.dart';
 import 'package:sylph/src/base/concurrent_jobs.dart';
+import 'package:sylph/src/bundle.dart';
 import 'package:sylph/src/config.dart';
 import 'package:sylph/src/device_farm.dart';
 import 'package:sylph/src/resources.dart';
@@ -154,7 +155,7 @@ main() {
                     "name": "app.apk",
                     "created": 1567929241.253,
                     "type": "ANDROID_APP",
-                    "status": "$kUploadSucceeded",
+                    "status": "SUCCEEDED",
                     "url": "https://fake-url",
                     "category": "PRIVATE"
                   }
@@ -194,7 +195,7 @@ main() {
                     "name": "test_bundle.zip",
                     "created": 1567929796.433,
                     "type": "APPIUM_PYTHON_TEST_PACKAGE",
-                    "status": "$kUploadSucceeded",
+                    "status": "SUCCEEDED",
                     "url":
                         "https://prod-us-west-2-uploads.s3-us-west-2.amazonaws.com/arn%3Aaws%3Adevicefarm%3Aus-west-2%3A122621792560%3Aproject%3Afake-project-id/uploads/arn%3Aaws%3Adevicefarm%3Aus-west-2%3A122621792560%3Aupload%3Afake-project-id/d73555c0-a254-48ad-b340-24b8eee1f6c2/test_bundle.zip?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20190908T080802Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86399&X-Amz-Credential=AKIAJSORV74ENYFBITRQ%2F20190908%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Signature=225a1a89bb5440e987ec71ee850aa32527371c657cad07c341a152892a8240f2",
                     "category": "PRIVATE"
@@ -235,7 +236,7 @@ main() {
                     "name": "test_spec.yaml",
                     "created": 1567930228.101,
                     "type": "APPIUM_PYTHON_TEST_SPEC",
-                    "status": "$kUploadSucceeded",
+                    "status": "SUCCEEDED",
                     "url":
                         "https://prod-us-west-2-uploads-testspec.s3-us-west-2.amazonaws.com/arn%3Aaws%3Adevicefarm%3Aus-west-2%3A122621792560%3Aproject%3Afake-project-id/uploads/arn%3Aaws%3Adevicefarm%3Aus-west-2%3A122621792560%3Aupload%3Afake-project-id/34e61fe1-efc8-4e90-93fe-70eac350fa89/test_spec.yaml?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20190908T081214Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Credential=AKIAJSORV74ENYFBITRQ%2F20190908%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Signature=d9245e947da3e053c307b0890db95062c6f875a9df503a9ec1c255fea4a3548f",
                     "category": "PRIVATE"
@@ -603,6 +604,8 @@ main() {
           'AWS_ACCESS_KEY_ID': 'AWS_ACCESS_KEY_ID',
           'AWS_SECRET_ACCESS_KEY': 'AWS_SECRET_ACCESS_KEY',
         },
+      DeviceFarm:()=>DeviceFarm(),
+      Bundle: () => Bundle(),
     });
   });
 
@@ -673,6 +676,8 @@ main() {
       ConcurrentJobs: () => FakeConcurrentJobs(),
       Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
         ..operatingSystem = 'macos',
+      DeviceFarm:()=>DeviceFarm(),
+      Bundle: () => Bundle(),
     });
   });
 

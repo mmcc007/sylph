@@ -4,10 +4,10 @@ import 'package:path/path.dart' as p;
 import 'package:tool_base/tool_base.dart';
 import 'dart:io' as io;
 
-/// Test for CI environment.
-bool isCI() {
-  return platform.environment['CI'] == 'true';
-}
+///// Test for CI environment.
+//bool isCI() {
+//  return platform.environment['CI'] == 'true';
+//}
 
 /// Copy [srcDir] in local filesystem to [dstDir] in another filesystem
 void copyDirFs(io.Directory srcDir, Directory dstDir) {

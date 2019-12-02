@@ -12,7 +12,7 @@ bool isValidConfig(Config config, bool isIosPoolTypeActive) {
   // and check tests are present
 
   // get all job devices
-  final allJobDevices = getDeviceFarmDevices();
+  final allJobDevices = df.getDeviceFarmDevices();
 
   final matchingSylphDevices = [];
   final missingSylphDevices = [];

@@ -6,7 +6,7 @@ import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_base_test/tool_base_test.dart';
 
-import '../src/common.dart';
+//import '../src/common.dart';
 
 main() {
   group('local package manager', () {
@@ -92,11 +92,5 @@ environment:
           fs.file('$appDstDir/shared_package/pubspec.yaml').readAsStringSync(),
           expectedPubSpecShared);
     });
-
-    testUsingContext('get dependencies in new project', () {
-      runLocalPackageManager(appSrcDir, appDstDir);
-      expect(cmd(['flutter', 'packages', 'get'], workingDirectory: appDstDir),
-          isNotEmpty);
-    }, skip: isCI());
   });
 }

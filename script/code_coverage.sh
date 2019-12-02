@@ -13,20 +13,25 @@ main() {
     --report)
         runReport
         ;;
+    --tests)
+        runTests $2
+        ;;
     *)
-        runTests
+        runAllTests
         ;;
   esac
 }
 
 show_help() {
-    printf "usage: %s [--help] [--report]
+    printf "usage: %s [--help] [--tests <test path>] [--report]
 
 Tool for running tests with code coverage.
 (run from root of repo)
 
 where:
 
+    --tests <test path>
+        run tests in <test path> with coverage
     --report
         run a coverage report (run code coverage first)
         (requires lcov installed)
@@ -39,10 +44,14 @@ requires coverage package
     exit 1
 }
 
+runAllTests () {
+  local test_path="test/all_tests.dart"
+  runTests $test_path
+}
+
 # run tests with code coverage
 runTests () {
-#  local test_path="test/sylph_test.dart"
-  local test_path="test/all_tests.dart"
+  local test_path=$1
   local coverage_dir="coverage"
   # clear coverage directory
   rm -rf "$coverage_dir"
