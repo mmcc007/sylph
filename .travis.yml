@@ -15,7 +15,7 @@ jobs:
       os: linux
       before_script: # exits build if tests fail
         - pub run test test/all_tests.dart
-        - pub global activate coverage
+        - pub global activate coverage 0.13.3
       script:
         - script/code_coverage.sh
       after_success: bash <(curl -s https://codecov.io/bash) -f coverage/lcov.info
