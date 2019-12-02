@@ -111,7 +111,7 @@ class FlutterVersion {
   @override
   String toString() {
     final String versionText = frameworkVersion == 'unknown' ? '' : ' $frameworkVersion';
-    final String flutterText = 'Flutter$versionText';
+    final String flutterText = 'Sylph$versionText';
 //    final String flutterText = 'Flutter$versionText • channel $channel • ${repositoryUrl ?? 'unknown source'}';
 //    final String frameworkText = 'Framework • revision $frameworkRevisionShort ($frameworkAge) • $frameworkCommitDate';
 //    final String engineText = 'Engine • revision $engineRevisionShort';
@@ -356,7 +356,7 @@ class FlutterVersion {
 
   @visibleForTesting
   static String versionOutOfDateMessage(Duration frameworkAge) {
-    String warning = 'WARNING: your installation of Flutter is ${frameworkAge.inDays} days old.';
+    String warning = 'WARNING: your installation of Sylph is ${frameworkAge.inDays} days old.  ';
     // Append enough spaces to match the message box width.
     warning += ' ' * (74 - warning.length);
 
@@ -364,7 +364,7 @@ class FlutterVersion {
   ╔════════════════════════════════════════════════════════════════════════════╗
   ║ $warning ║
   ║                                                                            ║
-  ║ To update to the latest version, run "flutter upgrade".                    ║
+  ║ To update to the latest version, run "pub global activate sylph".          ║
   ╚════════════════════════════════════════════════════════════════════════════╝
 ''';
   }
@@ -373,9 +373,9 @@ class FlutterVersion {
   static String newVersionAvailableMessage() {
     return '''
   ╔════════════════════════════════════════════════════════════════════════════╗
-  ║ A new version of Flutter is available!                                     ║
+  ║ A new version of Sylph is available!                                       ║
   ║                                                                            ║
-  ║ To update to the latest version, run "flutter upgrade".                    ║
+  ║ To update to the latest version, run "pub global activate sylph".          ║
   ╚════════════════════════════════════════════════════════════════════════════╝
 ''';
   }

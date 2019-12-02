@@ -42,9 +42,9 @@ import '../version.dart';
 //import '../vmservice.dart';
 
 const String kFlutterRootEnvironmentVariableName = 'SYLPH_ROOT'; // should point to //flutter/ (root of flutter/flutter repo)
-const String kFlutterEngineEnvironmentVariableName = 'FLUTTER_ENGINE'; // should point to //engine/src/ (root of flutter/engine repo)
-const String kSnapshotFileName = 'flutter_tools.snapshot'; // in //flutter/bin/cache/
-const String kFlutterToolsScriptFileName = 'flutter_tools.dart'; // in //flutter/packages/flutter_tools/bin/
+//const String kFlutterEngineEnvironmentVariableName = 'FLUTTER_ENGINE'; // should point to //engine/src/ (root of flutter/engine repo)
+//const String kSnapshotFileName = 'flutter_tools.snapshot'; // in //flutter/bin/cache/
+//const String kFlutterToolsScriptFileName = 'flutter_tools.dart'; // in //flutter/packages/flutter_tools/bin/
 //const String kFlutterEnginePackageName = 'sky_engine';
 
 class SylphCommandRunner extends CommandRunner<void> {
@@ -80,9 +80,9 @@ class SylphCommandRunner extends CommandRunner<void> {
             'wrapping occurs if not writing to a terminal. Use --no-wrap to turn off wrapping '
             'when connected to a terminal.',
         defaultsTo: null);
-    argParser.addOption('device-id',
-        abbr: 'd',
-        help: 'Target device id or name (prefixes allowed).');
+//    argParser.addOption('device-id',
+//        abbr: 'd',
+//        help: 'Target device id or name (prefixes allowed).');
     argParser.addFlag('version',
         negatable: false,
         help: 'Reports the version of this tool.');
@@ -99,13 +99,13 @@ class SylphCommandRunner extends CommandRunner<void> {
         negatable: true,
         defaultsTo: true,
         hide: !verboseHelp,
-        help: 'Allow Flutter to check for updates when this command runs.');
+        help: 'Allow Sylph to check for updates when this command runs.');
     argParser.addFlag('suppress-analytics',
         negatable: false,
         help: 'Suppress analytics reporting when this command runs.');
     argParser.addFlag('bug-report',
         negatable: false,
-        help: 'Captures a bug report file to submit to the Flutter team.\n'
+        help: 'Captures a bug report file to submit to the Sylph team.\n'
             'Contains local paths, device identifiers, and log snippets.');
 
 //    String packagesHelp;
@@ -120,12 +120,12 @@ class SylphCommandRunner extends CommandRunner<void> {
 //    argParser.addOption('packages',
 //        hide: !showPackagesCommand,
 //        help: 'Path to your ".packages" file.\n$packagesHelp');
-
-    argParser.addOption('flutter-root',
-        hide: !verboseHelp,
-        help: 'The root directory of the Flutter repository.\n'
-            'Defaults to \$$kFlutterRootEnvironmentVariableName if set, otherwise uses the parent '
-            'of the directory that the "flutter" script itself is in.');
+//
+//    argParser.addOption('flutter-root',
+//        hide: !verboseHelp,
+//        help: 'The root directory of the Flutter repository.\n'
+//            'Defaults to \$$kFlutterRootEnvironmentVariableName if set, otherwise uses the parent '
+//            'of the directory that the "flutter" script itself is in.');
 
     if (verboseHelp)
       argParser.addSeparator('Local build selection options (not normally required):');
@@ -145,7 +145,7 @@ class SylphCommandRunner extends CommandRunner<void> {
 //            'This path is relative to --local-engine-src-path/out.');
 
     if (verboseHelp)
-      argParser.addSeparator('Options for testing the "flutter" tool itself:');
+      argParser.addSeparator('Options for testing the "sylph" tool itself:');
 
     argParser.addOption('record-to',
         hide: !verboseHelp,
@@ -175,7 +175,7 @@ class SylphCommandRunner extends CommandRunner<void> {
 
   @override
   String get usageFooter {
-    return wrapText('Run "flutter help -v" for verbose help output, including less commonly used options.');
+    return wrapText('Run "sylph help -v" for verbose help output, including less commonly used options.');
   }
 
   @override
@@ -350,7 +350,8 @@ class SylphCommandRunner extends CommandRunner<void> {
 
     // We must set Cache.flutterRoot early because other features use it (e.g.
     // enginePath's initializer uses it).
-    final String flutterRoot = topLevelResults['flutter-root'] ?? defaultFlutterRoot;
+//    final String flutterRoot = topLevelResults['flutter-root'] ?? defaultFlutterRoot;
+    final String flutterRoot = defaultFlutterRoot;
     Cache.flutterRoot = fs.path.normalize(fs.path.absolute(flutterRoot));
 
 //    // Set up the tooling configuration.

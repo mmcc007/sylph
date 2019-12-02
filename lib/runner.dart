@@ -193,14 +193,14 @@ FileSystem crashFileSystem = const LocalFileSystem();
 
 /// Saves the crash report to a local file.
 Future<File> _createLocalCrashReport(List<String> args, dynamic error, StackTrace stackTrace) async {
-  File crashFile = getUniqueFile(crashFileSystem.currentDirectory, 'flutter', 'log');
+  File crashFile = getUniqueFile(crashFileSystem.currentDirectory, kToolName, 'log');
 
   final StringBuffer buffer = StringBuffer();
 
-  buffer.writeln('Sylph crash report; please file at https://github.com/flutter/flutter/issues.\n');
+  buffer.writeln('Sylph crash report; please file at https://github.com/mmcc007/sylph/issues.\n');
 
   buffer.writeln('## command\n');
-  buffer.writeln('flutter ${args.join(' ')}\n');
+  buffer.writeln('sylph ${args.join(' ')}\n');
 
   buffer.writeln('## exception\n');
   buffer.writeln('${error.runtimeType}: $error\n');
@@ -213,7 +213,7 @@ Future<File> _createLocalCrashReport(List<String> args, dynamic error, StackTrac
     await crashFile.writeAsString(buffer.toString());
   } on FileSystemException catch (_) {
     // Fallback to the system temporary directory.
-    crashFile = getUniqueFile(crashFileSystem.systemTempDirectory, 'flutter', 'log');
+    crashFile = getUniqueFile(crashFileSystem.systemTempDirectory, kToolName, 'log');
     try {
       await crashFile.writeAsString(buffer.toString());
     } on FileSystemException catch (e) {
