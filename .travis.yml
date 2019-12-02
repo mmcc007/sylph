@@ -14,6 +14,7 @@ jobs:
       dart: stable
       os: linux
       before_script: # exits build if tests fail
+        - pub get
         - pub run test test/all_tests.dart
         - pub global activate coverage 0.13.3
       script:
