@@ -12,6 +12,7 @@ import 'package:reporting/reporting.dart';
 //import 'package:tool_base/runner.dart' as tools;
 import 'package:sylph/runner.dart' as tools;
 import 'package:sylph/src/base/runner/sylph_command.dart';
+import 'package:sylph/src/base/version.dart';
 import 'package:tool_base/src/base/context.dart';
 import 'package:tool_base/src/base/io.dart';
 import 'package:tool_base/src/base/logger.dart';
@@ -28,6 +29,8 @@ import 'package:test/test.dart';
 import 'package:tool_base/src/base/common.dart' as c;
 import 'package:tool_base/tool_base.dart';
 import 'package:tool_base_test/tool_base_test.dart';
+
+import '../src/mocks.dart';
 
 //import '../src/common.dart';
 //import '../src/context.dart';
@@ -65,10 +68,19 @@ void main() {
         sylphVersion: 'test-version',
       );
       expect(exitCode, 1);
+      print(testLogger.statusText);
+      print(testLogger.errorText);
 
       await verifyCrashReportSent(requestInfo);
     }, overrides: <Type, Generator>{
       Stdio: () => const _NoStderr(),
+      Platform: () => FakePlatform(
+        environment: <String, String>{
+          'HOME': '/',
+        },
+        operatingSystem: 'macos', // used in HTTP header
+      ),
+      FlutterVersion: () => MockFlutterVersion(),
     });
 
     testUsingContext('should send crash reports when async throws', () async {
@@ -95,6 +107,13 @@ void main() {
       await verifyCrashReportSent(requestInfo);
     }, overrides: <Type, Generator>{
       Stdio: () => const _NoStderr(),
+      Platform: () => FakePlatform(
+        environment: <String, String>{
+          'HOME': '/',
+        },
+        operatingSystem: 'macos', // used in HTTP header
+      ),
+      FlutterVersion: () => MockFlutterVersion(),
     });
 
     testUsingContext('should not send a crash report if on a user-branch', () async {

@@ -24,6 +24,7 @@ main() {
   group('run', () {
     Testbed testbed;
     NoOpUsage noOpUsage;
+    FakePlatform fakePlatform;
     MockClock clock;
     List<int> mockTimes;
     MemoryFileSystem fs;
@@ -41,6 +42,13 @@ main() {
           setup: () async {
             noOpUsage = NoOpUsage();
             fs = MemoryFileSystem();
+            fakePlatform = FakePlatform(
+              environment: <String, String>{
+                'HOME': '/',
+              },
+              operatingSystem: 'macos',
+            );
+
             fs.directory(_kProjectRoot).createSync(recursive: true);
             fs.directory(_kTempDir).createSync(recursive: true);
             fs.currentDirectory = _kProjectRoot;
@@ -55,13 +63,14 @@ main() {
           },
           overrides: <Type, Generator>{
             FileSystem: () => fs,
+            Platform: () => fakePlatform,
+            FlutterVersion: () => MockFlutterVersion(),
+            Usage: () => noOpUsage,
+            UserMessages: () => UserMessages(),
             SystemClock: () => clock,
             DeviceFarm: () => mockDeviceFarm,
             ProcessManager: () => mockProcessManager,
             Bundle: () => mockBundle,
-            FlutterVersion: () => MockFlutterVersion(),
-            Usage: () => noOpUsage,
-            UserMessages: () => UserMessages(),
           });
     });
 
