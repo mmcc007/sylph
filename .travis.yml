@@ -22,6 +22,7 @@ jobs:
         - export PATH="$DART_SDK/bin:$PATH"
         - export PATH="${TRAVIS_HOME}/.pub-cache/bin:$PATH"
         - pub get
+        - export FLUTTER_ROOT='/'
         - pub run test test/all_tests.dart
         - pub global activate coverage 0.13.3
       script:
