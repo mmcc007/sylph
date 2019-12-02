@@ -224,8 +224,8 @@ void main() {
           expectSetStamp: true,
           channel: channel,
         );
-        final FlutterVersion version = FlutterVersion.instance;
-
+//        final FlutterVersion version = FlutterVersion.instance;
+//
 //        when(mockProcessManager.runSync(
 //          <String>['git', 'merge-base', '--is-ancestor', 'abcdef', '123456'],
 //          workingDirectory: anyNamed('workingDirectory'),

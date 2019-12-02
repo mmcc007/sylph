@@ -159,13 +159,13 @@ class FlutterVersion {
     }
   }
 
-  /// The name of the temporary git remote used to check for the latest
-  /// available Flutter framework version.
-  ///
-  /// In the absence of bugs and crashes a Flutter developer should never see
-  /// this remote appear in their `git remote` list, but also if it happens to
-  /// persist we do the proper clean-up for extra robustness.
-  static const String _versionCheckRemote = '__flutter_version_check__';
+//  /// The name of the temporary git remote used to check for the latest
+//  /// available Flutter framework version.
+//  ///
+//  /// In the absence of bugs and crashes a Flutter developer should never see
+//  /// this remote appear in their `git remote` list, but also if it happens to
+//  /// persist we do the proper clean-up for extra robustness.
+//  static const String _versionCheckRemote = '__flutter_version_check__';
 
   /// The date of the latest framework commit in the remote repository.
   ///

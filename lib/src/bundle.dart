@@ -46,8 +46,9 @@ class Bundle {
     copyDir('$stagingDir/script', '$defaultAppDir/script');
 
     // Copy build-to-os-map file to test bundle
-    if (config.isPoolTypeActive(DeviceType.ios))
+    if (config.isPoolTypeActive(DeviceType.ios)) {
       copyFile('$stagingDir/$kBuildToOsMapFileName', defaultAppDir);
+    }
 
     // zip test bundle
     zip(testBundleDir, testBundleZip);
