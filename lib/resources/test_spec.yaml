@@ -61,18 +61,23 @@ phases:
   # The test phase includes commands that run your test suite execution.
   test:
     commands:
-      - PHASE_FAILED=0
+      # Report status of each command exit code.
+      # Use last failing command exit code as test phase exit code
+      # or
+      # if no command failed, exit test phase normally.
+      # (this is required because test phase does not track a failed command correctly.
+      - TEST_PHASE_STATUS=0 # success
       - >-
-        track_phase_failure() {
-          local command_failed=$?
-          if [ "$command_failed" != "0" ]; then
-            echo "Most recent command failed with error code: $command_failed"
-            PHASE_FAILED=$command_failed
+        track_test_phase_status() {
+          local command_exit_code=$?
+          if [ "$command_exit_code" != "0" ]; then
+            echo "Most recent command failed with error code: $command_exit_code"
+            TEST_PHASE_STATUS=$command_exit_code
           fi
         }
 
-        set_phase_exit_code() {
-          return $PHASE_FAILED
+        set_test_phase_exit_code() {
+          return $TEST_PHASE_STATUS
         }
 
       # Your test package is downloaded in $DEVICEFARM_TEST_PACKAGE_PATH so we first change directory to that path.
@@ -88,27 +93,38 @@ phases:
       # Please refer "https://docs.pytest.org/en/latest/usage.html" for more options on running pytests from command line.
       # - bin/py.test tests/ --junit-xml $DEVICEFARM_LOG_DIR/junitreport.xml
       - cd flutter_app
+      - rm .packages # todo: remove from bundle
       - MAIN=test_driver/main.dart
       - TESTS='test_driver/main_test.dart'
       - >-
         if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "Android" ];
         then
           ./script/test_android.sh --run-tests "$TESTS"
-          track_phase_failure
+          track_test_phase_status
         fi
 
         if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "iOS" ];
         then
           ./script/test_ios.sh --unpack $DEVICEFARM_APP_PATH
-          track_phase_failure
+          track_test_phase_status
           ./script/test_ios.sh --dummy-symbols build_to_os.txt
-          track_phase_failure
+          track_test_phase_status
           ./script/test_ios.sh --run-tests "$MAIN" "$TESTS"
-          track_phase_failure
+          track_test_phase_status
         fi
 
+      # move any flutter crash logs to artifacts dir
+      - >-
+        for f in flutter_*.log; do
+          if [ -e "$f" ]; then
+            echo "Archiving $f to $DEVICEFARM_LOG_DIR"
+            mv $f $DEVICEFARM_LOG_DIR
+          fi
+        done
+
+      - ls -la $DEVICEFARM_LOG_DIR
       - echo done.
-      - set_phase_exit_code
+      - set_test_phase_exit_code
 
   # The post test phase includes are commands that are run after your tests are executed.
   post_test:
