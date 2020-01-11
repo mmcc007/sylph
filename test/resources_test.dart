@@ -57,7 +57,7 @@ main() {
         final filePaths = ['fastlane/Appfile', 'exportOptions.plist'];
         final dstDir = '/tmp/test_env_files';
         final nameVals = {
-          kAppIdentifier: getAppIdentifier('example/default_app')
+          kAppIdentifier: getIosAppIdentifier('example/default_app')
         };
 
         for (final srcPath in filePaths) {
@@ -73,9 +73,9 @@ main() {
 //        Logger: () => VerboseLogger(StdoutLogger()),
       });
 
-      test('find APP_IDENTIFIER', () {
-        final expected = 'com.orbsoft.counter';
-        String appIdentifier = getAppIdentifier('example/default_app');
+      test('find iOS APP_IDENTIFIER', () {
+        final expected = 'com.example.defaultApp';
+        String appIdentifier = getIosAppIdentifier('example/default_app');
         expect(appIdentifier, expected);
       });
     });
