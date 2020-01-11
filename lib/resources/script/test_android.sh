@@ -98,12 +98,12 @@ custom_test_runner() {
 
     echo "Starting Flutter app $app_id in debug mode..."
 
-    flutter packages get # may be required when running in CI/CD
+    flutter pub get # download test's dependencies
 
     adb version
 
     # stop app on device
-    # (if already running locally or started incorrectly by CI/CD)
+    # (if already running)
     adb shell am force-stop "$app_id"
 
     # clear log (to avoid picking up any earlier observatory announcements on re-runs)
