@@ -1,3 +1,8 @@
+## 0.7.1
+- Upgraded flutter to latest (1.12.13+hotfix.5) #82  
+(only used for running `flutter driver`)
+- Fixed problem with .packages in latest flutter #87
+
 ## 0.7.0+2
 - Fixed analyzer warnings and added example readme after publishing
 
