@@ -165,7 +165,7 @@ Future<bool> runSylphJob(
   // 2. Upload custom test spec yaml
   final testSpecPath = '$tmpDir/$kAppiumTestSpecName';
   // Substitute MAIN and TESTS for actual debug main and tests from test suite.
-  setTestSpecVars(testSuite, testSpecPath);
+  setTestSpecVars(testSuite, testSpecPath, config.androidPackageName, config.androidAppId);
   printStatus('Uploading test specification: $testSpecPath ...');
   String testSpecArn =
       await uploadFile(projectArn, testSpecPath, 'APPIUM_PYTHON_TEST_SPEC');
@@ -190,6 +190,11 @@ Future<bool> runSylphJob(
 /// Returns debug app ARN as [String].
 Future<String> _buildUploadApp(String projectArn, DeviceType poolType,
     String mainPath, String tmpDir, String flavor) async {
+  var androidPath = kDebugApkPath;
+  var iosPath = kDebugIpaPath;
+  if (flavor != null && flavor.isNotEmpty) {
+    androidPath = _getAndroidPathWithFlavor(flavor);
+  }
   String appArn;
   List<String> command;
   final addFlavor = (String flavor) {
@@ -204,8 +209,8 @@ Future<String> _buildUploadApp(String projectArn, DeviceType poolType,
     addFlavor(flavor);
     await streamCmd(command);
     // Upload apk
-    printStatus('Uploading debug android app: $kDebugApkPath ...');
-    appArn = await uploadFile(projectArn, kDebugApkPath, 'ANDROID_APP');
+    printStatus('Uploading debug android app: $androidPath ...');
+    appArn = await uploadFile(projectArn, androidPath, 'ANDROID_APP');
   } else {
     printStatus(
         'Building debug .ipa from $mainPath${isEmpty(flavor) ? '' : ' with flavor $flavor'}...');
@@ -217,8 +222,8 @@ Future<String> _buildUploadApp(String projectArn, DeviceType poolType,
     addFlavor(flavor);
     await streamCmd(command);
     // Upload ipa
-    printStatus('Uploading debug iOS app: $kDebugIpaPath ...');
-    appArn = await uploadFile(projectArn, kDebugIpaPath, 'IOS_APP');
+    printStatus('Uploading debug iOS app: $iosPath ...');
+    appArn = await uploadFile(projectArn, iosPath, 'IOS_APP');
   }
   return appArn;
 }
@@ -272,8 +277,9 @@ DateTime sylphTimestamp() {
   return timestamp;
 }
 
-/// Set MAIN and TESTS vars in test spec.
-void setTestSpecVars(TestSuite test_suite, String testSpecPath) {
+/// Set MAIN and TESTS env vars in test spec.
+void setTestSpecVars(TestSuite test_suite, String testSpecPath,
+    String androidPackageName, String androidAppId) {
   const kMainEnvName = 'MAIN=';
   const kTestsEnvName = 'TESTS=';
   final mainEnvVal = test_suite.main;
@@ -285,6 +291,13 @@ void setTestSpecVars(TestSuite test_suite, String testSpecPath) {
       testSpecStr.replaceFirst(mainRegExp, '$kMainEnvName$mainEnvVal');
   testSpecStr =
       testSpecStr.replaceAll(testsRegExp, '$kTestsEnvName\'$testsEnvVal\'');
+  if ((androidPackageName?.isNotEmpty ?? false) || (androidAppId?.isNotEmpty ?? false)) {
+    const kAndroidTestScript = './script/test_android.sh --run-tests "\$TESTS"';
+    var arguments = (androidAppId?.isNotEmpty ?? false) ? '$androidAppId' : "";
+    arguments += (androidPackageName?.isNotEmpty ?? false) ? '$androidPackageName' : "";
+    testSpecStr =
+        testSpecStr.replaceAll(kAndroidTestScript, '$kAndroidTestScript $arguments');
+  }
   fs.file(testSpecPath).writeAsStringSync(testSpecStr);
 }
 
@@ -353,3 +366,6 @@ Map<String, dynamic> packArgs(
     'flavor': config.flavor
   };
 }
+
+// gets correct file paths with flavor
+String _getAndroidPathWithFlavor(String flavor) => "build/app/outputs/apk/$flavor/debug/app-$flavor-debug.apk";

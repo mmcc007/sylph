@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' as io;
 
 import 'package:fake_process_manager/fake_process_manager.dart';
 import 'package:file/memory.dart';
@@ -11,7 +12,6 @@ import 'package:sylph/src/sylph_run.dart';
 import 'package:test/test.dart';
 import 'package:tool_base/tool_base.dart' hide Config;
 import 'package:tool_base_test/tool_base_test.dart';
-import 'dart:io' as io;
 
 import 'src/common.dart';
 
@@ -436,6 +436,7 @@ main() {
                 '')),
       ];
 
+      final androidAppName = 'app-dev-debug.apk';
       final androidCalls = [
         Call(
             'aws devicefarm create-device-pool --name android pool 1 --project-arn arn:aws:devicefarm:us-west-2:122621792560:project:fake-project-id --rules [{"attribute": "ARN", "operator": "IN","value": "[\\"arn:aws:devicefarm:us-west-2::device:70D5B22608A149568923E4A225EC5E04\\"]"}]',
@@ -455,7 +456,7 @@ main() {
         Call('flutter build apk -t test_driver/main.dart --debug --flavor dev',
             ProcessResult(0, 0, 'output from build', '')),
         Call(
-            'aws devicefarm create-upload --project-arn $projectArn --name app.apk --type ANDROID_APP',
+            'aws devicefarm create-upload --project-arn $projectArn --name $androidAppName --type ANDROID_APP',
             ProcessResult(
                 0,
                 0,
@@ -472,7 +473,7 @@ main() {
                   }
                 }),
                 '')),
-        Call('curl -T build/app/outputs/apk/app.apk https://fake-url',
+        Call('curl -T build/app/outputs/apk/dev/debug/$androidAppName https://fake-url',
             ProcessResult(0, 0, 'output from curl', '')),
       ];
 
@@ -699,7 +700,8 @@ main() {
       final expected =
           'MAIN=$expectedMainEnvVal\nTESTS=\'$expectedTestsEnvVal\'\n';
 
-      setTestSpecVars(test_suite, testSpecPath);
+      setTestSpecVars(test_suite, testSpecPath, config.androidPackageName,
+          config.androidAppId);
       expect(testSpecFile.readAsStringSync(), expected);
     }, overrides: <Type, Generator>{
 //      Logger: () => VerboseLogger(StdoutLogger()),
