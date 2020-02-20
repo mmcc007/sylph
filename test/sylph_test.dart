@@ -376,6 +376,7 @@ void main() {
         tmp_dir: /tmp/sylph
         artifacts_dir: /tmp/sylph_artifacts
         sylph_timeout: 720 
+        flavor: dev
         concurrent_runs: true
         project_name: test concurrent runs
         default_job_timeout: 10 
@@ -411,8 +412,15 @@ void main() {
       final projectArn = kTestProjectArn;
       final sylphRunName = 'dummy sylph run $timestamp';
       final sylphRunTimeout = config['sylph_timeout'];
-      final jobArgs = packArgs(testSuite, config, poolName, projectArn,
-          sylphRunName, sylphRunTimeout, true);
+      final jobArgs = packArgs(
+        testSuite,
+        config,
+        poolName,
+        projectArn,
+        sylphRunName,
+        sylphRunTimeout,
+        true,
+      );
 
       // for this test change directory
       final origDir = Directory.current;

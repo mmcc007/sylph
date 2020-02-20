@@ -28,7 +28,7 @@ main() {
             reason: '$dstPath does not exist');
       });
 
-      test('substitute env vars in string', () {
+      testUsingContext('substitute env vars in string', () {
         final env = platform.environment;
         final envVars = ['TEAM_ID'];
         final expected = () {
@@ -45,14 +45,19 @@ main() {
           str = str.replaceAll(envVar, env[envVar]);
         }
         expect(str, expected());
+      }, overrides: <Type, Generator>{
+        Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+          ..environment = {kCIEnvVar: 'true', 'TEAM_ID': 'team_id'},
+//        Logger: () => VerboseLogger(StdoutLogger()),
       });
 
-      test('unpack files with env vars and name/value pairs', () async {
+      testUsingContext('unpack files with env vars and name/value pairs',
+          () async {
         final envVars = ['TEAM_ID'];
         final filePaths = ['fastlane/Appfile', 'exportOptions.plist'];
         final dstDir = '/tmp/test_env_files';
         final nameVals = {
-          kAppIdentifier: getAppIdentifier('example/default_app')
+          kAppIdentifier: getIosAppIdentifier('example/default_app')
         };
 
         for (final srcPath in filePaths) {
@@ -62,11 +67,15 @@ main() {
           expect(fs.file(dstPath).existsSync(), isTrue,
               reason: '$dstPath not found');
         }
+      }, overrides: <Type, Generator>{
+        Platform: () => FakePlatform.fromPlatform(const LocalPlatform())
+          ..environment = {kCIEnvVar: 'true', 'TEAM_ID': 'team_id'},
+//        Logger: () => VerboseLogger(StdoutLogger()),
       });
 
-      test('find APP_IDENTIFIER', () {
-        final expected = 'com.orbsoft.counter';
-        String appIdentifier = getAppIdentifier('example/default_app');
+      test('find iOS APP_IDENTIFIER', () {
+        final expected = 'com.example.defaultApp';
+        String appIdentifier = getIosAppIdentifier('example/default_app');
         expect(appIdentifier, expected);
       });
     });

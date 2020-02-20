@@ -9,7 +9,7 @@ import 'config.dart';
 import 'base/devices.dart';
 import 'base/utils.dart';
 
-const kUploadTimeout = 5;
+const kUploadTimeout = 15;
 const kUploadSucceeded = 'SUCCEEDED';
 const kUploadFailed = 'FAILED';
 const kCompletedRunStatus = 'COMPLETED';

@@ -51,7 +51,7 @@ Future<void> unpackResources(String tmpDir, bool isIosPoolTypeActive,
   // unpack build to os map file
   await unpackFile(kBuildToOsMapFileName, tmpDir);
 
-  final nameVals = {kAppIdentifier: getAppIdentifier(appDir)};
+  final nameVals = {kAppIdentifier: getIosAppIdentifier(appDir)};
 
   // unpack export options
   if (isIosPoolTypeActive) {
@@ -132,7 +132,7 @@ Future unpackFile(String srcPath, String dstDir,
 }
 
 /// Gets the first app identifier found.
-String getAppIdentifier(String appDir) {
+String getIosAppIdentifier(String appDir) {
   final kIosConfigPath = '$appDir/ios/Runner.xcodeproj/project.pbxproj';
   final regExp = 'PRODUCT_BUNDLE_IDENTIFIER = (.*);';
   final iOSConfigStr = fs.file(kIosConfigPath).readAsStringSync();
