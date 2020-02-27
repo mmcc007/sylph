@@ -1,5 +1,6 @@
 name: flavors
 description: Integration test for build flavors.
+version: 0.0.1
 
 environment:
   # The pub client defaults to an <2.0.0 sdk constraint which we need to explicitly overwrite.
@@ -8,14 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_driver:
+    sdk: flutter
+  test: 1.9.4
 
 flutter:
   uses-material-design: true
-
-# PUBSPEC CHECKSUM: 0f0b
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_driver:
-    sdk: flutter
-  test: 1.6.3
