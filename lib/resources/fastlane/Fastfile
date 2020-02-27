@@ -63,7 +63,7 @@ platform :ios do
         git_url: ENV['PUBLISHING_MATCH_CERTIFICATE_REPO'],
         type: signing_type,
         keychain_name: 'fastlane_tmp_keychain',
-        readonly: true
+        readonly: false
       )
     }
     puts 'Certificates and profiles installed'

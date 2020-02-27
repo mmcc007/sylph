@@ -142,4 +142,4 @@ jobs:
         - pub global activate --source path .
 
       script:
-        - cd example; sylph -c sylph_android.yaml -v
+        - cd example/default_app; sylph -c sylph_android.yaml -v
