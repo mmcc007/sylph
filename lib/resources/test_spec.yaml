@@ -93,7 +93,7 @@ phases:
       # Please refer "https://docs.pytest.org/en/latest/usage.html" for more options on running pytests from command line.
       # - bin/py.test tests/ --junit-xml $DEVICEFARM_LOG_DIR/junitreport.xml
       - cd flutter_app
-      - rm .packages # todo: remove from bundle
+      - rm -f .packages # todo: remove from bundle
       - MAIN=test_driver/main.dart
       - TESTS='test_driver/main_test.dart'
       - >-
