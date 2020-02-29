@@ -1,15 +1,19 @@
 env:
   global:
     - FLUTTER_CHANNEL=stable
-    - FLUTTER_VERSION=1.7.8+hotfix.4-${FLUTTER_CHANNEL}
-    - ANDROID_SDK_TOOLS=4333796 # android-28
+    - FLUTTER_VERSION=1.12.13+hotfix.8-${FLUTTER_CHANNEL}
+    - ANDROID_SDK_TOOLS=sdk-tools-darwin-4333796.zip # older sdkmanager
+#    - ANDROID_SDK_TOOLS=commandlinetools-mac-6200805_latest.zip # latest sdkmanager
     - ANDROID_PLATFORM_SDK=28
     - ANDROID_BUILD_TOOLS=28.0.3
+    - GRAVIS="https://raw.githubusercontent.com/DanySK/Gravis-CI/master/"
+    - JDK_SDKMANAGER="1.8" # the JDK used by sdkmanager
+    - JDK="1.8" # the JDK used by build and tests
 
 jobs:
   include:
-    - stage: Run tests
-      env: Run Tests
+    - stage: Run sylph
+      env: Run Unit Tests
       language: dart
       dart: stable
       os: linux
@@ -23,28 +27,44 @@ jobs:
     - stage: Run sylph
       env: Run Sylph on Mac
       os: osx
+      osx_image: xcode11.3
       # only build on tag releases
       if: tag IS present
       before_install:
 
-        # Add missing java module used by sdkmanager, etc...
-      - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
+      # Set up JDK 8 for Android SDK
+      - java -version
+      - curl "${GRAVIS}.install-jdk-travis.sh" --output ~/.install-jdk-travis.sh
+      - export TARGET_JDK="${JDK}"
+      - JDK="${JDK_SDKMANAGER}" # used when running sdkmanager
+      - source ~/.install-jdk-travis.sh
+      - java -version
+
+      # Add missing java module used by sdkmanager, etc...
+      # - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
 
       # Install android tools
       - export ANDROID_HOME=~/android-sdk
-      - wget -q "https://dl.google.com/android/repository/sdk-tools-darwin-$ANDROID_SDK_TOOLS.zip" -O android-sdk-tools.zip
+      - wget -q "https://dl.google.com/android/repository/$ANDROID_SDK_TOOLS" -O android-sdk-tools.zip
       - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
       - rm android-sdk-tools.zip
       - PATH=${PATH}:${ANDROID_HOME}/emulator:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
       # Silence warning.
       - mkdir -p ~/.android
       - touch ~/.android/repositories.cfg
+#      - sdkmanager --sdk_root=$ANDROID_HOME --version
+      - sdkmanager --version
       # Accept licenses before installing components, no need to echo y for each component
-      - yes | sdkmanager --licenses
-      - sdkmanager --list | head -15
+      - yes | sdkmanager --licenses > /dev/null
+      # - sdkmanager --list | head -15
       # Platform and build tools
       - sdkmanager "tools" "platform-tools" "platforms;android-${ANDROID_PLATFORM_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
-      - sdkmanager --list | head -15
+      # - sdkmanager --list | head -15
+      - sdkmanager --version
+
+      # Switch back to our target JDK version to build and run tests
+#      - JDK="${TARGET_JDK}"
+#      - source ~/.install-jdk-travis.sh
 
       # fix timezone warning on osx
       - sudo ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
@@ -74,7 +94,8 @@ jobs:
       - pub global activate --source path .
 
       script:
-      - cd example; sylph
+       - cd example/default_app; sylph
+#      - cd example/flavors; sylph
 
       # publish artifacts to GitHub
       before_deploy:
@@ -90,55 +111,55 @@ jobs:
           tags: true
 
 
-    - stage: Run sylph
-      env: Run Sylph on linux
-      dist: trusty # defaults to java 1.8
-      os: linux
-      # only build on tag releases
-      if: tag IS present
-      before_install:
-        - |
-          if ! git diff --name-only $TRAVIS_COMMIT_RANGE | grep -qvE '(.md)|^(LICENSE)|^(appveyor.yml)'
-          then
-            echo "Not running CI since only docs were changed."
-            exit
-          fi
-
-        # Add missing java module used by sdkmanager, etc...
-#        - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
-
-        # Install android tools
-        - export ANDROID_HOME=~/android-sdk
-        - wget -q "https://dl.google.com/android/repository/sdk-tools-linux-$ANDROID_SDK_TOOLS.zip" -O android-sdk-tools.zip
-        - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
-        - rm android-sdk-tools.zip
-        - PATH=${PATH}:${ANDROID_HOME}/emulator:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
-        # Silence warning.
-        - mkdir -p ~/.android
-        - touch ~/.android/repositories.cfg
-        # Accept licenses before installing components, no need to echo y for each component
-        - yes | sdkmanager --licenses > /dev/null
-        - sdkmanager --list | head -15
-        # Platform and build tools
-        - sdkmanager "tools" "platform-tools" "platforms;android-${ANDROID_PLATFORM_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
-        - sdkmanager --list | head -15
-
-        # install pre-compiled flutter
-#        - sudo apt-get install -y --no-install-recommends lib32stdc++6 libstdc++6 > /dev/null
-        - wget --quiet --output-document=flutter.tar.xz https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/linux/flutter_linux_v${FLUTTER_VERSION}.tar.xz && tar xf flutter.tar.xz > /dev/null && rm flutter.tar.xz
-        - export PATH="$PATH":"$HOME/.pub-cache/bin"
-        - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
-        - flutter doctor -v
-
-        # install aws
-        - curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
-        - unzip awscli-bundle.zip
-        - sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
-        - aws --version
-        - cp -r .aws ~
-
-        # install most current (released or unreleased) version of Sylph
-        - pub global activate --source path .
-
-      script:
-        - cd example; sylph -c sylph_android.yaml -v
+#    - stage: Run sylph
+#      env: Run Sylph on linux
+#      dist: trusty # defaults to java 1.8
+#      os: linux
+#      # only build on tag releases
+#      if: tag IS present
+#      before_install:
+#        - |
+#          if ! git diff --name-only $TRAVIS_COMMIT_RANGE | grep -qvE '(.md)|^(LICENSE)|^(appveyor.yml)'
+#          then
+#            echo "Not running CI since only docs were changed."
+#            exit
+#          fi
+#
+#        # Add missing java module used by sdkmanager, etc...
+##        - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
+#
+#        # Install android tools
+#        - export ANDROID_HOME=~/android-sdk
+#        - wget -q "https://dl.google.com/android/repository/sdk-tools-linux-$ANDROID_SDK_TOOLS.zip" -O android-sdk-tools.zip
+#        - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
+#        - rm android-sdk-tools.zip
+#        - PATH=${PATH}:${ANDROID_HOME}/emulator:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
+#        # Silence warning.
+#        - mkdir -p ~/.android
+#        - touch ~/.android/repositories.cfg
+#        # Accept licenses before installing components, no need to echo y for each component
+#        - yes | sdkmanager --licenses > /dev/null
+#        - sdkmanager --list | head -15
+#        # Platform and build tools
+#        - sdkmanager "tools" "platform-tools" "platforms;android-${ANDROID_PLATFORM_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
+#        - sdkmanager --list | head -15
+#
+#        # install pre-compiled flutter
+##        - sudo apt-get install -y --no-install-recommends lib32stdc++6 libstdc++6 > /dev/null
+#        - wget --quiet --output-document=flutter.tar.xz https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/linux/flutter_linux_v${FLUTTER_VERSION}.tar.xz && tar xf flutter.tar.xz > /dev/null && rm flutter.tar.xz
+#        - export PATH="$PATH":"$HOME/.pub-cache/bin"
+#        - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
+#        - flutter doctor -v
+#
+#        # install aws
+#        - curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+#        - unzip awscli-bundle.zip
+#        - sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+#        - aws --version
+#        - cp -r .aws ~
+#
+#        # install most current (released or unreleased) version of Sylph
+#        - pub global activate --source path .
+#
+#      script:
+#        - cd example/default_app; sylph -c sylph_android.yaml -v

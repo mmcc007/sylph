@@ -459,6 +459,25 @@ void main() {
       // rounds to milliseconds
       expect(durationFormatted.contains(RegExp(r'15m:34s:12.ms')), true);
     });
+
+    test('substitute MAIN and TESTS for actual debug main and tests', () async {
+      final filePath = 'test/sylph_test.yaml';
+      final config = await parseYamlFile(filePath);
+      final test_suite = config['test_suites'][0];
+      final expectedMainEnvVal = test_suite['main'];
+      final expectedTestsEnvVal = test_suite['tests'].join(",");
+      final testSpecPath = 'test/test_spec_test.yaml';
+      final expected = '''
+      # - bin/py.test tests/ --junit-xml \$DEVICEFARM_LOG_DIR/junitreport.xml
+      - MAIN=$expectedMainEnvVal
+      - TESTS='$expectedTestsEnvVal'
+      - cd flutter_app
+''';
+      setTestSpecEnv(test_suite, testSpecPath);
+      expect(File(testSpecPath).readAsStringSync(), expected);
+      // restore modified test spec test
+      cmd(['git', 'checkout', testSpecPath]);
+    });
   });
 }
 

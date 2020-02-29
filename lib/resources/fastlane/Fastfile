@@ -58,12 +58,13 @@ platform :ios do
     suppress_output {
       # Retrieves all the necessary certs and provisioning profiles.
         #force_for_new_devices: true,
-        #readonly: false
+        #readonly: false,
+        #username: 'mmcc007@gmail.com'
       sync_code_signing(
         git_url: ENV['PUBLISHING_MATCH_CERTIFICATE_REPO'],
         type: signing_type,
         keychain_name: 'fastlane_tmp_keychain',
-        readonly: true
+        readonly: true,
       )
     }
     puts 'Certificates and profiles installed'

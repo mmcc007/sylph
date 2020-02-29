@@ -455,7 +455,7 @@ main() {
         Call('flutter build apk -t test_driver/main.dart --debug --flavor dev',
             ProcessResult(0, 0, 'output from build', '')),
         Call(
-            'aws devicefarm create-upload --project-arn $projectArn --name app.apk --type ANDROID_APP',
+            'aws devicefarm create-upload --project-arn $projectArn --name app-dev-debug.apk --type ANDROID_APP',
             ProcessResult(
                 0,
                 0,
@@ -472,7 +472,8 @@ main() {
                   }
                 }),
                 '')),
-        Call('curl -T build/app/outputs/apk/app.apk https://fake-url',
+        Call(
+            'curl -T build/app/outputs/apk/dev/debug/app-dev-debug.apk https://fake-url',
             ProcessResult(0, 0, 'output from curl', '')),
       ];
 
@@ -699,7 +700,7 @@ main() {
       final expected =
           'MAIN=$expectedMainEnvVal\nTESTS=\'$expectedTestsEnvVal\'\n';
 
-      setTestSpecVars(test_suite, testSpecPath);
+      setTestSpecEnv(test_suite, testSpecPath);
       expect(testSpecFile.readAsStringSync(), expected);
     }, overrides: <Type, Generator>{
 //      Logger: () => VerboseLogger(StdoutLogger()),

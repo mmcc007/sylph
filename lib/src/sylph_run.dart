@@ -14,7 +14,7 @@ import 'device_farm.dart';
 import 'base/devices.dart';
 import 'base/utils.dart';
 
-const kDebugApkPath = 'build/app/outputs/apk/app.apk';
+const kDebugApkPath = 'build/app/outputs/apk/debug/app-debug.apk';
 const kDebugIpaPath = 'build/ios/Debug-iphoneos/Debug_Runner.ipa';
 
 /// Processes config file (subject to change).
@@ -26,13 +26,9 @@ const kDebugIpaPath = 'build/ios/Debug-iphoneos/Debug_Runner.ipa';
 ///    1. Run tests on each device in device pool.
 ///    2. Report and collect artifacts for each device.
 /// Returns [Future<bool>] for pass or fail.
-Future<bool> sylphRun(
-  String configFilePath,
-  String sylphRunName,
-  DateTime sylphRunTimestamp,
-  bool jobVerbose, {
-  String configStr,
-}) async {
+Future<bool> sylphRun(String configFilePath, String sylphRunName,
+    DateTime sylphRunTimestamp, bool jobVerbose,
+    {String configStr}) async {
   bool sylphRunSucceeded = true;
 
   Config config;
@@ -165,7 +161,7 @@ Future<bool> runSylphJob(
   // 2. Upload custom test spec yaml
   final testSpecPath = '$tmpDir/$kAppiumTestSpecName';
   // Substitute MAIN and TESTS for actual debug main and tests from test suite.
-  setTestSpecVars(testSuite, testSpecPath);
+  setTestSpecEnv(testSuite, testSpecPath);
   printStatus('Uploading test specification: $testSpecPath ...');
   String testSpecArn =
       await uploadFile(projectArn, testSpecPath, 'APPIUM_PYTHON_TEST_SPEC');
@@ -204,8 +200,11 @@ Future<String> _buildUploadApp(String projectArn, DeviceType poolType,
     addFlavor(flavor);
     await streamCmd(command);
     // Upload apk
-    printStatus('Uploading debug android app: $kDebugApkPath ...');
-    appArn = await uploadFile(projectArn, kDebugApkPath, 'ANDROID_APP');
+    String debugApkPath = isEmpty(flavor)
+        ? kDebugApkPath
+        : 'build/app/outputs/apk/$flavor/debug/app-$flavor-debug.apk';
+    printStatus('Uploading debug android app: ${debugApkPath} ...');
+    appArn = await uploadFile(projectArn, debugApkPath, 'ANDROID_APP');
   } else {
     printStatus(
         'Building debug .ipa from $mainPath${isEmpty(flavor) ? '' : ' with flavor $flavor'}...');
@@ -272,8 +271,8 @@ DateTime sylphTimestamp() {
   return timestamp;
 }
 
-/// Set MAIN and TESTS vars in test spec.
-void setTestSpecVars(TestSuite test_suite, String testSpecPath) {
+/// Set MAIN and TESTS env vars in test spec.
+void setTestSpecEnv(TestSuite test_suite, String testSpecPath) {
   const kMainEnvName = 'MAIN=';
   const kTestsEnvName = 'TESTS=';
   final mainEnvVal = test_suite.main;

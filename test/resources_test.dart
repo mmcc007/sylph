@@ -74,7 +74,7 @@ main() {
       });
 
       test('find iOS APP_IDENTIFIER', () {
-        final expected = 'com.example.defaultApp';
+        final expected = 'com.orbsoft.counter';
         String appIdentifier = getIosAppIdentifier('example/default_app');
         expect(appIdentifier, expected);
       });

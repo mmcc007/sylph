@@ -80,7 +80,7 @@ install:
 test_script:
   # run sylph
   - echo Run sylph
-  - cd example
+  - cd example/default_app
   - sylph -c sylph_android.yaml -v
 
 # Allow Remote Desktop connection to session
