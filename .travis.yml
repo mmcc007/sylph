@@ -2,10 +2,13 @@ env:
   global:
     - FLUTTER_CHANNEL=stable
     - FLUTTER_VERSION=1.12.13+hotfix.8-${FLUTTER_CHANNEL}
-    # - ANDROID_SDK_TOOLS=sdk-tools-darwin-4333796.zip # older sdkmanager
-    - ANDROID_SDK_TOOLS=commandlinetools-mac-6200805_latest.zip # latest sdkmanager
+    - ANDROID_SDK_TOOLS=sdk-tools-darwin-4333796.zip # older sdkmanager
+#    - ANDROID_SDK_TOOLS=commandlinetools-mac-6200805_latest.zip # latest sdkmanager
     - ANDROID_PLATFORM_SDK=28
     - ANDROID_BUILD_TOOLS=28.0.3
+    - GRAVIS="https://raw.githubusercontent.com/DanySK/Gravis-CI/master/"
+    - JDK_SDKMANAGER="1.8" # the JDK used by sdkmanager
+    - JDK="1.8" # the JDK used by build and tests
 
 jobs:
   include:
@@ -29,11 +32,18 @@ jobs:
       # if: tag IS present
       before_install:
 
+      # Set up JDK 8 for Android SDK
+      - java -version
+      - curl "${GRAVIS}.install-jdk-travis.sh" --output ~/.install-jdk-travis.sh
+      - export TARGET_JDK="${JDK}"
+      - JDK="${JDK_SDKMANAGER}" # used when running sdkmanager
+      - source ~/.install-jdk-travis.sh
+      - java -version
+
       # Add missing java module used by sdkmanager, etc...
       # - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
 
       # Install android tools
-      - java -version
       - export ANDROID_HOME=~/android-sdk
       - wget -q "https://dl.google.com/android/repository/$ANDROID_SDK_TOOLS" -O android-sdk-tools.zip
       - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
@@ -42,15 +52,19 @@ jobs:
       # Silence warning.
       - mkdir -p ~/.android
       - touch ~/.android/repositories.cfg
-      - sdkmanager --sdk_root=$ANDROID_HOME --version
+#      - sdkmanager --sdk_root=$ANDROID_HOME --version
+      - sdkmanager --version
       # Accept licenses before installing components, no need to echo y for each component
-      - yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses > /dev/null
+      - yes | sdkmanager --licenses > /dev/null
       # - sdkmanager --list | head -15
       # Platform and build tools
-      - sdkmanager --sdk_root=$ANDROID_HOME "tools" "platform-tools" "platforms;android-${ANDROID_PLATFORM_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
+      - sdkmanager "tools" "platform-tools" "platforms;android-${ANDROID_PLATFORM_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
       # - sdkmanager --list | head -15
-      - sdkmanager --sdk_root=$ANDROID_HOME --version
       - sdkmanager --version
+
+      # Switch back to our target JDK version to build and run tests
+#      - JDK="${TARGET_JDK}"
+#      - source ~/.install-jdk-travis.sh
 
       # fix timezone warning on osx
       - sudo ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
