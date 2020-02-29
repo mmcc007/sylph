@@ -1,3 +1,6 @@
+## 0.7.2
+- Upgraded apps and build #91
+
 ## 0.7.1
 - Upgraded flutter to latest (1.12.13+hotfix.5) #82  
 (only used for running `flutter driver`)
