@@ -72,3 +72,6 @@ build/
 
 # additional rules
 **/ios/Flutter/flutter_export_environment.sh
+
+# Fastlane
+**/ios/Matchfile

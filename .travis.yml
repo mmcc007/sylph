@@ -32,35 +32,35 @@ jobs:
       # if: tag IS present
       before_install:
 
-      # Set up JDK 8 for Android SDK
-      - java -version
-      - curl "${GRAVIS}.install-jdk-travis.sh" --output ~/.install-jdk-travis.sh
-      - export TARGET_JDK="${JDK}"
-      - JDK="${JDK_SDKMANAGER}" # used when running sdkmanager
-      - source ~/.install-jdk-travis.sh
-      - java -version
-
-      # Add missing java module used by sdkmanager, etc...
-      # - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
-
-      # Install android tools
-      - export ANDROID_HOME=~/android-sdk
-      - wget -q "https://dl.google.com/android/repository/$ANDROID_SDK_TOOLS" -O android-sdk-tools.zip
-      - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
-      - rm android-sdk-tools.zip
-      - PATH=${PATH}:${ANDROID_HOME}/emulator:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
-      # Silence warning.
-      - mkdir -p ~/.android
-      - touch ~/.android/repositories.cfg
-#      - sdkmanager --sdk_root=$ANDROID_HOME --version
-      - sdkmanager --version
-      # Accept licenses before installing components, no need to echo y for each component
-      - yes | sdkmanager --licenses > /dev/null
-      # - sdkmanager --list | head -15
-      # Platform and build tools
-      - sdkmanager "tools" "platform-tools" "platforms;android-${ANDROID_PLATFORM_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
-      # - sdkmanager --list | head -15
-      - sdkmanager --version
+#      # Set up JDK 8 for Android SDK
+#      - java -version
+#      - curl "${GRAVIS}.install-jdk-travis.sh" --output ~/.install-jdk-travis.sh
+#      - export TARGET_JDK="${JDK}"
+#      - JDK="${JDK_SDKMANAGER}" # used when running sdkmanager
+#      - source ~/.install-jdk-travis.sh
+#      - java -version
+#
+#      # Add missing java module used by sdkmanager, etc...
+#      # - export JAVA_OPTS='-XX:+IgnoreUnrecognizedVMOptions --add-modules java.se.ee'
+#
+#      # Install android tools
+#      - export ANDROID_HOME=~/android-sdk
+#      - wget -q "https://dl.google.com/android/repository/$ANDROID_SDK_TOOLS" -O android-sdk-tools.zip
+#      - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
+#      - rm android-sdk-tools.zip
+#      - PATH=${PATH}:${ANDROID_HOME}/emulator:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
+#      # Silence warning.
+#      - mkdir -p ~/.android
+#      - touch ~/.android/repositories.cfg
+##      - sdkmanager --sdk_root=$ANDROID_HOME --version
+#      - sdkmanager --version
+#      # Accept licenses before installing components, no need to echo y for each component
+#      - yes | sdkmanager --licenses > /dev/null
+#      # - sdkmanager --list | head -15
+#      # Platform and build tools
+#      - sdkmanager "tools" "platform-tools" "platforms;android-${ANDROID_PLATFORM_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
+#      # - sdkmanager --list | head -15
+#      - sdkmanager --version
 
       # Switch back to our target JDK version to build and run tests
 #      - JDK="${TARGET_JDK}"
