@@ -2,8 +2,8 @@ env:
   global:
     - FLUTTER_CHANNEL=stable
     - FLUTTER_VERSION=1.12.13+hotfix.8-${FLUTTER_CHANNEL}
-    # - ANDROID_SDK_TOOLS=4333796 # older sdkmanager
-    - ANDROID_SDK_TOOLS=6200805 # latest sdkmanager
+    # - ANDROID_SDK_TOOLS=sdk-tools-darwin-4333796.zip # older sdkmanager
+    - ANDROID_SDK_TOOLS=commandlinetools-mac-6200805_latest.zip # latest sdkmanager
     - ANDROID_PLATFORM_SDK=28
     - ANDROID_BUILD_TOOLS=28.0.3
 
@@ -35,7 +35,7 @@ jobs:
       # Install android tools
       - java -version
       - export ANDROID_HOME=~/android-sdk
-      - wget -q "https://dl.google.com/android/repository/sdk-tools-darwin-$ANDROID_SDK_TOOLS.zip" -O android-sdk-tools.zip
+      - wget -q "https://dl.google.com/android/repository/$ANDROID_SDK_TOOLS" -O android-sdk-tools.zip
       - unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
       - rm android-sdk-tools.zip
       - PATH=${PATH}:${ANDROID_HOME}/emulator:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
