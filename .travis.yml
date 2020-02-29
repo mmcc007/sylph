@@ -29,7 +29,7 @@ jobs:
       os: osx
       osx_image: xcode11.3
       # only build on tag releases
-      # if: tag IS present
+      if: tag IS present
       before_install:
 
       # Set up JDK 8 for Android SDK
@@ -94,8 +94,8 @@ jobs:
       - pub global activate --source path .
 
       script:
-      # - cd example/default_app; sylph
-      - cd example/flavors; sylph
+       - cd example/default_app; sylph
+#      - cd example/flavors; sylph
 
       # publish artifacts to GitHub
       before_deploy:
