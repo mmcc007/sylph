@@ -26,7 +26,7 @@ jobs:
       os: osx
       osx_image: xcode11.3
       # only build on tag releases
-      if: tag IS present
+      # if: tag IS present
       before_install:
 
       # Add missing java module used by sdkmanager, etc...
@@ -49,6 +49,8 @@ jobs:
       # Platform and build tools
       - sdkmanager --sdk_root=$ANDROID_HOME "tools" "platform-tools" "platforms;android-${ANDROID_PLATFORM_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
       # - sdkmanager --list | head -15
+      - sdkmanager --sdk_root=$ANDROID_HOME --version
+      - sdkmanager --version
 
       # fix timezone warning on osx
       - sudo ln -sf /usr/share/zoneinfo/US/Pacific /etc/localtime
