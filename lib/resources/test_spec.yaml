@@ -16,6 +16,8 @@ phases:
 
       # enter flutter app directory in Appium bundle
       - cd flutter_app
+      # Delete .packages to avoid error setting file modification time (bonus: get rid of the mismatched Flutter repo warning)
+      - rm -f .packages
       - ls -la
 
       # check for bash
