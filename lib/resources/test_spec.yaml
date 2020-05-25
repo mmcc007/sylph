@@ -1,4 +1,4 @@
-version: 0.2
+version: 0.1
 
 # Phases are collection of commands that get executed on Device Farm.
 phases:
