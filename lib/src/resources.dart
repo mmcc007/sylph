@@ -8,12 +8,14 @@ import 'package:tool_base/tool_base.dart';
 const kResourcesUri = 'package:sylph/resources';
 const kAppiumTemplateZip = 'appium_bundle.zip';
 const kAppiumTestSpecName = 'test_spec.yaml';
+const kdefaultFlutterVersion = '1.17.1-stable';
 const kTestBundleDir = 'test_bundle';
 const kTestBundleZip = '$kTestBundleDir.zip';
 const kBuildToOsMapFileName = 'build_to_os.txt';
 
 // env vars
 const kCIEnvVar = 'CI'; // detects if running in CI
+const kFlutterVersionEnvVar = 'FLUTTER_VERSION';
 const kExportOptionsPlistEnvVars = [
   // required for iOS build locally and in CI
   'TEAM_ID'
@@ -43,7 +45,10 @@ Future<void> unpackResources(String tmpDir, bool isIosPoolTypeActive,
       '$tmpDir/$kAppiumTemplateZip');
 
   // unpack Appium test spec
-  await unpackFile(kAppiumTestSpecName, tmpDir);
+  await unpackFile(kAppiumTestSpecName, tmpDir, nameVals: {
+    kFlutterVersionEnvVar:
+        platform.environment[kFlutterVersionEnvVar] ?? kdefaultFlutterVersion
+  });
 
   // unpack scripts
   await unpackScripts(tmpDir);
