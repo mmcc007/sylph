@@ -183,3 +183,7 @@ String formatArns(List arns) {
 
 /// tests for empty [string].
 bool isEmpty(String string) => !(string != null && string.isNotEmpty);
+
+String capitalize(String str) {
+  return "${str[0].toUpperCase()}${str.substring(1)}";
+}
