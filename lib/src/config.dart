@@ -28,6 +28,7 @@ class Config {
   String get artifactsDir => _configInfo['artifacts_dir'];
   String get screenhostDir => _configInfo['screenhost_dir'];
   String get flavor => _configInfo['flavor'];
+  String get appIdentifier => _configInfo['app_identifier'];
 
   List<SylphDevice> getPoolDevices(String poolName) =>
       _getSylphDevices(_getPoolInfo(poolName));

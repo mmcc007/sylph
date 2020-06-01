@@ -15,7 +15,6 @@ import 'base/devices.dart';
 import 'base/utils.dart';
 
 const kDebugApkPath = 'build/app/outputs/apk/debug/app-debug.apk';
-const kDebugIpaPath = 'build/ios/Debug-iphoneos/Debug_Runner.ipa';
 
 /// Processes config file (subject to change).
 /// For each device pool:
@@ -53,7 +52,7 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
   final projectArn = setupProject(config.projectName, config.defaultJobTimeout);
 
   // Unpack resources used for building debug .ipa and to bundle tests
-  await unpackResources(config.tmpDir, isIosPoolTypeActive);
+  await unpackResources(config.tmpDir, config.appIdentifier, isIosPoolTypeActive);
 
   // Bundle tests
   bundleFlutterTests(config);
@@ -221,6 +220,7 @@ Future<String> _buildUploadApp(String projectArn, DeviceType poolType,
     addFlavor(flavor);
     await streamCmd(command);
     // Upload ipa
+    final kDebugIpaPath = flavor.isNotEmpty ? 'build/ios/Debug ${flavor}-iphoneos/Debug_Runner.ipa' : 'build/ios/Debug-iphoneos/Debug_Runner.ipa';
     printStatus('Uploading debug iOS app: $kDebugIpaPath ...');
     appArn = await uploadFile(projectArn, kDebugIpaPath, 'IOS_APP');
   }
