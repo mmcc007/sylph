@@ -15,7 +15,6 @@ import 'base/devices.dart';
 import 'base/utils.dart';
 
 const kDebugApkPath = 'build/app/outputs/apk/debug/app-debug.apk';
-const kDebugIpaPath = 'build/ios/Debug-iphoneos/Debug_Runner.ipa';
 
 /// Processes config file (subject to change).
 /// For each device pool:
@@ -53,7 +52,7 @@ Future<bool> sylphRun(String configFilePath, String sylphRunName,
   final projectArn = setupProject(config.projectName, config.defaultJobTimeout);
 
   // Unpack resources used for building debug .ipa and to bundle tests
-  await unpackResources(config.tmpDir, isIosPoolTypeActive);
+  await unpackResources(config.tmpDir, config.appIdentifier, isIosPoolTypeActive);
 
   // Bundle tests
   bundleFlutterTests(config);
@@ -149,6 +148,11 @@ Future<bool> runSylphJob(
     tmpDir,
     config.flavor,
   );
+  final appId = await _getAppId(
+    devicePool.deviceType,
+    config.flavor
+  );
+  printStatus('Aplication id: $appId');
 
   // Upload test suite (in 2 parts)
 
@@ -161,7 +165,7 @@ Future<bool> runSylphJob(
   // 2. Upload custom test spec yaml
   final testSpecPath = '$tmpDir/$kAppiumTestSpecName';
   // Substitute MAIN and TESTS for actual debug main and tests from test suite.
-  setTestSpecEnv(testSuite, testSpecPath);
+  setTestSpecEnv(testSuite, testSpecPath, appId, config.screenhostDir);
   printStatus('Uploading test specification: $testSpecPath ...');
   String testSpecArn =
       await uploadFile(projectArn, testSpecPath, 'APPIUM_PYTHON_TEST_SPEC');
@@ -216,10 +220,19 @@ Future<String> _buildUploadApp(String projectArn, DeviceType poolType,
     addFlavor(flavor);
     await streamCmd(command);
     // Upload ipa
+    final kDebugIpaPath = flavor.isNotEmpty ? 'build/ios/Debug ${flavor}-iphoneos/Debug_Runner.ipa' : 'build/ios/Debug-iphoneos/Debug_Runner.ipa';
     printStatus('Uploading debug iOS app: $kDebugIpaPath ...');
     appArn = await uploadFile(projectArn, kDebugIpaPath, 'IOS_APP');
   }
   return appArn;
+}
+
+String _getAppId(DeviceType poolType, String flavor) {
+  if (poolType == DeviceType.android) {
+    final applicationIdPath = 'build/app/intermediates/metadata_application_id/${flavor}Debug/write${capitalize(flavor)}DebugApplicationId/application-id.txt';
+    return fs.file(applicationIdPath).readAsStringSync();
+  }
+  return '';
 }
 
 /// Runs the test suite on each device in device pool and downloads artifacts.
@@ -272,18 +285,27 @@ DateTime sylphTimestamp() {
 }
 
 /// Set MAIN and TESTS env vars in test spec.
-void setTestSpecEnv(TestSuite test_suite, String testSpecPath) {
+void setTestSpecEnv(TestSuite test_suite, String testSpecPath, String appId, String screenhostDir) {
   const kMainEnvName = 'MAIN=';
   const kTestsEnvName = 'TESTS=';
+  const kAppIdEnvName = 'APP_ID=';
+  const kScreenhostPathEnvName = 'SCREENSHOTS_PATH=';
   final mainEnvVal = test_suite.main;
   final testsEnvVal = test_suite.tests.join(",");
+  final appIdEnvVal = appId;
   final mainRegExp = RegExp('$kMainEnvName.*');
   final testsRegExp = RegExp('$kTestsEnvName.*');
+  final appIdRegExp = RegExp('$kAppIdEnvName.*');
+  final screenhostPathRegExp = RegExp('$kScreenhostPathEnvName.*');
   String testSpecStr = fs.file(testSpecPath).readAsStringSync();
   testSpecStr =
       testSpecStr.replaceFirst(mainRegExp, '$kMainEnvName$mainEnvVal');
   testSpecStr =
       testSpecStr.replaceAll(testsRegExp, '$kTestsEnvName\'$testsEnvVal\'');
+  testSpecStr =
+      testSpecStr.replaceAll(appIdRegExp, '$kAppIdEnvName\'$appIdEnvVal\'');
+  testSpecStr =
+      testSpecStr.replaceAll(screenhostPathRegExp, '$kScreenhostPathEnvName\'$screenhostDir\'');
   fs.file(testSpecPath).writeAsStringSync(testSpecStr);
 }
 

@@ -94,6 +94,9 @@ Configuration information is passed to _Sylph_ using a configuration file. The d
 # sylph config
 tmp_dir: /tmp/sylph
 artifacts_dir: /tmp/sylph_artifacts
+# The folder in which screenshots are created during the tests. 
+# The folder will be copied to DEVICEFARM_SCREENSHOT_PATH so that AWD displays screenshots
+screenhost_dir: ./screenshots
 # local timeout per device farm run
 sylph_timeout: 720 # seconds approx
 # run on ios and android pools concurrently (for faster results)

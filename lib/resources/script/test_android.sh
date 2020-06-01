@@ -19,7 +19,7 @@ main() {
     --run-tests)
         if [[ -z $2 ]]; then show_help; fi
 #        run_tests "$2" "$4" "$6"
-        run_tests "$2"
+        run_tests "$2" "$3"
         ;;
     --run-driver)
         if [[ -z $2 ]]; then show_help; fi
@@ -60,11 +60,11 @@ where:
 
 run_tests() {
   local test_paths=$1 # comma-delimited list of test paths
+  local flavor=$2
 
   while IFS=',' read -ra tests; do # parse comma-delimited list into real list of [tests]
     for test in "${tests[@]}"; do
-#        custom_test_runner "$test" "$2" "$3"
-        custom_test_runner "$test"
+       custom_test_runner "$test" "$flavor"
     done
   done <<< "$test_paths"
 }
@@ -74,10 +74,9 @@ run_tests() {
 #       (see https://github.com/flutter/flutter/issues/34909)
 custom_test_runner() {
     local test_path=$1
+    local app_id=$2
     local forwarded_port=4723 # re-use appium server port if on device farm host
 
-    local app_id
-    app_id=$(grep applicationId android/app/build.gradle | awk '{print $2}' | tr -d '"')
 #    local package
 #    package=app_id
 
@@ -110,7 +109,8 @@ custom_test_runner() {
     adb logcat -c
 
     # start app on device
-    adb shell am start -a android.intent.action.RUN -f 0x20000000 --ez enable-background-compilation true --ez enable-dart-profiling true --ez enable-checked-mode true --ez verify-entry-points true --ez start-paused true "$app_id/.MainActivity"
+    activity=$(adb shell cmd package resolve-activity -c android.intent.category.LAUNCHER $app_id | sed -n '/name=/s/^.*name=//p')
+    adb shell am start -a android.intent.action.RUN -f 0x20000000 --ez enable-background-compilation true --ez enable-dart-profiling true --ez enable-checked-mode true --ez verify-entry-points true --ez start-paused true $app_id/$activity
 
     # wait for observatory startup on device and get port number
     obs_str=$( (adb logcat -v time &) | grep -m 1 "Observatory listening on")

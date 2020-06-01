@@ -33,7 +33,7 @@ const kAppIdentifier = 'APP_IDENTIFIER';
 /// Unpacks resources found in package into [tmpDir].
 /// Appium template is used to deliver tests.
 /// Scripts are used to initialize device and run tests.
-Future<void> unpackResources(String tmpDir, bool isIosPoolTypeActive,
+Future<void> unpackResources(String tmpDir, String appIdentifier, bool isIosPoolTypeActive,
     {String appDir = '.'}) async {
   printStatus('Unpacking sylph resources to $tmpDir');
   clearDirectory(tmpDir);
@@ -50,8 +50,11 @@ Future<void> unpackResources(String tmpDir, bool isIosPoolTypeActive,
 
   // unpack build to os map file
   await unpackFile(kBuildToOsMapFileName, tmpDir);
-
-  final nameVals = {kAppIdentifier: getIosAppIdentifier(appDir)};
+  
+  final nameVals = {kAppIdentifier: 
+    appIdentifier?.isEmpty ?? true 
+      ? getIosAppIdentifier(appDir)
+      : appIdentifier};
 
   // unpack export options
   if (isIosPoolTypeActive) {

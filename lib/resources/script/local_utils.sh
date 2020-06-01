@@ -84,13 +84,13 @@ build_debug_ipa() {
     local app_name="Runner"
     local scheme
     if [[ -z "$flavor" ]]; then
-        echo "Running flutter build ios -t test_driver/main.dart --debug..."
-        flutter build ios -t test_driver/main.dart --debug
+        echo "Running flutter build ios -t test_driver/main.dart --debug --no-codesign..."
+        flutter build ios -t test_driver/main.dart --debug --no-codesign
         scheme="$app_name"
         build_config="Debug"
     else
-        echo "Running flutter build ios -t test_driver/main.dart --debug --flavor $flavor..."
-        flutter build ios -t test_driver/main.dart --debug --flavor $flavor
+        echo "Running flutter build ios -t test_driver/main.dart --debug --no-codesign --flavor $flavor..."
+        flutter build ios -t test_driver/main.dart --debug --flavor $flavor --no-codesign
         scheme="$flavor"
         build_config="Debug $flavor"
     fi
@@ -105,7 +105,7 @@ build_debug_ipa() {
     remove_archive_disabler
 
     local default_debug_ipa_name='Debug_Runner.ipa'
-    local ios_build_dir="$PWD/build/ios/Debug-iphoneos"
+    local ios_build_dir="$PWD/build/ios/$build_config-iphoneos"
     local archive_path="$ios_build_dir/$app_name.xcarchive"
 
     echo "Generating debug archive..."

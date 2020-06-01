@@ -96,10 +96,11 @@ phases:
       - rm -f .packages # todo: remove from bundle
       - MAIN=test_driver/main.dart
       - TESTS='test_driver/main_test.dart'
+      - APP_ID=''
       - >-
         if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "Android" ];
         then
-          ./script/test_android.sh --run-tests "$TESTS"
+          ./script/test_android.sh --run-tests "$TESTS" "$APP_ID"
           track_test_phase_status
         fi
 
@@ -128,7 +129,12 @@ phases:
 
   # The post test phase includes are commands that are run after your tests are executed.
   post_test:
-    commands:
+    commands: 
+      - SCREENSHOTS_PATH=''
+      - >-
+        if [ -d "$SCREENSHOTS_PATH" ]; then
+          cp -r $SCREENSHOTS_PATH $DEVICEFARM_SCREENSHOT_PATH
+        fi
 
 # The artifacts phase lets you specify the location where your tests logs, device logs will be stored.
 # And also let you specify the location of your test logs and artifacts which you want to be collected by Device Farm.
