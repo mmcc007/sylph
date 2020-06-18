@@ -35,7 +35,7 @@ bool isValidConfig(Config config, bool isIosPoolTypeActive) {
           .firstWhere((device) => device == sylphDevice, orElse: () => null);
       if (jobDevice != null) {
         if (jobDevice.availability == 'BUSY' || jobDevice.availability == 'TEMPORARY_NOT_AVAILABLE') {
-          printError('Error: device: \'$jobDevice\' \'$sylphDevice\' is busy.');
+          printError('Error: device: \'$jobDevice\' is busy.');
           // If no devices are available then quit.
           if (config.getDevicesInSuite(testSuite.name).last.name == jobDevice.name && matchingSylphDevices.length == 0){
             printError('No available devices. Application will now quit.');
