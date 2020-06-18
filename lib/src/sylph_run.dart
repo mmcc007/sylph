@@ -212,7 +212,7 @@ Future<String> _buildUploadApp(String projectArn, DeviceType poolType,
       await streamCmd(
           ['$tmpDir/script/local_utils.sh', '--ci', fs.currentDirectory.path]);
     }
-    command = ['$tmpDir/script/local_utils.sh', '--build-debug-ipa'];
+    command = ['$tmpDir/script/local_utils.sh', '--build-debug-ipa', '--path', mainPath];
     addFlavor(flavor);
     await streamCmd(command);
     // Upload ipa

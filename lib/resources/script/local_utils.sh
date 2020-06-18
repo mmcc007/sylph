@@ -8,7 +8,7 @@ set -e
 main(){
   case $1 in
     --build-debug-ipa)
-        build_debug_ipa "$3"
+        build_debug_ipa "$2" "$3"
         ;;
     --ci)
         if [[ -z $2 ]]; then show_help; fi
@@ -31,6 +31,8 @@ where:
         (app must include 'enableFlutterDriverExtension()')
         --flavor <flavor name>
             <flavor name> is name of flavor to build (if any)
+        --path <main path>
+            <main path> is the path to the driver main dart file.
     --ci <staging dir>
         configure a CI build environment
     --help
@@ -72,8 +74,17 @@ EOF
 }
 
 build_debug_ipa() {
-    local flavor=$1
+    # Determine if it was flavor or path provided
+    if [[ $1 == "--flavor" ]]; then
+      local flavor=$2
+    elif [[ $1 == "--path" ]]; then
+      local main=$2
+    fi
 
+    # If a main file wasn't provided then default
+    if [[ -z "$main" ]]; then
+      local main="test_driver/main.dart"
+    fi
 #    echo "Building debug .ipa for upload to Device Farm..."
 
     flutter packages get > /dev/null # in case building from a different flutter repo
@@ -84,13 +95,13 @@ build_debug_ipa() {
     local app_name="Runner"
     local scheme
     if [[ -z "$flavor" ]]; then
-        echo "Running flutter build ios -t test_driver/main.dart --debug..."
-        flutter build ios -t test_driver/main.dart --debug
+        echo "Running flutter build ios -t $main --debug..."
+        flutter build ios -t $main --debug
         scheme="$app_name"
         build_config="Debug"
     else
-        echo "Running flutter build ios -t test_driver/main.dart --debug --flavor $flavor..."
-        flutter build ios -t test_driver/main.dart --debug --flavor $flavor
+        echo "Running flutter build ios -t $main --debug --flavor $flavor..."
+        flutter build ios -t $main --debug --flavor $flavor
         scheme="$flavor"
         build_config="Debug $flavor"
     fi
