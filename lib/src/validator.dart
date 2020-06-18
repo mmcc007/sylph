@@ -34,17 +34,22 @@ bool isValidConfig(Config config, bool isIosPoolTypeActive) {
       final jobDevice = allJobDevices
           .firstWhere((device) => device == sylphDevice, orElse: () => null);
       if (jobDevice != null) {
-        if (jobDevice.availability == 'BUSY') {
-          printError('Error: device: \'$jobDevice\' is busy.');
-          exit(1);
-        }
+        if (jobDevice.availability == 'BUSY' || jobDevice.availability == 'TEMPORARY_NOT_AVAILABLE') {
+          printError('Error: device: \'$jobDevice\' \'$sylphDevice\' is busy.');
+          // If no devices are available then quit.
+          if (config.getDevicesInSuite(testSuite.name).last.name == jobDevice.name && matchingSylphDevices.length == 0){
+            printError('No available devices. Application will now quit.');
+            exit(1);
+          }
+        } else {
         matchingSylphDevices.add(jobDevice);
+        }
       } else {
         printError('Error: No match found for $sylphDevice.');
         missingSylphDevices.add(sylphDevice);
       }
     }
-  }
+    }
 
   // check for valid pool types
   final isPoolTypesValid = config.isValidPoolTypes();
