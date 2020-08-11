@@ -169,6 +169,10 @@ To enable testing on a flavor add the following to your sylph.yaml:
 flavor: <name of flavor>
 ```
 
+## Flutter version
+
+Sylph will default to flutter version `v1.12.13+hotfix.8-stable` to execute the tests in AWS but this can be overriden by setting the `FLUTTER_VERSION` environment variable to the version of your choice.
+
 # Configuring a CI Environment for _Sylph_
 In addition to running from the command line, _Sylph_ also runs in a CI environment.
 

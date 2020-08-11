@@ -29,6 +29,7 @@ const kAWSCredentialsEnvVars = ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY'];
 
 // substitute names
 const kAppIdentifier = 'APP_IDENTIFIER';
+const kFlutterVersion = 'FLUTTER_VERSION';
 
 /// Unpacks resources found in package into [tmpDir].
 /// Appium template is used to deliver tests.
@@ -43,7 +44,8 @@ Future<void> unpackResources(String tmpDir, bool isIosPoolTypeActive,
       '$tmpDir/$kAppiumTemplateZip');
 
   // unpack Appium test spec
-  await unpackFile(kAppiumTestSpecName, tmpDir);
+  final testSpecNameVals = { 'FLUTTER_VERSION': getFlutterVersion() };
+  await unpackFile(kAppiumTestSpecName, tmpDir, nameVals: testSpecNameVals);
 
   // unpack scripts
   await unpackScripts(tmpDir);
@@ -138,3 +140,9 @@ String getIosAppIdentifier(String appDir) {
   final iOSConfigStr = fs.file(kIosConfigPath).readAsStringSync();
   return RegExp(regExp).firstMatch(iOSConfigStr)[1];
 }
+
+/// Gets the predefined or overriden flutter version to use
+String getFlutterVersion() {
+  const defaultVersion = 'v1.12.13+hotfix.8-stable';
+  return platform.environment[kFlutterVersion] ?? defaultVersion;
+} 
