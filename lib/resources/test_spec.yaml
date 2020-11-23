@@ -29,7 +29,7 @@ phases:
 
       # install flutter
       - echo "Install flutter"
-      - FLUTTER_VERSION='v1.12.13+hotfix.8-stable'
+      - FLUTTER_VERSION='1.22.4-stable'
       - >-
         if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "Android" ];
         then
@@ -99,7 +99,7 @@ phases:
       - >-
         if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "Android" ];
         then
-          ./script/test_android.sh --run-tests "$TESTS"
+          ./script/test_android.sh --run-driver "$MAIN"
           track_test_phase_status
         fi
 

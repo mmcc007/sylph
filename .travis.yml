@@ -1,7 +1,7 @@
 env:
   global:
     - FLUTTER_CHANNEL=stable
-    - FLUTTER_VERSION=1.12.13+hotfix.8-${FLUTTER_CHANNEL}
+    - FLUTTER_VERSION=1.22.4-${FLUTTER_CHANNEL}
     - ANDROID_SDK_TOOLS=sdk-tools-darwin-4333796.zip # older sdkmanager
 #    - ANDROID_SDK_TOOLS=commandlinetools-mac-6200805_latest.zip # latest sdkmanager
     - ANDROID_PLATFORM_SDK=28
@@ -78,7 +78,7 @@ jobs:
 #      - brew link --overwrite cocoapods
 
       # install pre-compiled flutter
-      - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_v${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
+      - wget --quiet --output-document=flutter.zip https://storage.googleapis.com/flutter_infra/releases/${FLUTTER_CHANNEL}/macos/flutter_macos_${FLUTTER_VERSION}.zip && unzip -qq flutter.zip > /dev/null && rm flutter.zip
       - export PATH="$PATH":"$HOME/.pub-cache/bin"
       - export PATH=$PWD/flutter/bin:$PWD/flutter/bin/cache/dart-sdk/bin:$PATH
       - flutter doctor -v
