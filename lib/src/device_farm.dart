@@ -1,317 +1,161 @@
-//import 'dart:io';
 import 'dart:async';
-import 'package:path/path.dart' as p;
-import 'package:sprintf/sprintf.dart';
-import 'package:tool_base/tool_base.dart' hide Version;
-import 'package:version/version.dart';
+import 'dart:convert';
+import 'dart:io';
 
-import 'config.dart';
-import 'base/devices.dart';
-import 'base/utils.dart';
+import 'package:path/path.dart' as path;
+import 'package:yaml/yaml.dart';
 
-const kUploadTimeout = 15;
-const kUploadSucceeded = 'SUCCEEDED';
-const kUploadFailed = 'FAILED';
-const kCompletedRunStatus = 'COMPLETED';
-const kSuccessResult = 'PASSED';
+import 'models/device.dart';
+import 'utils/tool_base.dart';
 
-/// Sets up a project for testing.
-/// Creates new project if none exists.
-/// Returns the project ARN as [String].
-String setupProject(String projectName, int jobTimeoutMinutes) {
-  // check for existing project
-  final projects = deviceFarmCmd(['list-projects'])['projects'];
-  final project = projects.firstWhere(
-      (project) => project['name'] == projectName,
-      orElse: () => null);
-
-  if (project == null) {
-    // create new project
+/// AWS Device Farm test runner.
+class DeviceFarm {
+  /// Creates a new project in AWS Device Farm.
+  Future<String> createProject(String projectName) async {
     printStatus('Creating new project for \'$projectName\' ...');
-    return deviceFarmCmd([
-      'create-project',
-      '--name',
-      projectName,
-      '--default-job-timeout-minutes',
-      '$jobTimeoutMinutes'
-    ])['project']['arn'];
-  } else {
-    return project['arn'];
+    final result = await runCommand(
+      'aws',
+      ['devicefarm', 'create-project', '--name', projectName, '--output', 'json'],
+      failureMessage: 'Failed to create project',
+    );
+    final Map<String, dynamic> response = jsonDecode(result);
+    return response['project']['arn'] as String;
   }
-}
 
-/// Set up a device pool if named pool does not exist.
-/// Returns the device pool ARN as [String].
-String setupDevicePool(DevicePool devicePool, String projectArn) {
-  final poolName = devicePool.name;
-  final devices = devicePool.devices;
-  // check for existing pool
-  final pools = deviceFarmCmd([
-    'list-device-pools',
-    '--arn',
-    projectArn,
-    '--type',
-    'PRIVATE'
-  ])['devicePools'];
-  final pool =
-      pools.firstWhere((pool) => pool['name'] == poolName, orElse: () => null);
+  /// Sets up a device pool in AWS Device Farm.
+  Future<String> setupDevicePool(DevicePool devicePool, String projectArn) async {
+    printStatus('Setting up device pool \'${devicePool.name}\' ...');
+    final rules = [
+      {
+        'attribute': 'ARN',
+        'operator': 'IN',
+        'value': jsonEncode(devicePool.devices.map((device) => device.arn).toList()),
+      }
+    ];
 
-  if (pool == null) {
-    // create new device pool
-    printStatus('Creating new device pool \'$poolName\' ...');
-    // convert devices to a rule
-    String rules = devicesToRule(devices);
+    final result = await runCommand(
+      'aws',
+      [
+        'devicefarm',
+        'create-device-pool',
+        '--project-arn',
+        projectArn,
+        '--name',
+        devicePool.name,
+        '--rules',
+        jsonEncode(rules),
+        '--output',
+        'json',
+      ],
+      failureMessage: 'Failed to create device pool',
+    );
 
-    final newPool = deviceFarmCmd([
-      'create-device-pool',
-      '--name',
-      poolName,
-      '--project-arn',
-      projectArn,
-      '--rules',
-      rules,
-      // number of devices in pool should not exceed number of devices requested
-      // An error occurred (ArgumentException) when calling the CreateDevicePool operation: A static device pool can not have max devices parameter
-//      '--max-devices', '${devices.length}'
-    ])['devicePool'];
-    return newPool['arn'];
-  } else {
-    return pool['arn'];
+    final Map<String, dynamic> response = jsonDecode(result);
+    return response['devicePool']['arn'] as String;
   }
-}
 
-/// Schedules a run.
-/// Returns the run ARN as [String].
-String scheduleRun(
-    String runName,
-    String projectArn,
-    String appArn,
-    String devicePoolArn,
-    String testSpecArn,
-    String testPackageArn,
-    int runTimeout) {
-  // Schedule run
-  return deviceFarmCmd([
-    'schedule-run',
-    '--project-arn',
-    projectArn,
-    '--app-arn',
-    appArn,
-    '--device-pool-arn',
-    devicePoolArn,
-    '--name',
-    runName,
-    '--test',
-    'testSpecArn=$testSpecArn,type=APPIUM_PYTHON,testPackageArn=$testPackageArn',
-    '--execution-configuration',
-    'jobTimeoutMinutes=$runTimeout,accountsCleanup=false,appPackagesCleanup=false,videoCapture=true,skipAppResign=false'
-  ])['run']['arn'];
-}
-
-/// Tracks run status.
-/// Returns final run status as [Map].
-Future<Map> runStatus(
-    String runArn, int sylphRunTimeout, String poolName) async {
-  const timeoutIncrement = 10;
-  Map runStatus;
-  for (int i = 0; i < sylphRunTimeout; i += timeoutIncrement) {
-    runStatus = deviceFarmCmd([
-      'get-run',
-      '--arn',
-      runArn,
-    ])['run'];
-    final runStatusFlag = runStatus['status'];
-
-    // print run status
-    printStatus(
-        'Run status on device pool \'$poolName\': $runStatusFlag (sylph run timeout: $i of $sylphRunTimeout)');
-
-    // print job status' for this run
-    final jobsInfo = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
-    for (final jobInfo in jobsInfo) {
-      printStatus('\t\t${jobStatus(jobInfo)}');
+  /// Runs tests on AWS Device Farm.
+  Future<void> runTests({
+    required String projectName,
+    required DevicePool devicePool,
+    required YamlMap? testSuite,
+  }) async {
+    if (testSuite == null) {
+      printError('No test suite specified');
+      exit(1);
     }
 
-    if (runStatusFlag == kCompletedRunStatus) return runStatus;
+    final projectArn = await createProject(projectName);
+    final devicePoolArn = await setupDevicePool(devicePool, projectArn);
 
-    await Future.delayed(Duration(milliseconds: 1000 * timeoutIncrement));
-  }
-  // todo: cancel run on device farm
-  throw 'Error: run timed-out';
-}
-
-/// Generates string of job status info from a [Map] of job info
-String jobStatus(Map job) {
-  final jobCounters = job['counters'];
-  final passed = jobCounters == null ? '?' : jobCounters['passed'];
-  final failed = jobCounters == null ? '?' : jobCounters['failed'];
-  final deviceMinutes = job['deviceMinutes'];
-  final deviceMinutesTotal =
-      deviceMinutes == null ? '?' : deviceMinutes['total'];
-  return sprintf('device: %-15s, passed: %s, failed: %s, minutes: %s',
-      [job['name'] ?? 'unknown for now', passed, failed, deviceMinutesTotal]);
-}
-
-/// Runs run report.
-/// Returns [bool] for pass/fail of run.
-bool runReport(Map run) {
-  printStatus(
-      'Run \'${run['name']}\' completed ${run['completedJobs']} of ${run['totalJobs']} jobs.');
-
-  final result = run['result'];
-
-  printStatus('  Result: $result');
-  final deviceMinutes = run['deviceMinutes'];
-  if (deviceMinutes != null) {
-    printStatus(
-        '  Device minutes: ${deviceMinutes['total']} (${deviceMinutes['metered']} metered).');
-  }
-  final counters = run['counters'];
-  printStatus('  Counters:\n'
-      '    skipped: ${counters['skipped']}\n'
-      '    warned: ${counters['warned']}\n'
-      '    failed: ${counters['failed']}\n'
-      '    stopped: ${counters['stopped']}\n'
-      '    passed: ${counters['passed']}\n'
-      '    errored: ${counters['errored']}\n'
-      '    total: ${counters['total']}\n');
-
-  if (result != kSuccessResult) {
-    printStatus('Warning: run failed. Continuing...');
-    return false;
-  }
-  return true;
-}
-
-/// Finds the ARNs of devices for a [List] of sylph devices.
-/// Returns device ARNs as a [List].
-List findDevicesArns(List<SylphDevice> sylphDevices) {
-  final deviceArns = [];
-  final deviceFarmDevices = getDeviceFarmDevices();
-  for (final sylphDevice in sylphDevices) {
-    final deviceFarmDevice = deviceFarmDevices.firstWhere(
-        (_deviceFarmDevice) => _deviceFarmDevice == sylphDevice,
-        orElse: () => throw 'Error: device does not exist: $sylphDevice');
-    deviceArns.add(deviceFarmDevice.arn);
-  }
-
-  return deviceArns;
-}
-
-/// Converts a [List] of sylph devices to a rule.
-/// Used for building a device pool.
-/// Returns rule as formatted [String].
-String devicesToRule(List<SylphDevice> sylphDevices) {
-  return '[{"attribute": "ARN", "operator": "IN","value": "[${formatArns(findDevicesArns(sylphDevices))}]"}]';
-}
-
-/// Uploads a file to device farm.
-/// Returns file ARN as [String].
-Future<String> uploadFile(
-    String projectArn, String filePath, String fileType) async {
-  // 1. Create upload
-  final upload = deviceFarmCmd([
-    'create-upload',
-    '--project-arn',
-    projectArn,
-    '--name',
-    p.basename(filePath),
-    '--type',
-    fileType
-  ])['upload'];
-  final uploadUrl = upload['url'];
-  final uploadArn = upload['arn'];
-
-  // 2. Upload file
-  cmd(['curl', '-T', filePath, '$uploadUrl']);
-
-  // 3. Wait until file upload complete
-  for (int i = 0; i < kUploadTimeout; i++) {
-    final upload = deviceFarmCmd(['get-upload', '--arn', uploadArn])['upload'];
-    await Future.delayed(Duration(milliseconds: 1000));
-    final uploadStatus = upload['status'];
-    if (uploadStatus == kUploadSucceeded) {
-      return uploadArn;
+    final appFile = testSuite['app'] as String;
+    if (!File(appFile).existsSync()) {
+      printError('App file not found: $appFile');
+      exit(1);
     }
-    if (uploadStatus == kUploadFailed) {
-//      throw 'Error: upload of \'$filePath\' failed: ${upload['metadata']['errorMessage']}';
-      throw 'Error: upload of \'$filePath\' failed: ${upload['metadata']}';
+
+    final testSpecFile = testSuite['test_spec'] as String;
+    if (!File(testSpecFile).existsSync()) {
+      printError('Test spec file not found: $testSpecFile');
+      exit(1);
     }
+
+    printStatus('Running tests...');
+    
+    // Upload app
+    printStatus('Uploading app...');
+    final uploadAppResult = await runCommand(
+      'aws',
+      [
+        'devicefarm',
+        'create-upload',
+        '--project-arn',
+        projectArn,
+        '--name',
+        path.basename(appFile),
+        '--type',
+        'ANDROID_APP',
+        '--output',
+        'json',
+      ],
+      failureMessage: 'Failed to create app upload',
+    );
+
+    final appUpload = jsonDecode(uploadAppResult);
+    final appUploadArn = appUpload['upload']['arn'] as String;
+
+    // Upload test spec
+    printStatus('Uploading test spec...');
+    final uploadTestSpecResult = await runCommand(
+      'aws',
+      [
+        'devicefarm',
+        'create-upload',
+        '--project-arn',
+        projectArn,
+        '--name',
+        path.basename(testSpecFile),
+        '--type',
+        'APPIUM_NODE_TEST_SPEC',
+        '--output',
+        'json',
+      ],
+      failureMessage: 'Failed to create test spec upload',
+    );
+
+    final testSpecUpload = jsonDecode(uploadTestSpecResult);
+    final testSpecUploadArn = testSpecUpload['upload']['arn'] as String;
+
+    // Schedule run
+    printStatus('Scheduling test run...');
+    final scheduleRunResult = await runCommand(
+      'aws',
+      [
+        'devicefarm',
+        'schedule-run',
+        '--project-arn',
+        projectArn,
+        '--app-arn',
+        appUploadArn,
+        '--device-pool-arn',
+        devicePoolArn,
+        '--name',
+        'Test Run ${DateTime.now().toIso8601String()}',
+        '--test',
+        jsonEncode({
+          'type': 'APPIUM_NODE',
+          'testSpecArn': testSpecUploadArn,
+        }),
+        '--output',
+        'json',
+      ],
+      failureMessage: 'Failed to schedule test run',
+    );
+
+    final run = jsonDecode(scheduleRunResult);
+    final runArn = run['run']['arn'] as String;
+
+    printStatus('Test run scheduled with ARN: $runArn');
+    printStatus('View the run in AWS Device Farm console.');
   }
-  throw 'Error: upload of file \'$filePath\' timed out';
-}
-
-/// Downloads artifacts for each job generated during a run.
-void downloadJobArtifacts(String runArn, String runArtifactDir) {
-  final List jobs = deviceFarmCmd(['list-jobs', '--arn', runArn])['jobs'];
-  for (final job in jobs) {
-    final jobDevice = loadDeviceFarmDevice(job['device']);
-    downloadArtifacts(
-        job['arn'], jobArtifactsDirPath(runArtifactDir, jobDevice));
-  }
-}
-
-/// Downloads artifacts generated during a run.
-/// [arn] can be a run, job, suite, or test ARN.
-void downloadArtifacts(String arn, String artifactsDir) {
-  printStatus('Downloading artifacts to $artifactsDir');
-  clearDirectory(artifactsDir);
-
-  final artifacts = deviceFarmCmd(
-      ['list-artifacts', '--arn', arn, '--type', 'FILE'])['artifacts'];
-
-  for (final artifact in artifacts) {
-    final name = artifact['name'];
-    final extension = artifact['extension'];
-    final fileUrl = artifact['url'];
-    final artifactArn = artifact['arn'];
-
-    // avoid duplicate filenames
-    final regExp = RegExp(r'(\/\d*){4}$'); // get last four numbers of arn
-    // returns an empty element at start of list that is removed
-    final artifactIDs = regExp.stringMatch(artifactArn).split('/')..removeAt(0);
-
-    // use last artifactID to make unique
-    final fileName = '$name ${artifactIDs[3]}.$extension'.replaceAll(' ', '_');
-    final filePath = '$artifactsDir/$fileName';
-    cmd(['curl', fileUrl, '-o', filePath]);
-  }
-}
-
-/// Get device farm devices filtered by type.
-List<DeviceFarmDevice> getDeviceFarmDevicesByType(DeviceType deviceType) {
-  return getDeviceFarmDevices()
-      .where((device) => device.deviceType == deviceType)
-      .toList();
-}
-
-/// Get current device farm devices using device farm API.
-List<DeviceFarmDevice> getDeviceFarmDevices() {
-  final _deviceFarmDevices = deviceFarmCmd(['list-devices'])['devices'];
-  final deviceFarmDevices = <DeviceFarmDevice>[];
-  for (final _deviceFarmDevice in _deviceFarmDevices) {
-    deviceFarmDevices.add(loadDeviceFarmDevice(_deviceFarmDevice));
-  }
-  deviceFarmDevices.sort();
-  return deviceFarmDevices;
-}
-
-/// Load a device farm device from a [Map] of device.
-DeviceFarmDevice loadDeviceFarmDevice(Map device) {
-  return DeviceFarmDevice(
-      device['name'],
-      device['modelId'],
-      Version.parse(device['os']),
-      device['platform'] == 'ANDROID' ? DeviceType.android : DeviceType.ios,
-      device['formFactor'] == 'PHONE' ? FormFactor.phone : FormFactor.tablet,
-      device['availability'] ?? '',
-      device['arn']);
-}
-
-/// generates a download directory path for each Device Farm run job's artifacts
-String jobArtifactsDirPath(String runArtifactDir, SylphDevice sylphDevice) {
-  final downloadDir = '$runArtifactDir/' +
-      '${sylphDevice.name}-${sylphDevice.model}-${sylphDevice.os}'
-          .replaceAll(' ', '_');
-  return downloadDir;
 }

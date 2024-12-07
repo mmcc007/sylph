@@ -1,0 +1,23 @@
+project_name: sylph_example
+default_job_timeout: 30
+
+device_pools:
+  - pool_name: android_pool
+    pool_type: android
+    devices:
+      - name: Google Pixel 2
+        model: Google Pixel 2
+        os: Android
+        os_version: "9"
+        arn: arn:aws:devicefarm:us-west-2::device:58D6FB12B3624256AED26D0F940D4427
+
+test_suites:
+  - test_suite: example_test
+    main: test/example.js
+    app: example/build/app/outputs/apk/debug/app-debug.apk
+    test_spec: test_spec.yaml
+    device_pools:
+      - android_pool
+    job_timeout: 30
+    pool_type: android
+    working_dir: example/test

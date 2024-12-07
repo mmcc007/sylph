@@ -5,25 +5,23 @@ import 'utils.dart';
 enum DeviceType { ios, android }
 
 /// Load a sylph device from [Map] of device and pool type.
-SylphDevice loadSylphDevice(Map device, String poolType) {
+SylphDevice loadSylphDevice(Map<String, dynamic> device, String poolType) {
   return SylphDevice(
-      device['name'],
-      device['model'],
-      Version.parse(device['os'].toString()),
-      stringToEnum(DeviceType.values, poolType));
+    device['name'] as String,
+    device['model'] as String,
+    Version.parse(device['os'].toString()),
+    stringToEnum(DeviceType.values, poolType),
+  );
 }
 
 const kOrderEqual = 0;
 
 /// Describe a sylph device that can be compared and sorted.
-class SylphDevice implements Comparable {
-  SylphDevice(this.name, this.model, this.os, this.deviceType)
-      : assert(name != null),
-        assert(model != null),
-        assert(os != null),
-        assert(deviceType != null);
+class SylphDevice implements Comparable<SylphDevice> {
+  SylphDevice(this.name, this.model, this.os, this.deviceType);
 
-  final String name, model;
+  final String name;
+  final String model;
   final Version os;
   final DeviceType deviceType;
 
@@ -33,28 +31,24 @@ class SylphDevice implements Comparable {
   }
 
   @override
-  int compareTo(other) {
+  int compareTo(SylphDevice other) {
     final nameCompare = name.compareTo(other.name);
     if (nameCompare != kOrderEqual) {
       return nameCompare;
-    } else {
-      final modelCompare = model.compareTo(other.model);
-      if (modelCompare != kOrderEqual) {
-        return modelCompare;
-      } else {
-        // Version does not implement compareTo
-        final osCompare = os == other.os ? kOrderEqual : os > other.os ? 1 : -1;
-        if (osCompare != kOrderEqual) {
-          return osCompare;
-        } else {
-          return enumToStr(deviceType).compareTo(enumToStr(other.deviceType));
-        }
-      }
     }
+    final modelCompare = model.compareTo(other.model);
+    if (modelCompare != kOrderEqual) {
+      return modelCompare;
+    }
+    final osCompare = os == other.os ? kOrderEqual : os.compareTo(other.os);
+    if (osCompare != kOrderEqual) {
+      return osCompare;
+    }
+    return enumToStr(deviceType).compareTo(enumToStr(other.deviceType));
   }
 
   @override
-  bool operator ==(other) {
+  bool operator ==(Object other) {
     return other is SylphDevice &&
         other.name == name &&
         other.model == model &&
@@ -72,15 +66,19 @@ enum FormFactor { phone, tablet }
 /// Describe a device farm device that can be compared and sorted.
 /// Also can be compared with a [SylphDevice].
 class DeviceFarmDevice extends SylphDevice {
-  DeviceFarmDevice(String name, String modelId, Version os,
-      DeviceType deviceType, this.formFactor, this.availability, this.arn)
-      : assert(formFactor != null),
-        assert(availability != null),
-        assert(arn != null),
-        super(name, modelId, os, deviceType);
+  DeviceFarmDevice(
+    String name,
+    String modelId,
+    Version os,
+    DeviceType deviceType,
+    this.formFactor,
+    this.availability,
+    this.arn,
+  ) : super(name, modelId, os, deviceType);
 
   final FormFactor formFactor;
-  final String availability, arn;
+  final String availability;
+  final String arn;
 
   @override
   String toString() {
@@ -89,37 +87,34 @@ class DeviceFarmDevice extends SylphDevice {
   }
 
   @override
-  int compareTo(other) {
-    final formFactorCompare =
-        enumToStr(formFactor).compareTo(enumToStr(other.formFactor));
-    if (formFactorCompare != kOrderEqual) {
-      return formFactorCompare;
-    } else {
-      final sylphCompare = super.compareTo(other);
-      if (sylphCompare != kOrderEqual) {
-        return sylphCompare;
-      } else {
-        return kOrderEqual;
+  int compareTo(SylphDevice other) {
+    if (other is DeviceFarmDevice) {
+      final formFactorCompare =
+          enumToStr(formFactor).compareTo(enumToStr(other.formFactor));
+      if (formFactorCompare != kOrderEqual) {
+        return formFactorCompare;
       }
     }
+    final sylphCompare = super.compareTo(other);
+    if (sylphCompare != kOrderEqual) {
+      return sylphCompare;
+    }
+    return kOrderEqual;
   }
 
   @override
-  bool operator ==(other) {
+  bool operator ==(Object other) {
     if (other is DeviceFarmDevice) {
       return super == other &&
           other.formFactor == formFactor &&
           other.availability == availability &&
           other.arn == arn;
-    } else {
-      if (other is SylphDevice) {
-        // allow comparison with a sylph device
-        return super == other;
-      } else {
-        // any other type
-        return false;
-      }
     }
+    if (other is SylphDevice) {
+      // allow comparison with a sylph device
+      return super == other;
+    }
+    return false;
   }
 
   @override

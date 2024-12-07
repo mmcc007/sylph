@@ -1,0 +1,7 @@
+{
+  "name": "sylph-example-test",
+  "version": "1.0.0",
+  "dependencies": {
+    "wd": "^1.14.0"
+  }
+}

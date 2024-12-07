@@ -1,0 +1,28 @@
+name: sylph
+description: A package for running Flutter integration tests on AWS Device Farm.
+version: 2.0.0
+homepage: https://github.com/mmcc007/sylph
+
+environment:
+  sdk: '>=2.12.0 <4.0.0'
+
+dependencies:
+  path: ^1.8.0
+  yaml: ^3.1.0
+  meta: ^1.7.0
+  sprintf: ^7.0.0
+  args: ^2.3.0
+  http: ^1.1.0
+  collection: ^1.17.0
+  version: ^3.0.2
+  process: ^5.0.1
+  file: ^7.0.0
+  tool_base: ^3.0.0
+
+dev_dependencies:
+  test: ^1.21.0
+  mockito: ^5.0.0
+  pedantic: ^1.11.0
+
+executables:
+  sylph: main

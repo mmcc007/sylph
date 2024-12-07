@@ -1,0 +1,31 @@
+version: 0.1
+
+phases:
+  install:
+    commands:
+      # Install required dependencies
+      - npm install -g appium@1.22.3
+      - npm install -g wd
+      - export PATH=$PATH:node_modules/.bin
+
+  pre_test:
+    commands:
+      # Start Appium server
+      - appium --log-level info &
+      - sleep 10
+
+  test:
+    commands:
+      # Run the test
+      - node test/example.js
+
+  post_test:
+    commands:
+      # Clean up
+      - pkill -f appium
+
+artifacts:
+  - $DEVICEFARM_LOG_DIR/**/*
+
+# Specify Amazon Linux 2 as the test host
+android_test_host: amazon_linux_2
